@@ -48,4 +48,4 @@ pip install git+https://github.com/syncrosim/pysyncrosim
 
 ## Usage
 
-For a basic usage example with the [helloworldSpatial](https://apexrms.github.io/helloworldEnhanced/) package, see [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/examples/spatial_demo.py) in the **examples** folder.
+For a basic usage example with the [helloworldSpatial](https://apexrms.github.io/helloworldEnhanced/) package, see [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) in the **examples** folder.
