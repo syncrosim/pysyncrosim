@@ -51,7 +51,7 @@ pandas=1.3.2
 
 numpy=1.21.2
 
-rasterio=1.2.6
+rasterio>=1.2.6
 ```
 
 ## Usage
