@@ -7,12 +7,16 @@ The Python interface to [SyncroSim](https://syncrosim.com/)
 
 Use `pip` to install `pysyncrosim` to your default python installation. You can install Python from https://www.python.org/downloads/. You can also find information on how to install `pip` from the [pip documentation](https://pip.pypa.io/en/stable/installation/).
 
+Before installing `pysyncrosim`, you must install `GDAL` and `rasterio` separately. To do this, download the binaries for [GDAL](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal) and [rasterio](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio). Then use `pip` to install these binaries from your **Downloads** folder. 
 ```
-# Install rasterio requirement
-pip install rasterio
+# Install GDAL before rasterio
+pip install GDAL-3.3.2-pp37-pypy37_pp73-win_amd64.whl
+
+# Install rasterio
+pip install rasterio-1.2.8-pp37-pypy37_pp73-win_amd64.whl
 
 # Install pysyncrosim
-pip install git+https://github.com/ApexRMS/pysyncrosim
+pip install git+https://github.com/syncrosim/pysyncrosim
 ```
 
 ### Using `conda` environments
