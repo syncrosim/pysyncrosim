@@ -34,6 +34,7 @@ conda config --add channels conda-forge
 ```
 # Install rasterio requirement
 conda install rasterio
+```
 
 6. Install `pysyncrosim` from GitHub using `pip`. If you do not have `git` or `pip` installed already, use `conda` to install these packages. Then, use `pip` and `git` to install the latest GitHub release of `pysyncrosim`. Run the following code to install `git`, `pip`, and `pysyncrosim`.
 ```
