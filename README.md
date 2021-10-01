@@ -27,6 +27,7 @@ You should now see that "(base)" has been replaced with "(myenv)" at the beginni
 
 4. Set the package channel for `conda`. To be able to install the dependencies for `pysyncrosim`, you need to access the `conda-forge` package channel. To configure this channel, run the following code in the Anaconda Prompt.
 ```
+# Set conda-forge package channel
 conda config --add channels conda-forge
 ```
 
@@ -87,6 +88,7 @@ rasterio>=1.2.6
 For a basic usage example with the [helloworldSpatial](https://apexrms.github.io/helloworldEnhanced/) package, see the [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif) in the **examples** folder. To download the spatial_demo.py file, view the file on GitHub and select **Raw**. From the raw view, right-click and select **Save As...**. To run the spatial demo, you will also need to install the `matplotlib` Python package. You can install this package using the following code.
 
 ```
+# Install matplotlib
 conda install matplotlib
 ```
 
