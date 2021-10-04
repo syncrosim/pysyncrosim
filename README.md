@@ -3,7 +3,7 @@ The Python interface to [SyncroSim](https://syncrosim.com/)
 
 ## Installation
 
-pysyncrosim can be installed using either the `conda` or `pip` package managers. `conda` is a general package manager capable of installing packages from many sources, but `pip` is strictly a Python package manager. For this reason, using `pip` requires downloading and installing dependency binaries, so we recommend using the `conda` installation method. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install pysyncrosim for Linux.
+`pysyncrosim` can be installed using either the `conda` or `pip` package managers. `conda` is a general package manager capable of installing packages from many sources, but `pip` is strictly a Python package manager. For this reason, using `pip` requires downloading and installing dependency binaries, so we recommend using the `conda` installation method. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install `pysyncrosim` for Linux.
 
 Before beginning the installation of `pysyncrosim`, make sure you have the latest release of [SyncroSim](https://syncrosim.com/download-id/syncrosim-for-windows-version-2-3-5/) installed.
 
