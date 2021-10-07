@@ -118,4 +118,4 @@ spyder
 
 ### SyncroSim Package Development
 
-If you wish to design SyncroSim packages using python and `pysyncrosim`, you can follow the [Creating a Package](http://docs.syncrosim.com/how_to_guides/package_create_overview.html) and [Enhancing a Package](http://docs.syncrosim.com/how_to_guides/package_enhance_overview.html) tutorials on the [SyncroSim documentation website](http://docs.syncrosim.com/).
+If you wish to design SyncroSim packages using python and `pysyncrosim`, you can follow the [Creating a Package](http://docs.syncrosim.com/how_to_guides/package_create_overview.html) and [Enhancing a Package](http://docs.syncrosim.com/how_to_guides/package_enhance_overview.html) tutorials on the [SyncroSim documentation website](http://docs.syncrosim.com/). Note that SyncroSim v2.3.6 is required to develop python-based SyncroSim packages.
