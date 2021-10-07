@@ -31,8 +31,14 @@ You should now see that "(base)" has been replaced with "(myenv)" at the beginni
 conda config --add channels conda-forge
 ```
 
-5. Install `pysyncrosim` dependencies. Most dependencies are installed with `pysyncrosim`, however since `rasterio` has a C library dependency (GDAL), it must be installed before `pysyncrosim`. Install `rasterio` using `conda` using the following code.
+5. Install `pysyncrosim` dependencies, `numpy`, `pandas`, and `rasterio`, using the following code.
 ```
+# Install numpy requirement
+conda install numpy
+
+# Install pandas requirement
+conda install pandas
+
 # Install rasterio requirement
 conda install rasterio
 ```
@@ -52,7 +58,7 @@ pip install git+https://github.com/syncrosim/pysyncrosim
 
 Use `pip` to install `pysyncrosim` to your default python installation. You can install Python from https://www.python.org/downloads/. You can also find information on how to install `pip` from the [pip documentation](https://pip.pypa.io/en/stable/installation/).
 
-Before installing `pysyncrosim`, you must install `GDAL` and `rasterio` separately. To do this, download the binaries for [GDAL](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal) and [rasterio](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio). Note that the **cp39** in the wheel name refers to Python 3.9. Then use `pip` to install these binaries from your **Downloads** folder. 
+Before installing `pysyncrosim`, you must install `GDAL` and `rasterio` separately. To do this, download the binaries for [GDAL](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal) and [rasterio](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio). Note that the **cp39** in the wheel name refers to Python 3.9. Then use `pip` to install these binaries from your **Downloads** folder. You must also install the dependencies `numpy` and `pandas`.
 ```
 # Make sure you are using the latest version of pip
 pip install --upgrade pip
@@ -62,6 +68,12 @@ pip install GDAL-3.3.2-cp39-cp39-win_amd64.whl
 
 # Install rasterio
 pip install rasterio-1.2.8-cp39-cp39-win_amd64.whl
+
+# Install numpy
+pip install numpy
+
+# Install pandas
+pip install pandas
 
 # Install pysyncrosim
 pip install git+https://github.com/syncrosim/pysyncrosim
