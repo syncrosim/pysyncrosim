@@ -5,7 +5,21 @@ The Python interface to [SyncroSim](https://syncrosim.com/)
 
 `pysyncrosim` can be installed using either the `conda` or `pip` package managers. `conda` is a general package manager capable of installing packages from many sources, but `pip` is strictly a Python package manager. For this reason, using `pip` requires downloading and installing dependency binaries, so we recommend using the `conda` installation method. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install `pysyncrosim` for Linux.
 
-Before beginning the installation of `pysyncrosim`, make sure you have the latest release of [SyncroSim](https://syncrosim.com/download-id/syncrosim-for-windows-version-2-3-5/) installed.
+Before beginning the installation of `pysyncrosim`, make sure you have the latest release of [SyncroSim](https://syncrosim.com/download/) installed.
+
+### Dependencies
+
+`pysyncrosim` was tested and developed using Python 3.8 and SyncroSim 2.3.5. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
+
+```
+python>=3.8
+
+pandas=1.3.2
+
+numpy=1.21.2
+
+rasterio>=1.2.6
+```
 
 ### Using `conda`
 
@@ -79,20 +93,6 @@ pip install pandas
 pip install git+https://github.com/syncrosim/pysyncrosim
 ```
 
-## Dependencies
-
-`pysyncrosim` was tested and developed using Python 3.8 and SyncroSim 2.3.5. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
-
-```
-python>=3.8
-
-pandas=1.3.2
-
-numpy=1.21.2
-
-rasterio>=1.2.6
-```
-
 ## Usage
 
 ### Getting Started
@@ -124,7 +124,7 @@ spyder
 
 3. Within the IDE, change the working directory to the directory containing your `pysyncrosim` scripts (e.g. [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif))
 
-![alt-text](docs/spyder.PNG)
+![alt-text](./docs/spyder.PNG)
 
 4. Open and run your `pysyncrosim` scripts from the left-hand window. You can run scripts line-by-line in `spyder` by selecting the line(s) you want to run and pressing F9.
 
