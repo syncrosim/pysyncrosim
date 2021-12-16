@@ -87,7 +87,7 @@ def _validate_environment():
 def _create_scenario_folder(scenario, parent_folder, datasheet_name):
     sidpart = "Scenario-" + str(scenario.sid)
     # p = re.sub("\\", "/", parent_folder)
-    f = os.path.join(p, sidpart, datasheet_name)
+    f = os.path.join(parent_folder, sidpart, datasheet_name)
     
     if not os.path.isdir(f):
         os.mkdir(f)

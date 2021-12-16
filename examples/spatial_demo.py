@@ -47,7 +47,7 @@ myLibrary = ps.library(name = "spatialDemo",
                        package = "helloworldSpatial")
 
 # Retrieve information about the Library instance attributes
-myLibrary.__dict__
+myLibrary.info
 
 # Create (or open) a Project in this Library
 myProject = myLibrary.projects(name = "Definitions")
@@ -127,7 +127,7 @@ myResultsScenarioAll = myLibrary.run(scenarios=[myScenario,
 # =============================================================================
 
 # Check Results Scenario attributes
-myResultsScenario.__dict__
+myResultsScenario.info
 
 # Check if Scenario is a Results Scenario
 myResultsScenario.is_result

@@ -428,18 +428,19 @@ class Scenario(object):
         
         # Find folder with raster data
         if self.__env is None:
-            fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
-                                 os.listdir(self.library.name + ".temp")[0])
+            try:
+                # fix this
+                fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
+                                     os.listdir(self.library.name + ".temp")[0])
+            except IndexError:
+                
+                f_base_path = os.path.join(os.getcwd(), self.library.name + ".output")
+                fpath = self.__find_output_fpath(f_base_path, datasheet)
+
         else:
             e = _environment()
             f_base_path = e.input_directory.item()
-
-            # If package is not included in name, add it
-            if datasheet.startswith(self.library.package) is False:
-                if datasheet.startswith("core") is False:
-                    datasheet = self.library.package + "_" + datasheet
-
-            fpath = os.path.join(f_base_path, f"Scenario-{self.sid}", datasheet)
+            fpath = self.__find_output_fpath(f_base_path, datasheet)
         
         # Iterate through all raster files in Datasheet
         for i in range(0, len(d)):
@@ -881,3 +882,14 @@ class Scenario(object):
         args = ["--list", "--dependencies", "--lib=%s" % self.library.location,
                 "--sid=%d" % self.sid, ]
         return self.library._Library__console_to_csv(args) 
+    
+    def __find_output_fpath(self, f_base_path, datasheet):
+                
+        # If package is not included in name, add it
+        if datasheet.startswith(self.library.package) is False:
+            if datasheet.startswith("core") is False:
+                datasheet = self.library.package + "_" + datasheet
+
+        fpath = os.path.join(f_base_path, f"Scenario-{self.sid}", datasheet)
+        
+        return fpath
