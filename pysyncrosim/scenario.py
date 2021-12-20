@@ -1,7 +1,8 @@
 import pysyncrosim as ps
 from pysyncrosim.environment import _environment
 import os
-# import pandas as pd
+import io
+import pandas as pd
 import numpy as np
 
 class Scenario(object):
