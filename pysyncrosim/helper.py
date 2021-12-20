@@ -149,7 +149,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
     finally:
         
         if library_up_to_date is True:
-            return ps.Library(loc=loc, session=session)
+            return ps.Library(location=loc, session=session)
 
 def _delete_library(name, session=None, force=False):
     """
