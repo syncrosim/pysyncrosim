@@ -432,7 +432,7 @@ class Scenario(object):
                 # fix this
                 fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
                                      os.listdir(self.library.name + ".temp")[0])
-            except IndexError:
+            except (FileNotFoundError, IndexError):
                 
                 f_base_path = os.path.join(os.getcwd(), self.library.name + ".output")
                 fpath = self.__find_output_fpath(f_base_path, datasheet)
