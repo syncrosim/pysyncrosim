@@ -430,11 +430,11 @@ class Scenario(object):
         if self.__env is None:
             try:
                 # fix this
-                fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
-                                     os.listdir(self.library.name + ".temp")[0])
+                fpath = os.path.join(self.library.location + ".temp",
+                                     os.listdir(self.library.location + ".temp")[0])
             except (FileNotFoundError, IndexError):
                 
-                f_base_path = os.path.join(os.getcwd(), self.library.name + ".output")
+                f_base_path = os.path.join(self.library.location + ".output")
                 fpath = self.__find_output_fpath(f_base_path, datasheet)
 
         else:
