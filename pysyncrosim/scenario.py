@@ -455,13 +455,10 @@ class Scenario(object):
         
         # Search for the following raster tifs in all possible output places
         raster_tifs = d[column].values
-        lib_dir = os.path.split(self.library.location)[0]
         rpaths = []
         
         # Find folder with raster data - search in input, temp, and output
         if self.__env is None:
-                        
-            # try:   
             
             for folder in [".input", ".temp", ".output"]:
                 
