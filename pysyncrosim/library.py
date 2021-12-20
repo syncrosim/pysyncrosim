@@ -76,7 +76,7 @@ class Library(object):
 
         Parameters
         ----------
-        loc : String
+        location : String
             Filepath to Library location on disk.
         session : Session
             pysyncrosim Session instance.
