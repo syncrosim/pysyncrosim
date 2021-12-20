@@ -376,6 +376,28 @@ class Scenario(object):
         # Retrieve Datasheet as DataFrame
         d = self.datasheets(name = datasheet)
         
+        # Check if column is raster column
+        args = ["--list", "--columns", "--allprops",
+                "--sheet=%s" % datasheet, "--csv", 
+                "--lib=%s" % self.library.location]
+        props = self.library.session._Session__call_console(args, decode=True,
+                                                            csv=True)
+        props = pd.read_csv(io.StringIO(props))
+        props["is_raster"] = props.Properties.str.contains("isRaster\^True")
+        
+        if (props.is_raster == False).all():
+            raise ValueError(
+                f"No raster columns found in Datasheet {datasheet}")
+            
+        if (props.Name == column).any() is False:
+            raise ValueError(
+                f"Column {column} not found in Datasheet {datasheet}")
+            
+        col_props = props[props.Name == column]
+        
+        if col_props.is_raster is False:
+            raise ValueError(f"Column {column} is not a raster column")
+        
         # Check that column exists in Datasheet
         if column not in d.columns:
             raise ValueError(f"column {column} does not exist in {datasheet}")
@@ -428,13 +450,13 @@ class Scenario(object):
         
         # Find folder with raster data
         if self.__env is None:
+
             try:
                 # fix this
-                fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
-                                     os.listdir(self.library.name + ".temp")[0])
-            except IndexError:
-                
-                f_base_path = os.path.join(os.getcwd(), self.library.name + ".output")
+                fpath = os.path.join(self.library.location + ".temp",
+                                     os.listdir(self.library.location + ".temp")[0])
+            except (IndexError, FileNotFoundError):
+                f_base_path = os.path.join(self.library.location + ".output")
                 fpath = self.__find_output_fpath(f_base_path, datasheet)
 
         else:
