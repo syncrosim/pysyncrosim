@@ -607,6 +607,9 @@ class Library(object):
         
         self.__datasheets = None
         
+        # Initialize Datasheets summary
+        self.__init_datasheets(scope=scope, summary=True)
+        
         # Initialize base arguments
         args = ["--export", "--lib=%s" % self.__location]
         
@@ -621,6 +624,54 @@ class Library(object):
             
         if include_key:
             args += ["--includepk"]
+         
+        # Can only use filter_column arg if name of Datasheet is specified
+        if (filter_column is not None) and (name is not None):
+            # Check if filter_column exists in Datasheet
+            col = filter_column.split("=")[0]
+            col_id = filter_column.split("=")[1]
+            check_args = ["--list", "--columns",
+                          "--lib=%s" % self.location, 
+                          "--sheet=%s" % name]
+            ds_cols = self.__console_to_csv(check_args)
+            
+            if col not in ds_cols.Name.values:
+                raise ValueError(
+                    f"filter column {col} not in Datasheet {name}")
+                
+            try:
+                
+                col_id = int(col_id)
+                
+            except ValueError:
+                        
+                ds_row = self.__datasheets[self.__datasheets.Name == name]
+                
+                if ds_row["Is Output"].values[0] == "Yes":
+                    input_sheet_name = ds_cols.formula1
+                else:
+                    input_sheet_name = name
+                    
+                tempfile_path = tempfile.NamedTemporaryFile(delete=False,
+                                                            suffix='csv') 
+                check_args = ["--export", "--lib=%s" % self.location,
+                              "sheet=%s" % input_sheet_name, 
+                              "--file=%s" % tempfile_path.name]
+                
+                if scope == "Project" and len(ids) > 0:
+                    check_args += ["--pid=%d" % ids]
+                
+                if scope == "Scenario" and len(ids) > 0:               
+                    check_args += ["--sid=%d" % ids]
+                
+                self.session._Session__call_console(check_args)
+                input_datasheet = pd.read_csv(tempfile_path.name)
+                    
+                
+                # Find column ID if string is specified
+            
+            # If all checks pass, then add filter_column to args
+            args += ["--filtercol=%s" % col + "=" + col_id]
         
         if name is None:
             
@@ -644,9 +695,6 @@ class Library(object):
                 # Add arguments
                 args += ["--sheet"]
                 
-                if filter_column is not None:
-                    args += ["--filtercol=%s" % filter_column]
-                            
                 for ds in d_summary["Name"]:
                     args[-1] = "--sheet=%s" % ds
                     self.__datasheets = None
@@ -665,9 +713,6 @@ class Library(object):
             
             # Add arguments
             args += ["--sheet=%s" % name] 
-            
-            if filter_column is not None:
-                args += ["--filtercol=%s" % filter_column]
             
             if name.startswith("core"):
                 args += ["--includesys"]
