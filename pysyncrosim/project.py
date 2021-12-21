@@ -211,7 +211,8 @@ class Project(object):
         self.__description = None
         self.__description = self.__init_description()
 
-    def scenarios(self, name=None, sid=None, optional=False, summary=True):
+    def scenarios(self, name=None, sid=None, optional=False, summary=True,
+                  results=False):
         """
         Retrieve a DataFrame of Scenarios in this Project.
         
@@ -226,6 +227,8 @@ class Project(object):
         summary : Logical, optional
             If set to False, then returns all Scenarios as SyncroSim
             Scenario instances.
+        results : Logical, optional
+            Return only a list of Results Scenarios. The default is False.
         
         Returns
         -------
@@ -242,7 +245,8 @@ class Project(object):
                                                   sid=sid,
                                                   pid=self.pid,
                                                   optional=optional,
-                                                  summary=summary)
+                                                  summary=summary,
+                                                  results=results)
         
         return self.__scenarios
 
