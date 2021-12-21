@@ -373,7 +373,8 @@ class Library(object):
                 
         
     def scenarios(self, name=None, project=None, sid=None, pid=None,
-                  overwrite=False, optional=False, summary=True):
+                  overwrite=False, optional=False, summary=True,
+                  results=False):
         """
         Retrieves a Scenario or DataFrame of Scenarios in this Library.
 
@@ -397,6 +398,8 @@ class Library(object):
             When name and sid is None, if True, returns a DataFrame of 
             information on existing Scenarios. Otherwise returns a list of 
             Scenario class instances. The default is True.
+        results : Logical, optional
+            Return only a list of Results Scenarios. The default is False.
 
         Returns
         -------
@@ -427,6 +430,8 @@ class Library(object):
             raise TypeError("optional must be a Logical")
         if not isinstance(summary, bool):
             raise TypeError("summary must be a Logical")
+        if not isinstance(results, bool):
+            raise TypeError("results must be a Logical")
         
         # self.__init_scenarios(pid=pid)
         
@@ -478,24 +483,29 @@ class Library(object):
         
         s = self.__get_scenario(name=name, sid=sid)
         
-        if s is None:
+        if (s is None) or (summary is True):
             
             # Retrieve DataFrame of available Scenarios
-            if summary is True:
+            if summary:
                 
                 if optional is False:
-                    return self.__scenarios[['Scenario ID',
-                                             'Project ID',
-                                             'Name',
-                                             'Is Result']]
-                
-                elif name is not None:
-                    return self.__scenarios[self.__scenarios.Name == name]
-                elif sid is not None:
-                    return self.__scenarios[self.__scenarios[
-                        "Scenario ID"] == sid]
+                    ds =  self.__scenarios[['Scenario ID',
+                                            'Project ID',
+                                            'Name',
+                                            'Is Result']]
                 else:
-                    return self.__scenarios
+                    ds = self.__scenarios
+                    
+                if results:
+                    ds = ds[ds["Is Result"] == "Yes"]
+                
+                if name is not None:
+                    return ds[ds.Name == name]
+                
+                if sid is not None:
+                    return ds[ds["Scenario ID"] == sid]
+                
+                return ds
               
             # Return list of Scenario objects    
             if summary is False:
@@ -652,11 +662,14 @@ class Library(object):
                 else:
                     input_sheet_name = name
                     
-                tempfile_path = tempfile.NamedTemporaryFile(delete=False,
-                                                            suffix='csv') 
+                # tempfile_path = tempfile.NamedTemporaryFile(delete=False,
+                #                                             suffix='.csv')
+                tempfile_path = os.path.join(self.location + ".temp",
+                                             "temp.csv")
                 check_args = ["--export", "--lib=%s" % self.location,
-                              "sheet=%s" % input_sheet_name, 
-                              "--file=%s" % tempfile_path.name]
+                              "--sheet=%s" % input_sheet_name, 
+                              "--file=%s" % tempfile_path, "--includepk",
+                              "--valsheets", "--extfilepaths", "--force"]
                 
                 if scope == "Project" and len(ids) > 0:
                     check_args += ["--pid=%d" % ids]
@@ -665,10 +678,12 @@ class Library(object):
                     check_args += ["--sid=%d" % ids]
                 
                 self.session._Session__call_console(check_args)
-                input_datasheet = pd.read_csv(tempfile_path.name)
-                    
-                
-                # Find column ID if string is specified
+                input_datasheet = pd.read_csv(tempfile_path)
+                # TODO: subset to find correct column / ID
+            
+            finally:
+                if os.path.exists(tempfile_path):
+                    os.remove(tempfile_path)
             
             # If all checks pass, then add filter_column to args
             args += ["--filtercol=%s" % col + "=" + col_id]
