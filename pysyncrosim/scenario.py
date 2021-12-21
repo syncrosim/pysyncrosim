@@ -41,7 +41,8 @@ class Scenario(object):
     
     Methods
     -------
-    datasheets(name=None, summary=True, optional=False, empty=False):
+    datasheets(name=None, summary=True, optional=False, empty=False,
+               filter_column=None):
         Retrieves a DataFrame of Scenario Datasheets.
     datasheet_raster(datasheet, column, iteration=None, timestep=None):
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
@@ -303,7 +304,8 @@ class Scenario(object):
         """
         return self.__parent_id
     
-    def datasheets(self, name=None, summary=True, optional=False, empty=False):
+    def datasheets(self, name=None, summary=True, optional=False, empty=False,
+                   filter_column=None):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -318,6 +320,9 @@ class Scenario(object):
             Return optional columns. The default is False.
         empty : Logical, optional
             If True, returns an empty Datasheet. The default is False.
+        filter_column : String
+            The column and value to filter the output Datasheet by 
+            (e.g. "TransitionGroupID=20"). The default is None.
 
         Returns
         -------
@@ -329,13 +334,13 @@ class Scenario(object):
         """
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
-                                                    empty, "Scenario", 
-                                                    self.sid)
+                                                    empty, "Scenario",
+                                                    filter_column, self.sid)
         return self.__datasheets
     
 
     def datasheet_raster(self, datasheet, column=None, iteration=None,
-                          timestep=None):
+                          timestep=None, filter_column=None):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
 
@@ -346,10 +351,13 @@ class Scenario(object):
         column : String
             The column in the Datasheet containing the raster data. If no 
             column selected, then datasheet_raster will attempt to find one.
-        iteration : Int or List, optional
+        iteration : Int, List, or Range, optional
             The iteration to subset by. The default is None.
-        timestep : Int or List, optional
+        timestep : Int, List, or Range, optional
             The timestep to subset by. The default is None.
+        filter_column : String
+            The column and value to filter the output rasters by 
+            (e.g. "TransitionGroupID=20"). The default is None.
 
         Returns
         -------
@@ -360,24 +368,28 @@ class Scenario(object):
         # Type Checks
         if not isinstance(datasheet, str):
             raise TypeError("datasheet must be a String")
+            
         if column is not None and not isinstance(column, str):
             raise TypeError("column must be a String")
-        if iteration is not None and not isinstance(
-                iteration, int) and not isinstance(
-                    iteration, np.int64) and not isinstance(iteration, list):
-            raise TypeError("iteration must be an Integer or List")
-        if timestep is not None and not isinstance(
-                timestep, int) and not isinstance(
-                    timestep, np.int64) and not isinstance(
-                        timestep, list):
-            raise TypeError("timestep must be an Integer or List")
+            
+        if iteration is not None and not isinstance(iteration, int)\
+            and not isinstance(iteration, np.int64)\
+                and not isinstance(iteration, list)\
+                    and not isinstance(iteration, range):
+            raise TypeError("iteration must be an Integer, List, or Range")
+            
+        if timestep is not None and not isinstance(timestep, int)\
+            and not isinstance(timestep, np.int64)\
+                and not isinstance(timestep, list)\
+                    and not isinstance(timestep, range):
+            raise TypeError("timestep must be an Integer, List, or Range")
         
         # Check that self is Results Scenario
         if self.is_result == "No":
             raise ValueError("Scenario must be a Results Scenario")
         
         # Retrieve Datasheet as DataFrame
-        d = self.datasheets(name = datasheet)
+        d = self.datasheets(name = datasheet, filter_column = filter_column)
         
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",
@@ -414,6 +426,9 @@ class Scenario(object):
         #     band_column = [b for b in prop_split if b.startswith("bandColumn")]
         #     col_props["band_column"] = band_column[0].split("^")[1]
         
+        if isinstance(iteration, range):
+            iteration = list(iteration)
+        
         if iteration is not None:
             if isinstance(iteration, int):
                 
@@ -434,6 +449,9 @@ class Scenario(object):
                 d = d.loc[d["Iteration"].isin(iteration)]
                 
             d = d.reset_index()
+            
+        if isinstance(timestep, range):
+            timestep = list(timestep)
             
         if timestep is not None:
             if isinstance(timestep, int):

@@ -48,7 +48,7 @@ class Library(object):
               optional=False, summary=True):
         Retrieves a Scenario or DataFrame of Scenarios in this Library.
     datasheets(name=None, summary=True, optional=False, empty=False,
-               scope="Library", *ids):
+               scope="Library", filter_column=None, *ids):
         Retrieves a DataFrame of Library Datasheets.
     delete(project=None, scenario=None, force=False):
         Deletes a SyncroSim class instance.
@@ -561,7 +561,7 @@ class Library(object):
             return ps.Scenario(sid, s["Name"].values[0], project, self)
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   scope="Library", *ids):
+                   scope="Library", filter_column=None, *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -579,6 +579,9 @@ class Library(object):
         scope : String, optional
             Datasheet scope. Options include "Library", "Project", or 
             "Scenario". The default is "Library".
+        filter_column : String
+            The column and value to filter the output Datasheet by 
+            (e.g. "TransitionGroupID=20"). The default is None.
 
         Returns
         -------
@@ -633,6 +636,9 @@ class Library(object):
                 
                 # Add arguments
                 args += ["--sheet"]
+                
+                if filter_column is not None:
+                    args += ["--filtercol=%s" % filter_column]
                             
                 for ds in d_summary["Name"]:
                     args[-1] = "--sheet=%s" % ds
@@ -652,6 +658,9 @@ class Library(object):
             
             # Add arguments
             args += ["--sheet=%s" % name] 
+            
+            if filter_column is not None:
+                args += ["--filtercol=%s" % filter_column]
             
             if name.startswith("core"):
                 args += ["--includesys"]

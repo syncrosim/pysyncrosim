@@ -29,7 +29,8 @@ class Project(object):
     -------
     scenarios(name=None, sid=None, optional=False, summary=True):
         Retrieve a DataFrame of Scenarios in this Project.
-    datasheets(name=None, summary=True, optional=False, empty=False):
+    datasheets(name=None, summary=True, optional=False, empty=False,
+               filter_column=None):
         Retrieves a DataFrame of Project Datasheets.
     delete(scenario=None, force=False):
         Deletes a Project or Scenario.    
@@ -245,7 +246,8 @@ class Project(object):
         
         return self.__scenarios
 
-    def datasheets(self, name=None, summary=True, optional=False, empty=False):
+    def datasheets(self, name=None, summary=True, optional=False, empty=False,
+                   filter_column=None):
         """
         Retrieves a DataFrame of Project Datasheets.
         
@@ -260,6 +262,9 @@ class Project(object):
             Return optional columns. The default is False.
         empty : Logical, optional
             If True, returns an empty Datasheet. The default is False.
+        filter_column : String
+            The column and value to filter the output Datasheet by 
+            (e.g. "TransitionGroupID=20"). The default is None.
 
         Returns
         -------
@@ -272,6 +277,7 @@ class Project(object):
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
                                                     empty, "Project",
+                                                    filter_column=None, 
                                                     self.pid)
         return self.__datasheets
     
