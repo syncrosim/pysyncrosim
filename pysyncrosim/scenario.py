@@ -333,7 +333,8 @@ class Scenario(object):
                                                     self.sid)
         return self.__datasheets
     
-    def datasheet_raster(self, datasheet, column, iteration=None,
+
+    def datasheet_raster(self, datasheet, column=None, iteration=None,
                           timestep=None):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
@@ -343,7 +344,8 @@ class Scenario(object):
         datasheet : String
             The name of a SyncroSim Datasheet containing raster data.
         column : String
-            The column in the Datasheet containing the raster data.
+            The column in the Datasheet containing the raster data. If no 
+            column selected, then datasheet_raster will attempt to find one.
         iteration : Int or List, optional
             The iteration to subset by. The default is None.
         timestep : Int or List, optional
@@ -358,7 +360,7 @@ class Scenario(object):
         # Type Checks
         if not isinstance(datasheet, str):
             raise TypeError("datasheet must be a String")
-        if not isinstance(column, str):
+        if column is not None and not isinstance(column, str):
             raise TypeError("column must be a String")
         if iteration is not None and not isinstance(
                 iteration, int) and not isinstance(
@@ -389,6 +391,13 @@ class Scenario(object):
         if (props.is_raster == False).all():
             raise ValueError(
                 f"No raster columns found in Datasheet {datasheet}")
+          
+        # If no raster column specified, find the raster column
+        if column is None:
+            if len(props[props.is_raster == True]) > 1:
+                raise ValueError(
+                    "> 1 raster output column available, please specify.")
+            column = props[props.is_raster == True].Name.values[0]
             
         if (props.Name == column).any() is False:
             raise ValueError(
@@ -398,10 +407,12 @@ class Scenario(object):
         
         if col_props.is_raster is False:
             raise ValueError(f"Column {column} is not a raster column")
-        
-        # Check that column exists in Datasheet
-        if column not in d.columns:
-            raise ValueError(f"column {column} does not exist in {datasheet}")
+            
+        # TODO: Get band column if it exists
+        # if col_props.Properties.str.contains("bandColumn").any():
+        #     prop_split = col_props.Properties.str.split("!").values[0]
+        #     band_column = [b for b in prop_split if b.startswith("bandColumn")]
+        #     col_props["band_column"] = band_column[0].split("^")[1]
         
         if iteration is not None:
             if isinstance(iteration, int):
@@ -449,39 +460,58 @@ class Scenario(object):
         # Create empty list to store raster objects
         raster_list = []
         
-        # Find folder with raster data
+        # Search for the following raster tifs in all possible output places
+        raster_tifs = d[column].values
+        rpaths = []
+        
+        # Find folder with raster data - search in input, temp, and output
         if self.__env is None:
-
-            try:
-                # fix this
-                fpath = os.path.join(self.library.location + ".temp",
-                                     os.listdir(self.library.location + ".temp")[0])
-            except (IndexError, FileNotFoundError):
-                f_base_path = os.path.join(self.library.location + ".output")
-                fpath = self.__find_output_fpath(f_base_path, datasheet)
-
+            
+            for folder in [".input", ".temp", ".output"]:
+                
+                if folder != ".temp":
+                    lib_dir = self.__find_output_fpath(
+                        self.library.location + folder, datasheet)
+                else:
+                    lib_dir = self.library.location + folder
+                
+                for raster_tif in raster_tifs:
+                    for root, dirs, files in os.walk(lib_dir):
+                        if raster_tif in files:
+                            rpaths.append(os.path.join(root, raster_tif))
+                        else:
+                            break
+                        
+                    if len(rpaths) == 0:
+                        break
+                    
+                if len(rpaths) !=0:
+                    break
+                
         else:
             e = _environment()
             f_base_path = e.input_directory.item()
             fpath = self.__find_output_fpath(f_base_path, datasheet)
+            
+            for i in range(0, len(d)):
+  
+                # Index column with raster data
+                rpaths = os.path.join(fpath, d[column].loc[i])
         
         # Iterate through all raster files in Datasheet
-        for i in range(0, len(d)):
-            
-            # Index column with raster data
-            rpath = os.path.join(fpath, d[column].loc[i])
+        for i in range(0, len(rpaths)):
             
             # Open and append each raster from the Datasheet
             if "Iteration" in d.columns:
                 if "Timestep" in d.columns:
-                    raster = ps.Raster(rpath, iteration = d["Iteration"].loc[i],
+                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i],
                                        timestep = d["Timestep"].loc[i])
                 else:
-                    raster = ps.Raster(rpath, iteration = d["Iteration"].loc[i])
+                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i])
             elif "Timestep" in d.columns:
-                raster = ps.Raster(rpath, timestep=d["Timestep"].loc[i])
+                raster = ps.Raster(rpaths[i], timestep=d["Timestep"].loc[i])
             else:
-                raster = ps.Raster(rpath)
+                raster = ps.Raster(rpaths[i])
 
             raster_list.append(raster)
             
