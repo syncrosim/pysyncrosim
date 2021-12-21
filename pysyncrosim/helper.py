@@ -73,7 +73,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         raise ValueError(f"Path to Library does not exist: {name}")
     
     args = ["--create", "--library", "--package=%s" % package,
-            "--name=\"%s\"" % name]
+            "--name=\"%s\"" % loc]
     
     if overwrite is True:
         
