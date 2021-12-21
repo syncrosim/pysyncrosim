@@ -334,7 +334,7 @@ class Scenario(object):
         return self.__datasheets
     
 
-    def datasheet_raster(self, datasheet, column="Filename", iteration=None,
+    def datasheet_raster(self, datasheet, column=None, iteration=None,
                           timestep=None):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
@@ -344,8 +344,8 @@ class Scenario(object):
         datasheet : String
             The name of a SyncroSim Datasheet containing raster data.
         column : String
-            The column in the Datasheet containing the raster data. Default is
-            "Filename".
+            The column in the Datasheet containing the raster data. If no 
+            column selected, then datasheet_raster will attempt to find one.
         iteration : Int or List, optional
             The iteration to subset by. The default is None.
         timestep : Int or List, optional
@@ -360,7 +360,7 @@ class Scenario(object):
         # Type Checks
         if not isinstance(datasheet, str):
             raise TypeError("datasheet must be a String")
-        if not isinstance(column, str):
+        if column is not None and not isinstance(column, str):
             raise TypeError("column must be a String")
         if iteration is not None and not isinstance(
                 iteration, int) and not isinstance(
@@ -391,6 +391,13 @@ class Scenario(object):
         if (props.is_raster == False).all():
             raise ValueError(
                 f"No raster columns found in Datasheet {datasheet}")
+          
+        # If no raster column specified, find the raster column
+        if column is None:
+            if len(props[props.is_raster == True]) > 1:
+                raise ValueError(
+                    "> 1 raster output column available, please specify.")
+            column = props[props.is_raster == True].Name.values[0]
             
         if (props.Name == column).any() is False:
             raise ValueError(
