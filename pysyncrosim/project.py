@@ -247,7 +247,7 @@ class Project(object):
         return self.__scenarios
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None):
+                   filter_column=None, include_key=False):
         """
         Retrieves a DataFrame of Project Datasheets.
         
@@ -265,6 +265,9 @@ class Project(object):
         filter_column : String
             The column and value to filter the output Datasheet by 
             (e.g. "TransitionGroupID=20"). The default is None.
+        include_key : Logical, optional
+            Whether to include the primary key of the Datasheet, corresponding
+            to the SQL database. Default is False.
 
         Returns
         -------
@@ -277,7 +280,7 @@ class Project(object):
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
                                                     empty, "Project",
-                                                    filter_column=None, 
+                                                    filter_column, include_key,
                                                     self.pid)
         return self.__datasheets
     

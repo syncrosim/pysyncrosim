@@ -561,7 +561,8 @@ class Library(object):
             return ps.Scenario(sid, s["Name"].values[0], project, self)
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   scope="Library", filter_column=None, *ids):
+                   scope="Library", filter_column=None, include_key=False, 
+                   *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -582,6 +583,9 @@ class Library(object):
         filter_column : String
             The column and value to filter the output Datasheet by 
             (e.g. "TransitionGroupID=20"). The default is None.
+        include_key : Logical, optional
+            Whether to include the primary key of the Datasheet, corresponding
+            to the SQL database. Default is False.
 
         Returns
         -------
@@ -612,8 +616,11 @@ class Library(object):
         if scope == "Scenario" and len(ids) > 0:               
             args += ["--sid=%d" % ids]
             
-        if empty is True:
+        if empty:
             args += ["--schemaonly"]
+            
+        if include_key:
+            args += ["--includepk"]
         
         if name is None:
             
