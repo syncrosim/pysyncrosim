@@ -380,8 +380,9 @@ class Library(object):
 
         Parameters
         ----------
-        name : String, optional
-            Scenario name. The default is None.
+        name : String or Int, optional
+            Scenario name. If an integer is given, the value will be parsed as
+            as Scenario ID. The default is None.
         project : Project, String, or Int, optional
             Project the Scenario belongs to. If no Project is specified when
             creating a new Scenario, the "Definitions" default Project is used.
@@ -412,8 +413,9 @@ class Library(object):
 
         """
         # Check types
-        if name is not None and not isinstance(name, str):
-            raise TypeError("name must be a String")            
+        if name is not None and not isinstance(name, str)\
+            and not isinstance(name, int):
+            raise TypeError("name must be a String or Integer")            
         if project is not None and project.__class__.__name__ != "Project":
             if not isinstance(project, str) and not isinstance(project, int):
                 raise TypeError(
@@ -434,6 +436,14 @@ class Library(object):
             raise TypeError("results must be a Logical")
         
         # self.__init_scenarios(pid=pid)
+        
+        # Find out if first argument is a Scenario ID
+        if isinstance(name, int):
+            if sid is not None:
+                raise ValueError(
+                    "Name is specified as a Scenario ID, but sid is given")
+            sid = name
+            name = None
         
         # Set default summary argument
         if summary is None:
