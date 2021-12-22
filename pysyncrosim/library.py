@@ -461,7 +461,12 @@ class Library(object):
         if not isinstance(results, bool):
             raise TypeError("results must be a Logical")
         
-        if sid is not None:
+        if (sid is not None and len(sid) == 1)\
+            and (name is not None and len(name) == 1):
+            output = self.__extract_scenario(None, project, sid[0], pid,
+                                             overwrite, optional, summary,
+                                             results)
+        elif sid is not None:
             output = [self.__extract_scenario(
                 name, project, s, pid, overwrite, optional, summary, results
                 ) for s in sid]
@@ -473,8 +478,10 @@ class Library(object):
             output = self.__extract_scenario(None, project, None, pid,
                                              overwrite, optional, summary,
                                              results)
-        
-        return output
+        if isinstance(output, list) and len(output) == 1:
+            return output[0]
+        else:
+            return output
         
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
