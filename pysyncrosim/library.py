@@ -373,7 +373,7 @@ class Library(object):
                 
         
     def scenarios(self, name=None, project=None, sid=None, pid=None,
-                  overwrite=False, optional=False, summary=True,
+                  overwrite=False, optional=False, summary=None,
                   results=False):
         """
         Retrieves a Scenario or DataFrame of Scenarios in this Library.
@@ -397,7 +397,7 @@ class Library(object):
         summary : Logical, optional
             When name and sid is None, if True, returns a DataFrame of 
             information on existing Scenarios. Otherwise returns a list of 
-            Scenario class instances. The default is True.
+            Scenario class instances.
         results : Logical, optional
             Return only a list of Results Scenarios. The default is False.
 
@@ -428,13 +428,21 @@ class Library(object):
             raise TypeError("overwrite must be a Logical")
         if not isinstance(optional, bool):
             raise TypeError("optional must be a Logical")
-        if not isinstance(summary, bool):
-            raise TypeError("summary must be a Logical")
+        if not isinstance(summary, bool) and summary is not None:
+            raise TypeError("summary must be a Logical or None")
         if not isinstance(results, bool):
             raise TypeError("results must be a Logical")
         
         # self.__init_scenarios(pid=pid)
         
+        # Set default summary argument
+        if summary is None:
+            if sid is None and name is None:
+                summary = True
+            else:
+                summary = False
+        
+        # Find project if not specified
         if project is None and pid is None:
             self.__init_scenarios()
             if sid is not None and self.__get_scenario(sid=sid).empty is False:
@@ -617,9 +625,6 @@ class Library(object):
         
         self.__datasheets = None
         
-        # Initialize Datasheets summary
-        self.__init_datasheets(scope=scope, summary=True)
-        
         # Initialize base arguments
         args = ["--export", "--lib=%s" % self.__location]
         
@@ -654,16 +659,19 @@ class Library(object):
                 col_id = int(col_id)
                 
             except ValueError:
-                        
+                    
+                # Initialize Datasheets summary
+                # TODO: find out why Library and project scoped datasheets not showing up
+                self.__init_datasheets(scope=scope, summary=True)
+                
                 ds_row = self.__datasheets[self.__datasheets.Name == name]
                 
                 if ds_row["Is Output"].values[0] == "Yes":
-                    input_sheet_name = ds_cols.formula1
+                    input_sheet_name = ds_cols[
+                        ds_cols.Name == col].Formula1.values[0]
                 else:
                     input_sheet_name = name
-                    
-                # tempfile_path = tempfile.NamedTemporaryFile(delete=False,
-                #                                             suffix='.csv')
+                
                 tempfile_path = os.path.join(self.location + ".temp",
                                              "temp.csv")
                 check_args = ["--export", "--lib=%s" % self.location,
@@ -671,22 +679,46 @@ class Library(object):
                               "--file=%s" % tempfile_path, "--includepk",
                               "--valsheets", "--extfilepaths", "--force"]
                 
-                if scope == "Project" and len(ids) > 0:
-                    check_args += ["--pid=%d" % ids]
+                # Check the scope of the input_sheet_name
+                scope_list = ["Project", "Scenario"]
                 
-                if scope == "Scenario" and len(ids) > 0:               
-                    check_args += ["--sid=%d" % ids]
+                if (self.__datasheets.Name == input_sheet_name).any():
+                    
+                    input_scope = scope
+                    
+                    if input_scope == "Project" and len(ids) > 0:
+                        check_args += ["--pid=%d" % ids]
+                    
+                    if input_scope == "Scenario" and len(ids) > 0:               
+                        check_args += ["--sid=%d" % ids]
+                        
+                else:
+                    scope_list.remove(scope)
+                    input_scope = scope_list[0]
+                        
+                    if input_scope == "Project" and len(ids) > 0:
+                        if scope == "Scenario":
+                            pid = self.scenarios(sid=121).project.pid
+                        else:
+                            pid = ids
+                        check_args += ["--pid=%d" % pid]
+                    
+                    if input_scope == "Scenario" and len(ids) > 0:               
+                        check_args += ["--sid=%d" % ids]
                 
                 self.session._Session__call_console(check_args)
                 input_datasheet = pd.read_csv(tempfile_path)
+                col_id = input_datasheet[
+                    input_datasheet.Name == col_id][col].values[0]
                 # TODO: subset to find correct column / ID
             
             finally:
                 if os.path.exists(tempfile_path):
                     os.remove(tempfile_path)
+                self.__datasheets = None
             
             # If all checks pass, then add filter_column to args
-            args += ["--filtercol=%s" % col + "=" + col_id]
+            args += ["--filtercol=%s" % col + "=" + str(col_id)]
         
         if name is None:
             
