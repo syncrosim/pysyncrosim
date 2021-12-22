@@ -824,7 +824,8 @@ class Library(object):
             finally:
                 shutil.rmtree(temp_folder, ignore_errors=True)
             
-    def run(self, scenarios=None, project=None, jobs=1):
+    def run(self, scenarios=None, project=None, jobs=1,
+            copy_external_inputs=False):
         """
         Runs a list of Scenario objects.
 
@@ -837,6 +838,11 @@ class Library(object):
             SyncroSim Project instance, name of Project, or Project ID.
         jobs : Int, optional
             Number of multiprocessors to use. The default is 1.
+        copy_external_inputs : Logical, optional
+            If False, then a copy of external input files (e.g. GeoTIFF files)
+            is not created for each job. Otherwise, a copy of external inputs 
+            is created for each job. Applies only when jobs > 1. The default is
+            False.
 
         Returns
         -------
@@ -885,7 +891,8 @@ class Library(object):
             # Run all Scenarios in a Project
             result_list = [
                 scn.run(
-                    jobs=jobs) for scn in project.scenarios(summary=False)]
+                    jobs=jobs, copy_external_inputs=copy_external_inputs
+                    ) for scn in project.scenarios(summary=False)]
                     
         elif scenarios is not None:
                 
@@ -902,7 +909,9 @@ class Library(object):
             else:
                 scenario_list = scenarios
 
-            result_list = [scn.run(jobs=jobs) for scn in scenario_list]
+            result_list = [scn.run(
+                jobs=jobs, copy_external_inputs=copy_external_inputs
+                ) for scn in scenario_list]
             
         if len(result_list) == 1:
             return result_list[0]
