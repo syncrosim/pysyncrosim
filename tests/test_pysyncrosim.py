@@ -158,8 +158,10 @@ def test_library_scenarios():
     myLibrary = ps.library(name="Test", overwrite=True)
     myLibrary.projects(name="test")
     
-    with pytest.raises(TypeError, match="name must be a String"):
-        myLibrary.scenarios(name=1)
+    with pytest.raises(
+            TypeError, 
+            match="name must be a String, Integer, or List of these"):
+        myLibrary.scenarios(name=pd.DataFrame())
         
     with pytest.raises(
             TypeError,
@@ -181,16 +183,12 @@ def test_library_scenarios():
     with pytest.raises(TypeError, match="summary must be a Logical"):
         myLibrary.scenarios(summary="True")
         
-    with pytest.raises(
-            ValueError,
-            match="Scenario ID 1 does not match Scenario name test2"):
-        myLibrary.scenarios(name="test")
-        myLibrary.scenarios(name="test2", sid=1)
-        
     with pytest.raises(ValueError, match="Scenario ID 2 does not exist"):
         myLibrary.scenarios(sid=2)
         
     # Test scenarios method outputs
+    assert myLibrary.scenarios(name="test").name == "test"
+    assert myLibrary.scenarios(name="test2", sid=1).name == "test"
     assert isinstance(myLibrary.scenarios(name="test"), ps.Scenario)
     assert isinstance(myLibrary.scenarios(name="test", sid=1), ps.Scenario)
     assert isinstance(myLibrary.scenarios(), pd.DataFrame)
@@ -199,7 +197,8 @@ def test_library_scenarios():
     with pytest.raises(ValueError, match="More than one Project in Library"):
         myLibrary.scenarios(summary=False)
     
-    assert isinstance(myLibrary.scenarios(pid=1, summary=False), list)
+    assert isinstance(myLibrary.scenarios(), pd.DataFrame) 
+    assert isinstance(myLibrary.scenarios(pid=1, summary=False), ps.Scenario)
     assert len(myLibrary.scenarios(pid=1).columns) == 4
     assert len(myLibrary.scenarios(pid=1, optional=True).columns) == 11
     assert myLibrary.scenarios(name="test", overwrite=True).sid != 1
@@ -351,7 +350,7 @@ def test_library_run():
         myLibrary.run(jobs="1")
     
     runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", 1)
+                                      "Scenario", None, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
     myLibrary.save_datasheet("RunControl", runcontrol, "Scenario", 1)
@@ -424,8 +423,10 @@ def test_project_scenarios():
     myProject = myLibrary.projects(name="Definitions")
     
     # Test scenarios method
-    with pytest.raises(TypeError, match="name must be a String"):
-        myProject.scenarios(name=1)
+    with pytest.raises(
+            TypeError,
+            match="name must be a String, Integer, or List of these"):
+        myProject.scenarios(name=pd.DataFrame())
         
     with pytest.raises(TypeError, match="sid must be an Integer"):
         myProject.scenarios(sid="1")
@@ -666,10 +667,15 @@ def test_scenario_run_and_results():
     with pytest.raises(RuntimeError,
                        match="The data sheet does not exist"):
         myResultsScenario.datasheet_raster(datasheet="test", column="test")
-    
+        
     with pytest.raises(ValueError,
-                       match="column test does not exist in OutputDatasheet"):
-        myResultsScenario.datasheet_raster(datasheet="OutputDatasheet",
+                       match="No raster columns found in Datasheet"):
+        myResultsScenario.datasheet_raster(datasheet="OutputDatasheet")
+    
+    with pytest.raises(
+            ValueError,
+            match="Column test not found in Datasheet"):
+        myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
                                            column="test")
         
     with pytest.raises(

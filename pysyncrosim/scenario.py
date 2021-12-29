@@ -344,7 +344,7 @@ class Scenario(object):
     
 
     def datasheet_raster(self, datasheet, column=None, iteration=None,
-                          timestep=None, filter_column=None):
+                         timestep=None, filter_column=None):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
 
@@ -391,6 +391,9 @@ class Scenario(object):
         # Check that self is Results Scenario
         if self.is_result == "No":
             raise ValueError("Scenario must be a Results Scenario")
+            
+        # Check that Datasheet has package prefix
+        datasheet = self.library._Library__check_datasheet_name(datasheet)
         
         # Retrieve Datasheet as DataFrame
         d = self.datasheets(name = datasheet, filter_column = filter_column)
@@ -402,7 +405,7 @@ class Scenario(object):
         props = self.library.session._Session__call_console(args, decode=True,
                                                             csv=True)
         props = pd.read_csv(io.StringIO(props))
-        props["is_raster"] = props.Properties.str.contains("isRaster\^True")
+        props["is_raster"] = props.Properties.str.contains(r"isRaster\^True")
         
         if (props.is_raster == False).all():
             raise ValueError(
@@ -415,9 +418,9 @@ class Scenario(object):
                     "> 1 raster output column available, please specify.")
             column = props[props.is_raster == True].Name.values[0]
             
-        if (props.Name == column).any() is False:
+        if not (props.Name == column).any():
             raise ValueError(
-                f"Column {column} not found in Datasheet {datasheet}")
+               f"Column {column} not found in Datasheet {datasheet}")
             
         col_props = props[props.Name == column]
         

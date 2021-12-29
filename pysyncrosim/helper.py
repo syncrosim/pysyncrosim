@@ -103,7 +103,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         
         if base_temp in base_temps["Name"].values:
             args += ["--template=\"%s\"" % base_temp]
-        elif addon_temp in addon_temps["Name"].values:
+        elif addons is not None and addon_temp in addon_temps["Name"].values:
             args += ["--template=\"%s\"" % addons]
         else:
             raise ValueError(
