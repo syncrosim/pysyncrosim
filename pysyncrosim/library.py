@@ -569,7 +569,8 @@ class Library(object):
             if col not in ds_cols.Name.values:
                 raise ValueError(
                     f"filter column {col} not in Datasheet {name}")
-                
+               
+            tempfile_path = None
             try:
                 
                 col_id = int(col_id)
@@ -629,7 +630,7 @@ class Library(object):
                 # TODO: subset to find correct column / ID
             
             finally:
-                if os.path.exists(tempfile_path):
+                if tempfile_path is not None and os.path.exists(tempfile_path):
                     os.remove(tempfile_path)
                 self.__datasheets = None
             
