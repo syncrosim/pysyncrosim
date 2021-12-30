@@ -222,6 +222,9 @@ def test_library_datasheets():
         
     with pytest.raises(TypeError, match="optional must be a Logical"):
         myLibrary.datasheets(optional=[1, 2, 3])
+        
+    with pytest.raises(TypeError, match="filter_column must be a String"):
+        myLibrary.datasheets(filter_column=1)
     
     with pytest.raises(
             RuntimeError,
@@ -232,6 +235,11 @@ def test_library_datasheets():
             RuntimeError,
             match="The data sheet does not exist: stsim_test"):
         myLibrary.datasheets(name="test")
+        
+    with pytest.raises(
+            ValueError,
+            match="filter column Test not in Datasheet stsim_RunControl"):
+        myLibrary.datasheets(name="RunControl", filter_column="Test=1")
         
     # Test datasheets method outputs
     assert isinstance(myLibrary.datasheets(), pd.DataFrame)
@@ -572,7 +580,15 @@ def test_scenario_datasheets():
         summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myScenario.datasheets().columns) == 3
     assert len(myScenario.datasheets(optional=True).columns) == 6
-    
+    assert isinstance(myScenario.datasheets(
+        name="RunControl",
+        filter_column="MinimumIteration=1"), pd.DataFrame)
+    assert len(myScenario.datasheets(
+        name="RunControl",
+        filter_column="MinimumIteration=1") == 1)
+    assert myScenario.datasheets(
+        name="RunControl",
+        filter_column="MinimumIteration=2").empty    
     assert myScenario.datasheets(name="InputDatasheet").empty is False
     assert myScenario.datasheets(name="InputDatasheet", empty=True).empty
 

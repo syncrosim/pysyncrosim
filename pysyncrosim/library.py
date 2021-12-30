@@ -537,8 +537,14 @@ class Library(object):
             raise TypeError("optional must be a Logical")
         if not isinstance(empty, bool):
             raise TypeError("empty must be a Logical")
+        if not isinstance(filter_column, str) and filter_column is not None:
+            raise TypeError("filter_column must be a String")
+        if not isinstance(include_key, bool):
+            raise TypeError("include_key must be a Logical")
         
         self.__datasheets = None
+        
+        # TODO: Check if datasheet exists in desired scope
         
         # Initialize base arguments
         args = ["--export", "--lib=%s" % self.__location]
@@ -557,6 +563,7 @@ class Library(object):
          
         # Can only use filter_column arg if name of Datasheet is specified
         if (filter_column is not None) and (name is not None):
+            
             # Check if filter_column exists in Datasheet
             name = self.__check_datasheet_name(name)            
             col = filter_column.split("=")[0]
