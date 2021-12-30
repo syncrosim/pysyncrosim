@@ -48,7 +48,7 @@ class Library(object):
               optional=False, summary=True):
         Retrieves a Scenario or DataFrame of Scenarios in this Library.
     datasheets(name=None, summary=True, optional=False, empty=False,
-               scope="Library", *ids):
+               scope="Library", filter_column=None, *ids):
         Retrieves a DataFrame of Library Datasheets.
     delete(project=None, scenario=None, force=False):
         Deletes a SyncroSim class instance.
@@ -373,20 +373,23 @@ class Library(object):
                 
         
     def scenarios(self, name=None, project=None, sid=None, pid=None,
-                  overwrite=False, optional=False, summary=True):
+                  overwrite=False, optional=False, summary=None,
+                  results=False):
         """
         Retrieves a Scenario or DataFrame of Scenarios in this Library.
 
         Parameters
         ----------
-        name : String, optional
-            Scenario name. The default is None.
+        name : String, Int, or List of these, optional
+            Scenario name. If an integer is given, the value will be parsed as
+            as Scenario ID. The default is None.
         project : Project, String, or Int, optional
             Project the Scenario belongs to. If no Project is specified when
             creating a new Scenario, the "Definitions" default Project is used.
             The default is None.
-        sid : Int, optional
-            Scenario ID. The default is None.
+        sid : Int or List of Ints, optional
+            Scenario ID. If both name and sid are specified, the sid is used. 
+            The default is None.
         pid : Int, optional
             Project ID. The default is None.
         overwrite : Logical, optional
@@ -396,7 +399,9 @@ class Library(object):
         summary : Logical, optional
             When name and sid is None, if True, returns a DataFrame of 
             information on existing Scenarios. Otherwise returns a list of 
-            Scenario class instances. The default is True.
+            Scenario class instances.
+        results : Logical, optional
+            Return only a list of Results Scenarios. The default is False.
 
         Returns
         -------
@@ -409,159 +414,88 @@ class Library(object):
 
         """
         # Check types
-        if name is not None and not isinstance(name, str):
-            raise TypeError("name must be a String")            
+        if name is not None and not isinstance(name, str)\
+            and not isinstance(name, int)\
+                and not isinstance(name, list):
+            raise TypeError("name must be a String, Integer, or List of these")
+            
+        if isinstance(name, list) and isinstance(sid, list):
+            name = None
+            
+        if isinstance(name, list):
+           if not all(isinstance(item, int) for item in name)\
+               and not all(isinstance(item, str) for item in name):
+               raise TypeError("All values in name list must be either" + 
+                               " Strings or Integers")
+        elif name is not None:
+            name = [name]
+               
         if project is not None and project.__class__.__name__ != "Project":
             if not isinstance(project, str) and not isinstance(project, int):
                 raise TypeError(
                     "project must be Project instance, String, or Integer")
-        if sid is not None and not isinstance(
-                sid, int) and not isinstance(sid, np.int64):
-            raise TypeError("sid must be an Integer")
+                
+        if sid is not None and not isinstance(sid, int)\
+            and not isinstance(sid, np.int64)\
+                and not isinstance(sid, list):
+            raise TypeError("sid must be an Integer or List of Integers")
+            
+        if isinstance(sid, list):
+            if not all(isinstance(item, int) for item in sid):
+                raise TypeError("All values in sid list must be Integers")
+        elif sid is not None:
+            sid = [sid]
+                
         if pid is not None and not isinstance(
                 pid, int) and not isinstance(pid, np.int64):
             raise TypeError("pid must be an Integer")
+            
         if not isinstance(overwrite, bool):
             raise TypeError("overwrite must be a Logical")
+            
         if not isinstance(optional, bool):
             raise TypeError("optional must be a Logical")
-        if not isinstance(summary, bool):
-            raise TypeError("summary must be a Logical")
-        
-        # self.__init_scenarios(pid=pid)
-        
-        if project is None and pid is None:
-            self.__init_scenarios()
-            if sid is not None and self.__get_scenario(sid=sid).empty is False:
-                pid = self.__get_scenario(sid=sid)["Project ID"].item()
-                project = self.projects(pid=pid)
-            if name is not None and len(self.__get_scenario(name=name)) == 1:
-                pid = self.__get_scenario(name=name)["Project ID"].item()
-                project = self.projects(pid=pid)
-            elif self.__projects is None or self.__projects.empty:
-                project = self.projects(name = "Definitions")
-                pid = project.pid
-            elif len(self.__projects) == 1:
-                pid = self.__projects.ID.item()
-                project = self.projects(pid=pid)
-            # elif "Definitions" in self.__projects.Name.values:
-            #     pid = self.__projects[
-            #         self.__projects.Name == "Definitions"].ID.item()
-            #     project = self.projects(pid=pid)
+            
+        if not isinstance(summary, bool) and summary is not None:
+            raise TypeError("summary must be a Logical or None")
+            
+        if not isinstance(results, bool):
+            raise TypeError("results must be a Logical")
+          
+        # Set the summary argument
+        if summary is None:
+            if name is not None or sid is not None:
+                summary = False
             else:
-                # project = self.projects(name = "Definitions")
-                # pid = project.pid
-                raise ValueError("More than one Project in Library \
-                                  Please specify a Project")
-        elif isinstance(project, int) or isinstance(project, np.int64):
-            pid = project
-        elif isinstance(project, str):
-            pid = self.__projects[
-                self.__projects.Name == project].ID.item()
-        elif isinstance(project, ps.Project):
-            pid = project.pid
-            
-        if overwrite is True:
-            self.delete(project=project, scenario=name, force=True)
-                    
-        # Retrieve Scenario DataFrame
-        self.__init_scenarios(pid=pid)
+                summary = True
         
-        # If sid provided, check that sid exists
-        if sid is not None:
-            if self.__get_scenario(sid=sid).empty:
-                raise ValueError(f"Scenario ID {sid} does not exist")
-            elif name is not None and name != self.__get_scenario(
-                    sid=1).Name.item():
-                raise ValueError(
-                    f"Scenario ID {sid} does not match Scenario name {name}")
-        
-        s = self.__get_scenario(name=name, sid=sid)
-        
-        if s is None:
-            
-            # Retrieve DataFrame of available Scenarios
-            if summary is True:
-                
-                if optional is False:
-                    return self.__scenarios[['Scenario ID',
-                                             'Project ID',
-                                             'Name',
-                                             'Is Result']]
-                
-                elif name is not None:
-                    return self.__scenarios[self.__scenarios.Name == name]
-                elif sid is not None:
-                    return self.__scenarios[self.__scenarios[
-                        "Scenario ID"] == sid]
-                else:
-                    return self.__scenarios
-              
-            # Return list of Scenario objects    
-            if summary is False:
-                
-                s_summary = self.__scenarios
-                s_summary = s_summary[s_summary["Is Result"] == "No"]
-                
-                if not isinstance(project, ps.Project):
-                    project = self.projects(pid=pid) 
-                                
-                scn_list = []
-                
-                for i in range(0, len(s_summary)):
-                    
-                    scn = ps.Scenario(s_summary["Scenario ID"].loc[i],
-                                      s_summary["Name"].loc[i],
-                                      project, self)
-                    
-                    scn_list.append(scn)
-    
-                return scn_list                
-        
-        
-        # Create a Scenario
-        if s.empty:
-            
-            if isinstance(project, int):
-                pid = project
-            elif isinstance(project, str):
-                self.__init_projects()
-                p = self.__get_project(name=project)
-                pid = p["ID"].values[0]
-            elif isinstance(project, ps.Project):
-                pid = project.pid
-             
-            # Create Scenario using console    
-            args = ["--create", "--scenario", "--pid=%d" % pid,
-                    "--lib=%s" % self.__location, "--name=%s" % name]
-            self.session._Session__call_console(args)
-            
-            # Reset Scenarios
-            self.__scenarios = None
-            self.__init_scenarios()
-            s = self.__get_scenario(name=name, sid=sid)
-            
-            if not isinstance(project, ps.Project):
-                project = self.projects(pid=pid)
-            
-            return ps.Scenario(s["Scenario ID"].values[0],
-                               s["Name"].values[0], project, self)
-        
-        # Open a Scenario
+        if (sid is not None and len(sid) == 1)\
+            and (name is not None and len(name) == 1):
+                print("Both Scenario ID and name specified, using Scenario ID")
+                output = self.__extract_scenario(None, project, sid[0], pid,
+                                                 overwrite, optional, summary,
+                                                 results)
+        elif sid is not None:
+            output = [self.__extract_scenario(
+                name, project, s, pid, overwrite, optional, summary, results
+                ) for s in sid]
+        elif name is not None:
+            output = [self.__extract_scenario(
+                n, project, sid, pid, overwrite, optional, summary, results
+                ) for n in name]
         else:
-                            
-            # Retrieve the name of a Scenario using only the sid
-            pid = s["Project ID"].values[0].tolist()
-
-            if not isinstance(project, ps.Project):
-                project = self.projects(pid=pid)
-
-            sid = s["Scenario ID"].values[0].tolist()
-            
-            return ps.Scenario(sid, s["Name"].values[0], project, self)
+            output = self.__extract_scenario(None, project, None, pid,
+                                             overwrite, optional, summary,
+                                             results)
+        if isinstance(output, list) and len(output) == 1:
+            return output[0]
+        else:
+            return output
+        
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   scope="Library", *ids):
+                   scope="Library", filter_column=None, include_key=False, 
+                   *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -579,6 +513,12 @@ class Library(object):
         scope : String, optional
             Datasheet scope. Options include "Library", "Project", or 
             "Scenario". The default is "Library".
+        filter_column : String
+            The column and value to filter the output Datasheet by 
+            (e.g. "TransitionGroupID=20"). The default is None.
+        include_key : Logical, optional
+            Whether to include the primary key of the Datasheet, corresponding
+            to the SQL database. Default is False.
 
         Returns
         -------
@@ -597,8 +537,14 @@ class Library(object):
             raise TypeError("optional must be a Logical")
         if not isinstance(empty, bool):
             raise TypeError("empty must be a Logical")
+        if not isinstance(filter_column, str) and filter_column is not None:
+            raise TypeError("filter_column must be a String")
+        if not isinstance(include_key, bool):
+            raise TypeError("include_key must be a Logical")
         
         self.__datasheets = None
+        
+        # TODO: Check if datasheet exists in desired scope
         
         # Initialize base arguments
         args = ["--export", "--lib=%s" % self.__location]
@@ -609,8 +555,94 @@ class Library(object):
         if scope == "Scenario" and len(ids) > 0:               
             args += ["--sid=%d" % ids]
             
-        if empty is True:
+        if empty:
             args += ["--schemaonly"]
+            
+        if include_key:
+            args += ["--includepk"]
+         
+        # Can only use filter_column arg if name of Datasheet is specified
+        if (filter_column is not None) and (name is not None):
+            
+            # Check if filter_column exists in Datasheet
+            name = self.__check_datasheet_name(name)            
+            col = filter_column.split("=")[0]
+            col_id = filter_column.split("=")[1]
+            check_args = ["--list", "--columns",
+                          "--lib=%s" % self.location, 
+                          "--sheet=%s" % name]
+            ds_cols = self.__console_to_csv(check_args)
+            
+            if col not in ds_cols.Name.values:
+                raise ValueError(
+                    f"filter column {col} not in Datasheet {name}")
+               
+            tempfile_path = None
+            try:
+                
+                col_id = int(col_id)
+                
+            except ValueError:
+                    
+                # Initialize Datasheets summary
+                # TODO: find out why Library and project scoped datasheets not showing up
+                self.__init_datasheets(scope=scope, summary=True)
+                
+                ds_row = self.__datasheets[self.__datasheets.Name == name]
+                
+                if ds_row["Is Output"].values[0] == "Yes":
+                    input_sheet_name = ds_cols[
+                        ds_cols.Name == col].Formula1.values[0]
+                else:
+                    input_sheet_name = name
+                
+                tempfile_path = os.path.join(self.location + ".temp",
+                                             "temp.csv")
+                check_args = ["--export", "--lib=%s" % self.location,
+                              "--sheet=%s" % input_sheet_name, 
+                              "--file=%s" % tempfile_path, "--includepk",
+                              "--valsheets", "--extfilepaths", "--force"]
+                
+                # Check the scope of the input_sheet_name
+                scope_list = ["Project", "Scenario"]
+                
+                if (self.__datasheets.Name == input_sheet_name).any():
+                    
+                    input_scope = scope
+                    
+                    if input_scope == "Project" and len(ids) > 0:
+                        check_args += ["--pid=%d" % ids]
+                    
+                    if input_scope == "Scenario" and len(ids) > 0:               
+                        check_args += ["--sid=%d" % ids]
+                        
+                else:
+                    scope_list.remove(scope)
+                    input_scope = scope_list[0]
+                        
+                    if input_scope == "Project" and len(ids) > 0:
+                        if scope == "Scenario":
+                            pid = self.scenarios(sid=121).project.pid
+                        else:
+                            pid = ids
+                        check_args += ["--pid=%d" % pid]
+                    
+                    if input_scope == "Scenario" and len(ids) > 0:               
+                        check_args += ["--sid=%d" % ids]
+                
+                self.session._Session__call_console(check_args)
+                input_datasheet = pd.read_csv(tempfile_path)
+                col_id = input_datasheet[
+                    input_datasheet.Name == col_id][col].values[0]
+                # TODO: subset to find correct column / ID
+            
+            finally:
+                if tempfile_path is not None and os.path.exists(tempfile_path):
+                    os.remove(tempfile_path)
+                self.__datasheets = None
+            
+            # If all checks pass, then add filter_column to args
+            args += ["--filtercol=%s" % col + "=" + str(col_id)]
         
         if name is None:
             
@@ -633,7 +665,7 @@ class Library(object):
                 
                 # Add arguments
                 args += ["--sheet"]
-                            
+                
                 for ds in d_summary["Name"]:
                     args[-1] = "--sheet=%s" % ds
                     self.__datasheets = None
@@ -646,9 +678,7 @@ class Library(object):
         if name is not None:
             
             # If package is not included in name, add it
-            if name.startswith(self.package) is False:
-                if name.startswith("core") is False:
-                    name = self.package + "_" + name
+            name = self.__check_datasheet_name(name)
             
             # Add arguments
             args += ["--sheet=%s" % name] 
@@ -810,7 +840,8 @@ class Library(object):
             finally:
                 shutil.rmtree(temp_folder, ignore_errors=True)
             
-    def run(self, scenarios=None, project=None, jobs=1):
+    def run(self, scenarios=None, project=None, jobs=1,
+            copy_external_inputs=False):
         """
         Runs a list of Scenario objects.
 
@@ -823,6 +854,11 @@ class Library(object):
             SyncroSim Project instance, name of Project, or Project ID.
         jobs : Int, optional
             Number of multiprocessors to use. The default is 1.
+        copy_external_inputs : Logical, optional
+            If False, then a copy of external input files (e.g. GeoTIFF files)
+            is not created for each job. Otherwise, a copy of external inputs 
+            is created for each job. Applies only when jobs > 1. The default is
+            False.
 
         Returns
         -------
@@ -869,9 +905,15 @@ class Library(object):
                 project = self.projects(name=project)
                 
             # Run all Scenarios in a Project
+            scenarios = project.scenarios(summary=False)
+            
+            if not isinstance(scenarios, list):
+                scenarios = [scenarios]
+            
             result_list = [
                 scn.run(
-                    jobs=jobs) for scn in project.scenarios(summary=False)]
+                    jobs=jobs, copy_external_inputs=copy_external_inputs
+                    ) for scn in scenarios]
                     
         elif scenarios is not None:
                 
@@ -888,7 +930,9 @@ class Library(object):
             else:
                 scenario_list = scenarios
 
-            result_list = [scn.run(jobs=jobs) for scn in scenario_list]
+            result_list = [scn.run(
+                jobs=jobs, copy_external_inputs=copy_external_inputs
+                ) for scn in scenario_list]
             
         if len(result_list) == 1:
             return result_list[0]
@@ -1062,7 +1106,14 @@ class Library(object):
             if summary == "CORE":
                 args = ["--list", "--datasheets", "--lib=%s" % self.__location,
                         "--scope=%s" % scope, "--includesys"]
-            self.__datasheets = self.__console_to_csv(args)       
+            self.__datasheets = self.__console_to_csv(args)    
+            
+    def __check_datasheet_name(self, name):
+        # Appends package name to Datasheet name
+        if name.startswith(self.package) is False:
+            if name.startswith("core") is False:
+                name = self.package + "_" + name
+        return name
             
     def __get_project(self, name=None, pid=None):
         # Retrieves Project info from the name or ID
@@ -1081,6 +1132,153 @@ class Library(object):
             return self.__scenarios[self.__scenarios["Name"] == name]
         else:
             return self.__scenarios[self.__scenarios["Scenario ID"] == sid]
+        
+    def __extract_scenario(self, name, project, sid, pid, overwrite, optional,
+                           summary, results):
+        
+        # Find out if first argument is a Scenario ID
+        if isinstance(name, int):
+            
+            if sid is not None:
+                raise ValueError("Name is specified as a Scenario ID, but " + 
+                                 "sid is already given")
+                
+            sid = name
+            name = None
+        
+        # Find project if not specified
+        if summary is False:
+            if project is None and pid is None:
+                
+                self.__init_scenarios()
+                if sid is not None and self.__get_scenario(sid=sid).empty is False:
+                    pid = self.__get_scenario(sid=sid)["Project ID"].item()
+                    project = self.projects(pid=pid)
+                if name is not None and len(self.__get_scenario(name=name)) == 1:
+                    pid = self.__get_scenario(name=name)["Project ID"].item()
+                    project = self.projects(pid=pid)
+                elif self.__projects is None or self.__projects.empty:
+                    project = self.projects(name = "Definitions")
+                    pid = project.pid
+                elif len(self.__projects) == 1:
+                    pid = self.__projects.ID.item()
+                    project = self.projects(pid=pid)
+                else:
+                    raise ValueError("More than one Project in Library." + 
+                                     " Please specify a Project.")
+                    
+            elif isinstance(project, int) or isinstance(project, np.int64):
+                pid = project
+            elif isinstance(project, str):
+                pid = self.__projects[
+                    self.__projects.Name == project].ID.item()
+            elif isinstance(project, ps.Project):
+                pid = project.pid
+                
+            if overwrite is True:
+                self.delete(project=project, scenario=name, force=True)
+                    
+        # Retrieve Scenario DataFrame
+        self.__init_scenarios(pid=pid)
+        
+        # If sid provided, check that sid exists
+        if sid is not None:
+            
+            if self.__get_scenario(sid=sid).empty:
+                raise ValueError(f"Scenario ID {sid} does not exist")
+            elif name is not None and name != self.__get_scenario(
+                    sid=1).Name.item():
+                raise ValueError(
+                    f"Scenario ID {sid} does not match Scenario name {name}")
+        
+        s = self.__get_scenario(name=name, sid=sid)
+        
+        if (s is None) or (summary is True):
+            
+            # Retrieve DataFrame of available Scenarios
+            if summary:
+                
+                if optional is False:
+                    ds =  self.__scenarios[['Scenario ID',
+                                            'Project ID',
+                                            'Name',
+                                            'Is Result']]
+                else:
+                    ds = self.__scenarios
+                    
+                if results:
+                    ds = ds[ds["Is Result"] == "Yes"]
+                
+                if name is not None:
+                    return ds[ds.Name == name]
+                
+                if sid is not None:
+                    return ds[ds["Scenario ID"] == sid]
+                
+                return ds
+              
+            # Return list of Scenario objects    
+            if summary is False:
+                
+                s_summary = self.__scenarios
+                s_summary = s_summary[s_summary["Is Result"] == "No"]
+                
+                if not isinstance(project, ps.Project):
+                    project = self.projects(pid=pid) 
+                                
+                scn_list = []
+                
+                for i in range(0, len(s_summary)):
+                    
+                    scn = ps.Scenario(s_summary["Scenario ID"].loc[i],
+                                      s_summary["Name"].loc[i],
+                                      project, self)
+                    
+                    scn_list.append(scn)
+    
+                return scn_list                
+        
+        
+        # Create a Scenario
+        if s.empty:
+            
+            if isinstance(project, int):
+                pid = project
+            elif isinstance(project, str):
+                self.__init_projects()
+                p = self.__get_project(name=project)
+                pid = p["ID"].values[0]
+            elif isinstance(project, ps.Project):
+                pid = project.pid
+             
+            # Create Scenario using console    
+            args = ["--create", "--scenario", "--pid=%d" % pid,
+                    "--lib=%s" % self.__location, "--name=%s" % name]
+            self.session._Session__call_console(args)
+            
+            # Reset Scenarios
+            self.__scenarios = None
+            self.__init_scenarios()
+            s = self.__get_scenario(name=name, sid=sid)
+            
+            if not isinstance(project, ps.Project):
+                project = self.projects(pid=pid)
+            
+            return ps.Scenario(s["Scenario ID"].values[0],
+                               s["Name"].values[0], project, self)
+        
+        # Open a Scenario
+        else:
+                            
+            # Retrieve the name of a Scenario using only the sid
+            pid = s["Project ID"].values[0].tolist()
+
+            if not isinstance(project, ps.Project):
+                project = self.projects(pid=pid)
+
+            sid = s["Scenario ID"].values[0].tolist()
+            
+            return ps.Scenario(sid, s["Name"].values[0], project, self)
         
     def __console_to_csv(self, args, index_col=None):
         # Turns console output into a pd.DataFrame

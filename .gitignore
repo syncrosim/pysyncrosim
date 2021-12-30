@@ -135,10 +135,11 @@ dmypy.json
 *.ssim.output
 
 # VS code
-/.vs/
+.vs/
 
 # Rough work
 /examples/ML_digits_workflow.py
 pysyncrosim-1.0.0.tar.gz
 /examples/stsim_test.py
 /examples/helloworld_test.py
+/examples/mariposa_test.py
