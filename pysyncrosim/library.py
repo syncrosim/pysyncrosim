@@ -732,7 +732,7 @@ class Library(object):
         
         if project is None and scenario is None:
             
-            helper._delete_library(name = self.name, session=self.session,
+            helper._delete_library(name = self.location, session=self.session,
                                force=force)
         
         elif project is not None and scenario is None:
@@ -825,7 +825,7 @@ class Library(object):
                     raise RuntimeError(f"file path {fpath} does not exist")
 
                 # Specify import arguments
-                args = ["--import", "--lib=%s" % self.name,
+                args = ["--import", "--lib=%s" % self.location,
                         "--sheet=%s" % name, "--folder=%s" % temp_folder,
                         "--file=%s" % fpath]
 
