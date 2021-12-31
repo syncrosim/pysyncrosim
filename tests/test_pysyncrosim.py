@@ -365,15 +365,15 @@ def test_library_run():
     
     myLibrary.run()
     assert len(myLibrary.scenarios()) == 2
-    assert myLibrary.scenarios().iloc[1]["Is Result"] == "Yes"
+    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
     
     myLibrary.run(project=1)
     assert len(myLibrary.scenarios()) == 3
-    assert myLibrary.scenarios().iloc[2]["Is Result"] == "Yes"
+    assert myLibrary.scenarios().iloc[2]["IsResult"] == "Yes"
     
     myLibrary.run(project=1, scenarios=1)
     assert len(myLibrary.scenarios()) == 4     
-    assert myLibrary.scenarios().iloc[3]["Is Result"] == "Yes"
+    assert myLibrary.scenarios().iloc[3]["IsResult"] == "Yes"
     
     myLibrary.projects(name="New Project")
     with pytest.raises(
@@ -642,7 +642,7 @@ def test_scenario_run_and_results():
         
     myScenario.run(jobs=2)
     assert len(myLibrary.scenarios()) == 2 
-    assert myLibrary.scenarios().iloc[1]["Is Result"] == "Yes"
+    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
     
     # Test results
     with pytest.raises(TypeError, match="Scenario ID must be an Integer"):
@@ -652,8 +652,8 @@ def test_scenario_run_and_results():
         myScenario.results(sid=1)
         
     assert isinstance(myScenario.results(), pd.DataFrame)
-    assert (myScenario.results()["Is Result"] == "Yes").all()
-    res_sid = myLibrary.scenarios().iloc[1]["Scenario ID"].item()
+    assert (myScenario.results()["IsResult"] == "Yes").all()
+    res_sid = myLibrary.scenarios().iloc[1]["ScenarioID"].item()
     assert isinstance(myScenario.results(sid=res_sid), ps.Scenario) 
     
     # Test run_log

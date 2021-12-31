@@ -312,10 +312,10 @@ class Library(object):
         
         # If pid provided, check that pid exists
         if pid is not None:
-            if pid not in self.__projects["ID"].values:
+            if pid not in self.__projects["ProjectID"].values:
                 raise ValueError(f"Project ID {pid} does not exist")
             elif name is not None and name != self.__projects[
-                    self.__projects["ID"] == pid]["Name"].values[0]:
+                    self.__projects["ProjectID"] == pid]["Name"].values[0]:
                 raise ValueError(
                     f"Project ID {pid} does not match Project name {name}")
           
@@ -329,7 +329,7 @@ class Library(object):
                 if name is not None:
                     return self.__projects[self.__projects.Name == name]
                 if pid is not None:
-                    return self.__projects[self.__projects.ID == pid]
+                    return self.__projects[self.__projects.ProjectID == pid]
                 else:
                     return self.__projects
                 
@@ -339,7 +339,7 @@ class Library(object):
                 
                 for i in range(0, len(self.__projects)):
                     
-                    proj = ps.Project(self.__projects["ID"].loc[i],
+                    proj = ps.Project(self.__projects["ProjectID"].loc[i],
                                       self.__projects["Name"].loc[i],
                                       self)
                     
@@ -360,14 +360,14 @@ class Library(object):
             p = self.__get_project(name, pid)
             
             # Convert np.int64 to native int
-            pid = p["ID"].values[0].tolist()
+            pid = p["ProjectID"].values[0].tolist()
             
             return ps.Project(pid, p["Name"].values[0], self)
                 
         else:
             
             # Convert np.int64 to native int
-            pid = p["ID"].values[0].tolist()
+            pid = p["ProjectID"].values[0].tolist()
              
             return ps.Project(pid, p["Name"].values[0], self)
                 
@@ -590,7 +590,7 @@ class Library(object):
                 
                 ds_row = self.__datasheets[self.__datasheets.Name == name]
                 
-                if ds_row["Is Output"].values[0] == "Yes":
+                if ds_row["IsOutput"].values[0] == "Yes":
                     input_sheet_name = ds_cols[
                         ds_cols.Name == col].Formula1.values[0]
                 else:
@@ -892,7 +892,8 @@ class Library(object):
             if project is None:
                 
                 if len(self.projects()) == 1:
-                    project = self.projects(pid=self.__projects.ID.item())
+                    project = self.projects(
+                        pid=self.__projects.ProjectID.item())
                     
                 else:
                     raise ValueError(
@@ -1161,7 +1162,7 @@ class Library(object):
                     project = self.projects(name = "Definitions")
                     pid = project.pid
                 elif len(self.__projects) == 1:
-                    pid = self.__projects.ID.item()
+                    pid = self.__projects.ProjectID.item()
                     project = self.projects(pid=pid)
                 else:
                     raise ValueError("More than one Project in Library." + 
@@ -1171,7 +1172,7 @@ class Library(object):
                 pid = project
             elif isinstance(project, str):
                 pid = self.__projects[
-                    self.__projects.Name == project].ID.item()
+                    self.__projects.Name == project].ProjectID.item()
             elif isinstance(project, ps.Project):
                 pid = project.pid
                 
@@ -1247,7 +1248,7 @@ class Library(object):
             elif isinstance(project, str):
                 self.__init_projects()
                 p = self.__get_project(name=project)
-                pid = p["ID"].values[0]
+                pid = p["ProjectID"].values[0]
             elif isinstance(project, ps.Project):
                 pid = project.pid
              

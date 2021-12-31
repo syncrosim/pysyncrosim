@@ -226,7 +226,7 @@ class Project(object):
             Return optional information. The default is False.
         summary : Logical, optional
             If set to False, then returns all Scenarios as SyncroSim
-            Scenario instances. The default is None.
+            Scenario instances.
         results : Logical, optional
             Return only a list of Results Scenarios. The default is False.
         
@@ -359,17 +359,17 @@ class Project(object):
         self.library._Library__init_projects()
         p = self.library._Library__get_project(name=name)
         
-        return ps.Project(p["ID"].values[0],
+        return ps.Project(p["ProjectID"].values[0],
                           p["Name"].values[0], self.library)
     
     def __init_info(self):
         # Set projects
         self.library.projects()
         proj_info = self.library._Library__projects
-        proj_info = proj_info[proj_info["ID"] == self.pid]
+        proj_info = proj_info[proj_info["ProjectID"] == self.pid]
         self.__owner = proj_info["Owner"].item()
-        self.__date_modified = proj_info["Last Modified"].item()
-        self.__readonly = proj_info["Read Only"].item()
+        self.__date_modified = proj_info["DateLastModified"].item()
+        self.__readonly = proj_info["IsReadOnly"].item()
         self.__info = proj_info.set_axis(
             ["Value"], axis=0, inplace=False
             ).T.rename_axis("Property").reset_index()
