@@ -76,7 +76,7 @@ class Library(object):
 
         Parameters
         ----------
-        location : String
+        loc : String
             Filepath to Library location on disk.
         session : Session
             pysyncrosim Session instance.
@@ -732,7 +732,7 @@ class Library(object):
         
         if project is None and scenario is None:
             
-            helper._delete_library(name = self.location, session=self.session,
+            helper._delete_library(name = self.name, session=self.session,
                                force=force)
         
         elif project is not None and scenario is None:
@@ -825,7 +825,7 @@ class Library(object):
                     raise RuntimeError(f"file path {fpath} does not exist")
 
                 # Specify import arguments
-                args = ["--import", "--lib=%s" % self.location,
+                args = ["--import", "--lib=%s" % self.name,
                         "--sheet=%s" % name, "--folder=%s" % temp_folder,
                         "--file=%s" % fpath]
 
@@ -1122,7 +1122,7 @@ class Library(object):
         if name is not None:
             return self.__projects[self.__projects["Name"] == name]
         else:
-            return self.__projects[self.__projects["ID"] == pid]
+            return self.__projects[self.__projects["ProjectID"] == pid]
             
     def __get_scenario(self, name=None, sid=None):
         # Retrieves Scenario info from the name or ID
@@ -1131,7 +1131,7 @@ class Library(object):
         if name is not None:
             return self.__scenarios[self.__scenarios["Name"] == name]
         else:
-            return self.__scenarios[self.__scenarios["Scenario ID"] == sid]
+            return self.__scenarios[self.__scenarios["ScenarioID"] == sid]
         
     def __extract_scenario(self, name, project, sid, pid, overwrite, optional,
                            summary, results):
@@ -1152,10 +1152,10 @@ class Library(object):
                 
                 self.__init_scenarios()
                 if sid is not None and self.__get_scenario(sid=sid).empty is False:
-                    pid = self.__get_scenario(sid=sid)["Project ID"].item()
+                    pid = self.__get_scenario(sid=sid)["ProjectID"].item()
                     project = self.projects(pid=pid)
                 if name is not None and len(self.__get_scenario(name=name)) == 1:
-                    pid = self.__get_scenario(name=name)["Project ID"].item()
+                    pid = self.__get_scenario(name=name)["ProjectID"].item()
                     project = self.projects(pid=pid)
                 elif self.__projects is None or self.__projects.empty:
                     project = self.projects(name = "Definitions")
@@ -1199,21 +1199,21 @@ class Library(object):
             if summary:
                 
                 if optional is False:
-                    ds =  self.__scenarios[['Scenario ID',
-                                            'Project ID',
+                    ds =  self.__scenarios[['ScenarioID',
+                                            'ProjectID',
                                             'Name',
-                                            'Is Result']]
+                                            'IsResult']]
                 else:
                     ds = self.__scenarios
                     
                 if results:
-                    ds = ds[ds["Is Result"] == "Yes"]
+                    ds = ds[ds["IsResult"] == "Yes"]
                 
                 if name is not None:
                     return ds[ds.Name == name]
                 
                 if sid is not None:
-                    return ds[ds["Scenario ID"] == sid]
+                    return ds[ds["ScenarioID"] == sid]
                 
                 return ds
               
@@ -1221,7 +1221,7 @@ class Library(object):
             if summary is False:
                 
                 s_summary = self.__scenarios
-                s_summary = s_summary[s_summary["Is Result"] == "No"]
+                s_summary = s_summary[s_summary["IsResult"] == "No"]
                 
                 if not isinstance(project, ps.Project):
                     project = self.projects(pid=pid) 
@@ -1230,7 +1230,7 @@ class Library(object):
                 
                 for i in range(0, len(s_summary)):
                     
-                    scn = ps.Scenario(s_summary["Scenario ID"].loc[i],
+                    scn = ps.Scenario(s_summary["ScenarioID"].loc[i],
                                       s_summary["Name"].loc[i],
                                       project, self)
                     
@@ -1264,19 +1264,19 @@ class Library(object):
             if not isinstance(project, ps.Project):
                 project = self.projects(pid=pid)
             
-            return ps.Scenario(s["Scenario ID"].values[0],
+            return ps.Scenario(s["ScenarioID"].values[0],
                                s["Name"].values[0], project, self)
         
         # Open a Scenario
         else:
                             
             # Retrieve the name of a Scenario using only the sid
-            pid = s["Project ID"].values[0].tolist()
+            pid = s["ProjectID"].values[0].tolist()
 
             if not isinstance(project, ps.Project):
                 project = self.projects(pid=pid)
 
-            sid = s["Scenario ID"].values[0].tolist()
+            sid = s["ScenarioID"].values[0].tolist()
             
             return ps.Scenario(sid, s["Name"].values[0], project, self)
         
