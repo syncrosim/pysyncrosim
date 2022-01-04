@@ -127,7 +127,10 @@ class Raster(object):
         
         prefix = os.path.splitext(os.path.basename(self.source))[0]
         
-        return prefix + ".it" + str(iteration) + ".ts" + str(timestep)
+        if prefix.endswith(f".it{iteration}.ts{timestep}"):
+            return prefix
+        else:
+            return prefix + ".it" + str(iteration) + ".ts" + str(timestep)
     
     def __init_dimensions(self):
         

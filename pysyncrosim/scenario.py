@@ -1,7 +1,8 @@
 import pysyncrosim as ps
 from pysyncrosim.environment import _environment
 import os
-# import pandas as pd
+import io
+import pandas as pd
 import numpy as np
 
 class Scenario(object):
@@ -40,7 +41,8 @@ class Scenario(object):
     
     Methods
     -------
-    datasheets(name=None, summary=True, optional=False, empty=False):
+    datasheets(name=None, summary=True, optional=False, empty=False,
+               filter_column=None):
         Retrieves a DataFrame of Scenario Datasheets.
     datasheet_raster(datasheet, column, iteration=None, timestep=None):
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
@@ -302,7 +304,8 @@ class Scenario(object):
         """
         return self.__parent_id
     
-    def datasheets(self, name=None, summary=True, optional=False, empty=False):
+    def datasheets(self, name=None, summary=True, optional=False, empty=False,
+                   filter_column=None, include_key=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -317,6 +320,12 @@ class Scenario(object):
             Return optional columns. The default is False.
         empty : Logical, optional
             If True, returns an empty Datasheet. The default is False.
+        filter_column : String
+            The column and value to filter the output Datasheet by 
+            (e.g. "TransitionGroupID=20"). The default is None.
+        include_key : Logical, optional
+            Whether to include the primary key of the Datasheet, corresponding
+            to the SQL database. Default is False.
 
         Returns
         -------
@@ -328,12 +337,14 @@ class Scenario(object):
         """
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
-                                                    empty, "Scenario", 
+                                                    empty, "Scenario",
+                                                    filter_column, include_key,
                                                     self.sid)
         return self.__datasheets
     
-    def datasheet_raster(self, datasheet, column, iteration=None,
-                          timestep=None):
+
+    def datasheet_raster(self, datasheet, column=None, iteration=None,
+                         timestep=None, filter_column=None):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
 
@@ -342,11 +353,15 @@ class Scenario(object):
         datasheet : String
             The name of a SyncroSim Datasheet containing raster data.
         column : String
-            The column in the Datasheet containing the raster data.
-        iteration : Int or List, optional
+            The column in the Datasheet containing the raster data. If no 
+            column selected, then datasheet_raster will attempt to find one.
+        iteration : Int, List, or Range, optional
             The iteration to subset by. The default is None.
-        timestep : Int or List, optional
+        timestep : Int, List, or Range, optional
             The timestep to subset by. The default is None.
+        filter_column : String
+            The column and value to filter the output rasters by 
+            (e.g. "TransitionGroupID=20"). The default is None.
 
         Returns
         -------
@@ -357,28 +372,69 @@ class Scenario(object):
         # Type Checks
         if not isinstance(datasheet, str):
             raise TypeError("datasheet must be a String")
-        if not isinstance(column, str):
+            
+        if column is not None and not isinstance(column, str):
             raise TypeError("column must be a String")
-        if iteration is not None and not isinstance(
-                iteration, int) and not isinstance(
-                    iteration, np.int64) and not isinstance(iteration, list):
-            raise TypeError("iteration must be an Integer or List")
-        if timestep is not None and not isinstance(
-                timestep, int) and not isinstance(
-                    timestep, np.int64) and not isinstance(
-                        timestep, list):
-            raise TypeError("timestep must be an Integer or List")
+            
+        if iteration is not None and not isinstance(iteration, int)\
+            and not isinstance(iteration, np.int64)\
+                and not isinstance(iteration, list)\
+                    and not isinstance(iteration, range):
+            raise TypeError("iteration must be an Integer, List, or Range")
+            
+        if timestep is not None and not isinstance(timestep, int)\
+            and not isinstance(timestep, np.int64)\
+                and not isinstance(timestep, list)\
+                    and not isinstance(timestep, range):
+            raise TypeError("timestep must be an Integer, List, or Range")
         
         # Check that self is Results Scenario
         if self.is_result == "No":
             raise ValueError("Scenario must be a Results Scenario")
+            
+        # Check that Datasheet has package prefix
+        datasheet = self.library._Library__check_datasheet_name(datasheet)
         
         # Retrieve Datasheet as DataFrame
-        d = self.datasheets(name = datasheet)
+        d = self.datasheets(name = datasheet, filter_column = filter_column)
         
-        # Check that column exists in Datasheet
-        if column not in d.columns:
-            raise ValueError(f"column {column} does not exist in {datasheet}")
+        # Check if column is raster column
+        args = ["--list", "--columns", "--allprops",
+                "--sheet=%s" % datasheet, "--csv", 
+                "--lib=%s" % self.library.location]
+        props = self.library.session._Session__call_console(args, decode=True,
+                                                            csv=True)
+        props = pd.read_csv(io.StringIO(props))
+        props["is_raster"] = props.Properties.str.contains(r"isRaster\^True")
+        
+        if (props.is_raster == False).all():
+            raise ValueError(
+                f"No raster columns found in Datasheet {datasheet}")
+          
+        # If no raster column specified, find the raster column
+        if column is None:
+            if len(props[props.is_raster == True]) > 1:
+                raise ValueError(
+                    "> 1 raster output column available, please specify.")
+            column = props[props.is_raster == True].Name.values[0]
+            
+        if not (props.Name == column).any():
+            raise ValueError(
+               f"Column {column} not found in Datasheet {datasheet}")
+            
+        col_props = props[props.Name == column]
+        
+        if col_props.is_raster is False:
+            raise ValueError(f"Column {column} is not a raster column")
+            
+        # TODO: Get band column if it exists
+        # if col_props.Properties.str.contains("bandColumn").any():
+        #     prop_split = col_props.Properties.str.split("!").values[0]
+        #     band_column = [b for b in prop_split if b.startswith("bandColumn")]
+        #     col_props["band_column"] = band_column[0].split("^")[1]
+        
+        if isinstance(iteration, range):
+            iteration = list(iteration)
         
         if iteration is not None:
             if isinstance(iteration, int):
@@ -400,6 +456,9 @@ class Scenario(object):
                 d = d.loc[d["Iteration"].isin(iteration)]
                 
             d = d.reset_index()
+            
+        if isinstance(timestep, range):
+            timestep = list(timestep)
             
         if timestep is not None:
             if isinstance(timestep, int):
@@ -426,39 +485,58 @@ class Scenario(object):
         # Create empty list to store raster objects
         raster_list = []
         
-        # Find folder with raster data
+        # Search for the following raster tifs in all possible output places
+        raster_tifs = d[column].values
+        rpaths = []
+        
+        # Find folder with raster data - search in input, temp, and output
         if self.__env is None:
-            try:
-                # fix this
-                fpath = os.path.join(os.getcwd(), self.library.name + ".temp",
-                                     os.listdir(self.library.name + ".temp")[0])
-            except IndexError:
+            
+            for folder in [".input", ".temp", ".output"]:
                 
-                f_base_path = os.path.join(os.getcwd(), self.library.name + ".output")
-                fpath = self.__find_output_fpath(f_base_path, datasheet)
-
+                if folder != ".temp":
+                    lib_dir = self.__find_output_fpath(
+                        self.library.location + folder, datasheet)
+                else:
+                    lib_dir = self.library.location + folder
+                
+                for raster_tif in raster_tifs:
+                    for root, dirs, files in os.walk(lib_dir):
+                        if raster_tif in files:
+                            rpaths.append(os.path.join(root, raster_tif))
+                        else:
+                            break
+                        
+                    if len(rpaths) == 0:
+                        break
+                    
+                if len(rpaths) !=0:
+                    break
+                
         else:
             e = _environment()
             f_base_path = e.input_directory.item()
             fpath = self.__find_output_fpath(f_base_path, datasheet)
+            
+            for i in range(0, len(d)):
+  
+                # Index column with raster data
+                rpaths = os.path.join(fpath, d[column].loc[i])
         
         # Iterate through all raster files in Datasheet
-        for i in range(0, len(d)):
-            
-            # Index column with raster data
-            rpath = os.path.join(fpath, d[column].loc[i])
+        for i in range(0, len(rpaths)):
             
             # Open and append each raster from the Datasheet
             if "Iteration" in d.columns:
                 if "Timestep" in d.columns:
-                    raster = ps.Raster(rpath, iteration = d["Iteration"].loc[i],
+                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i],
                                        timestep = d["Timestep"].loc[i])
                 else:
-                    raster = ps.Raster(rpath, iteration = d["Iteration"].loc[i])
+                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i])
             elif "Timestep" in d.columns:
-                raster = ps.Raster(rpath, timestep=d["Timestep"].loc[i])
+                raster = ps.Raster(rpaths[i], timestep=d["Timestep"].loc[i])
             else:
-                raster = ps.Raster(rpath)
+                raster = ps.Raster(rpaths[i])
 
             raster_list.append(raster)
             
@@ -738,7 +816,7 @@ class Scenario(object):
         # Reset Scenario information
         self.library._Library__init_scenarios()
         
-    def run(self, jobs=1):
+    def run(self, jobs=1, copy_external_inputs=False):
         """
         Runs a Scenario.
 
@@ -747,6 +825,11 @@ class Scenario(object):
         jobs : Int, optional
             Number of multiprocessors to use when running a Scenario. The 
             default is 1.
+        copy_external_inputs : Logical, optional
+            If False, then a copy of external input files (e.g. GeoTIFF files)
+            is not created for each job. Otherwise, a copy of external inputs 
+            is created for each job. Applies only when jobs > 1. The default is
+            False.
 
         Returns
         -------
@@ -760,6 +843,10 @@ class Scenario(object):
         # Runs the scenario
         args = ["--run", "--lib=%s" % self.library.location,
                 "--sid=%d" % self.__sid, "--jobs=%d" % jobs]
+        
+        if jobs > 1 and copy_external_inputs is False:
+            args += ["--noextfiles"]
+            
         self.library.session._Session__call_console(args)
         
         # Reset Project Scenarios

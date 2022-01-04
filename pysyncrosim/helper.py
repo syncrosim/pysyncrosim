@@ -73,7 +73,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         raise ValueError(f"Path to Library does not exist: {name}")
     
     args = ["--create", "--library", "--package=%s" % package,
-            "--name=\"%s\"" % name]
+            "--name=\"%s\"" % loc]
     
     if overwrite is True:
         
@@ -84,14 +84,27 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         if template.endswith(".ssim") is True:
             template = os.path.splitext(template)[0]
         
-        # Check if template exists
-        temp_args = ["--list", "--templates", "--package=%s" % package]
-        temps = session._Session__call_console(temp_args, decode=True,
-                                               csv=True)
-        temps = pd.read_csv(io.StringIO(temps))
+        # Check if template exists in base package
+        base_temp_args = ["--list", "--templates", "--package=%s" % package]
+        base_temps = session._Session__call_console(base_temp_args,
+                                                    decode=True,
+                                                    csv=True)
+        base_temps = pd.read_csv(io.StringIO(base_temps))
+        base_temp = package + "_" + template
         
-        if template in temps["Name"].values:
-            args += ["--template=\"%s\"" % template]
+        # TODO: check for case when more than one addon package is included
+        if addons is not None:
+            addon_temp_args = ["--list", "--templates", "--package=%s" % addons]
+            addon_temps = session._Session__call_console(addon_temp_args,
+                                                        decode=True,
+                                                        csv=True)
+            addon_temps = pd.read_csv(io.StringIO(addon_temps))
+            addon_temp = addons + "_" + template
+        
+        if base_temp in base_temps["Name"].values:
+            args += ["--template=\"%s\"" % base_temp]
+        elif addons is not None and addon_temp in addon_temps["Name"].values:
+            args += ["--template=\"%s\"" % addons]
         else:
             raise ValueError(
                 f"Template {template} does not exist in package {package}")
@@ -149,7 +162,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
     finally:
         
         if library_up_to_date is True:
-            return ps.Library(loc=loc, session=session)
+            return ps.Library(location=loc, session=session)
 
 def _delete_library(name, session=None, force=False):
     """
