@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name="pysyncrosim",
-      version="1.0.1",
+      version="1.0.2",
       description="Python interface to SyncroSim",
       author="ApexRMS",
       author_email="info@apexrms.com",
