@@ -127,3 +127,5 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+autodoc_mock_imports = ['numpy', 'pandas', 'os', 're', 'io', 'tempfile',
+                        'shutil', 'rasterio', 'subprocess']
