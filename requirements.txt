@@ -1,9 +1,4 @@
 numpy
 pandas
-os
-re
-io
-tempfile
 shutil
 rasterio
-subprocess
