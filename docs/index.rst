@@ -17,6 +17,7 @@ pysyncrosim is the Python interface to `SyncroSim`_
    install
    usage
    support
+   modules
 
 
 Indices and tables
@@ -24,3 +25,4 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
+* :ref:`search`

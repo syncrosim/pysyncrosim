@@ -71,7 +71,7 @@ You should now see that "(base)" has been replaced with "(myenv)" at the beginni
 	conda install git pip
 
 	# Install pysyncrosim
-	pip install git+https://github.com/syncrosim/pysyncrosim
+	pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.1.tar.gz
 
 pysyncrosim should now be installed and ready to use!
 
@@ -106,4 +106,4 @@ Before installing pysyncrosim, you must install ``GDAL`` and ``rasterio`` separa
 	pip install pandas
 
 	# Install pysyncrosim
-	pip install git+https://github.com/syncrosim/pysyncrosim
+	pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.1.tar.gz
