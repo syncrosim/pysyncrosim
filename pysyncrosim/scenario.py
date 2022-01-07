@@ -535,6 +535,7 @@ class Scenario(object):
         # Return only filepaths to rasters if path_only is True
         if path_only:
             return rpaths
+
         
         # Iterate through all raster files in Datasheet
         for i in range(0, len(rpaths)):

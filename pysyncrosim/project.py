@@ -226,7 +226,8 @@ class Project(object):
             Return optional information. The default is False.
         summary : Logical, optional
             If set to False, then returns all Scenarios as SyncroSim
-            Scenario instances.
+            Scenario instances. The default is None.
+
         results : Logical, optional
             Return only a list of Results Scenarios. The default is False.
         
