@@ -63,7 +63,7 @@ conda install rasterio
 conda install git pip
 
 # Install pysyncrosim
-pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.1.tar.gz
+pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.2.tar.gz
 ```
 
 `pysyncrosim` should now be installed and ready to use!
@@ -90,7 +90,7 @@ pip install numpy
 pip install pandas
 
 # Install pysyncrosim
-pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.1.tar.gz
+pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.2.tar.gz
 ```
 
 ## Usage
