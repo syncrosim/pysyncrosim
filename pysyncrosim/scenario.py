@@ -42,9 +42,10 @@ class Scenario(object):
     Methods
     -------
     datasheets(name=None, summary=True, optional=False, empty=False,
-               filter_column=None):
+               filter_column=None, include_key=False):
         Retrieves a DataFrame of Scenario Datasheets.
-    datasheet_raster(datasheet, column, iteration=None, timestep=None):
+    datasheet_rasters(datasheet, column, iteration=None, timestep=None,
+                      filter_column=None, path_only=False):
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
     save_datasheet(name, data):
         Saves a pandas DataFrame as a SyncroSim Datasheet.
@@ -59,7 +60,7 @@ class Scenario(object):
     merge_dependencies(value=None):
         Retrieves or sets whether or not a Scenario is configured to merge
         dependencies at run time.
-    run(jobs=1):
+    run(jobs=1, copy_external_inputs=False):
         Runs a Scenario.
     run_log():
         Returns a run log for a Results Scenario.
@@ -87,7 +88,7 @@ class Scenario(object):
             self.__sid = int(e.scenario_id.item())
             temp_df = self.__library.scenarios()
             self.__name = temp_df[
-                temp_df["Scenario ID"] == self.__sid]["Name"].item()
+                temp_df["ScenarioID"] == self.__sid]["Name"].item()
             # revisit these!!
             self.__env = e.transfer_directory.item()
             self.__temp = e.temp_directory
@@ -305,7 +306,7 @@ class Scenario(object):
         return self.__parent_id
     
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -338,13 +339,15 @@ class Scenario(object):
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
                                                     empty, "Scenario",
-                                                    filter_column, include_key,
+                                                    filter_column, 
+                                                    filter_value, include_key,
                                                     self.sid)
         return self.__datasheets
     
 
-    def datasheet_raster(self, datasheet, column=None, iteration=None,
-                         timestep=None, filter_column=None):
+    def datasheet_rasters(self, datasheet, column=None, iteration=None,
+                         timestep=None, filter_column=None, filter_value=None,
+                         path_only=False):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
 
@@ -354,14 +357,19 @@ class Scenario(object):
             The name of a SyncroSim Datasheet containing raster data.
         column : String
             The column in the Datasheet containing the raster data. If no 
-            column selected, then datasheet_raster will attempt to find one.
+            column selected, then datasheet_rasters will attempt to find one.
         iteration : Int, List, or Range, optional
             The iteration to subset by. The default is None.
         timestep : Int, List, or Range, optional
             The timestep to subset by. The default is None.
         filter_column : String
-            The column and value to filter the output rasters by 
+            The column to filter the output rasters by 
             (e.g. "TransitionGroupID=20"). The default is None.
+        filter_value : String, Int, Logical
+            The value to filter the filter_column by. The default is None.
+        path_only : Logical
+            Instead of returning a Raster Class Instance, a filepath to the
+            raster is returned. The default is False.
 
         Returns
         -------
@@ -396,7 +404,8 @@ class Scenario(object):
         datasheet = self.library._Library__check_datasheet_name(datasheet)
         
         # Retrieve Datasheet as DataFrame
-        d = self.datasheets(name = datasheet, filter_column = filter_column)
+        d = self.datasheets(name = datasheet, filter_column = filter_column,
+                            filter_value = filter_value)
         
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",
@@ -523,6 +532,11 @@ class Scenario(object):
                 # Index column with raster data
                 rpaths = os.path.join(fpath, d[column].loc[i])
         
+        # Return only filepaths to rasters if path_only is True
+        if path_only:
+            return rpaths
+
+        
         # Iterate through all raster files in Datasheet
         for i in range(0, len(rpaths)):
             
@@ -613,7 +627,7 @@ class Scenario(object):
         self.library._Library__init_scenarios()
         s = self.library._Library__get_scenario(name=name)
         
-        return ps.Scenario(s["Scenario ID"].values[0],
+        return ps.Scenario(s["ScenarioID"].values[0],
                            s["Name"].values[0], self.project, self.library)
     
     def dependencies(self, dependency=None, remove=False, force=False):
@@ -667,12 +681,12 @@ class Scenario(object):
                     raise ValueError(
                         "dependency name not unique, use ID or Scenario")
                 else:
-                    d = d["Scenario ID"].item()
+                    d = d["ScenarioID"].item()
                 
             elif isinstance(d, int) or isinstance(d, np.int64):
                 # check if scenarios exists
                 d_name = self.library._Library__scenarios[
-                         self.library._Library__scenarios["Scenario ID"]==d
+                         self.library._Library__scenarios["ScenarioID"]==d
                          ].Name.item()
                 
             else:
@@ -754,7 +768,7 @@ class Scenario(object):
             scn_info = self.library._Library__scenarios
             return scn_info[
                 scn_info[
-                    "Scenario ID"] == self.sid]["Ignore Dependencies"].item()
+                    "ScenarioID"] == self.sid]["IgnoreDependencies"].item()
         elif isinstance(value, str):
             args = ["--setprop", "--lib=%s" % self.library.location,
                     "--ignoredeps='%s'" % value, "--sid=%d" % self.sid]
@@ -787,7 +801,7 @@ class Scenario(object):
         
         scn_info = self.library._Library__scenarios
         merge_dep_status =  scn_info[scn_info[
-                "Scenario ID"] == self.sid]["Merge Dependencies"].item()
+                "ScenarioID"] == self.sid]["MergeDependencies"].item()
         
         if value is None:
             return merge_dep_status
@@ -860,7 +874,7 @@ class Scenario(object):
         
         # Retrieve Results Scenario ID
         # Also resets scenarios and results info
-        result_id = self.results()["Scenario ID"].values[-1]
+        result_id = self.results()["ScenarioID"].values[-1]
         
         # Return Results Scenario
         result_scn = self.library.scenarios(project=self.project,
@@ -931,11 +945,11 @@ class Scenario(object):
         # Set Scenario information
         scn_info = self.library.scenarios(project=self.project.pid,
                                           optional=True)
-        scn_info = scn_info[scn_info["Scenario ID"] == self.sid]
+        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
         self.__owner = scn_info["Owner"].item()
-        self.__date_modified = scn_info["Last Modified"].item()
-        self.__readonly = scn_info["Read Only"].item()
-        self.__project_id = scn_info["Project ID"].item()
+        self.__date_modified = scn_info["DateLastModified"].item()
+        self.__readonly = scn_info["IsReadOnly"].item()
+        self.__project_id = scn_info["ProjectID"].item()
         self.__info = scn_info.set_axis(
             ["Value"], axis=0, inplace=False
             ).T.rename_axis("Property").reset_index()
@@ -949,15 +963,15 @@ class Scenario(object):
         
         # Find out if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["Scenario ID"] == self.sid]
-        return scn_info["Is Result"].values[0]
+        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        return scn_info["IsResult"].values[0]
     
     def __init_parent_id(self):
         
         # Find out parent ID if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["Scenario ID"] == self.sid]
-        parent_id = scn_info["Parent ID"].values[0]
+        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        parent_id = scn_info["ParentID"].values[0]
         if type(parent_id) == float:
             return int(parent_id)
         else:

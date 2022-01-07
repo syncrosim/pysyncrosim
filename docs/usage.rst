@@ -46,11 +46,12 @@ If using ``conda``, the ``spyder`` IDE is easy to install and straightforward to
 	.. _spatial_demo.py: https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py
 	.. _input-raster.tif: https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif
 
-.. image:: spyder.PNG
+.. figure:: spyder.PNG
 	:width: 800px
 	:align: center
 	:alt: alternate text
 
+|
 
 4. Open and run your pysyncrosim scripts from the left-hand window. You can run scripts line-by-line in ``spyder`` by selecting the line(s) you want to run and pressing F9.
 

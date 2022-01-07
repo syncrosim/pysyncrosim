@@ -154,7 +154,7 @@ myResultsScenario.datasheets(name = "OutputDatasheet").head()
 # =============================================================================
 
 # Get a raster 
-spatialRaster = myResultsScenario.datasheet_raster(
+spatialRaster = myResultsScenario.datasheet_rasters(
     datasheet = "IntermediateDatasheet",
     column = "OutputRasterFile",
     iteration = 3,
@@ -180,7 +180,7 @@ with rasterio.open(spatialRaster[0].source) as raster:
     rasterio.plot.show(raster)
 
 # Get multiple rasters in a list
-spatialRasters = myResultsScenario.datasheet_raster(
+spatialRasters = myResultsScenario.datasheet_rasters(
     datasheet = "helloworldSpatial_IntermediateDatasheet",
     column = "OutputRasterFile")
 
