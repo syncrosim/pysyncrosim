@@ -251,7 +251,7 @@ class Project(object):
         return self.__scenarios
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False):
         """
         Retrieves a DataFrame of Project Datasheets.
         
@@ -284,7 +284,8 @@ class Project(object):
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
                                                     empty, "Project",
-                                                    filter_column, include_key,
+                                                    filter_column, 
+                                                    filter_value, include_key,
                                                     self.pid)
         return self.__datasheets
     

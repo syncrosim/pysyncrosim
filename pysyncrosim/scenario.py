@@ -42,9 +42,10 @@ class Scenario(object):
     Methods
     -------
     datasheets(name=None, summary=True, optional=False, empty=False,
-               filter_column=None):
+               filter_column=None, include_key=False):
         Retrieves a DataFrame of Scenario Datasheets.
-    datasheet_raster(datasheet, column, iteration=None, timestep=None):
+    datasheet_rasters(datasheet, column, iteration=None, timestep=None,
+                      filter_column=None, path_only=False):
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
     save_datasheet(name, data):
         Saves a pandas DataFrame as a SyncroSim Datasheet.
@@ -59,7 +60,7 @@ class Scenario(object):
     merge_dependencies(value=None):
         Retrieves or sets whether or not a Scenario is configured to merge
         dependencies at run time.
-    run(jobs=1):
+    run(jobs=1, copy_external_inputs=False):
         Runs a Scenario.
     run_log():
         Returns a run log for a Results Scenario.
@@ -305,7 +306,7 @@ class Scenario(object):
         return self.__parent_id
     
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -338,13 +339,15 @@ class Scenario(object):
         
         self.__datasheets = self.library.datasheets(name, summary, optional,
                                                     empty, "Scenario",
-                                                    filter_column, include_key,
+                                                    filter_column, 
+                                                    filter_value, include_key,
                                                     self.sid)
         return self.__datasheets
     
 
-    def datasheet_raster(self, datasheet, column=None, iteration=None,
-                         timestep=None, filter_column=None):
+    def datasheet_rasters(self, datasheet, column=None, iteration=None,
+                         timestep=None, filter_column=None, filter_value=None,
+                         path_only=False):
         """
         Retrieves spatial data columns from one or more SyncroSim Datasheets.
 
@@ -354,14 +357,19 @@ class Scenario(object):
             The name of a SyncroSim Datasheet containing raster data.
         column : String
             The column in the Datasheet containing the raster data. If no 
-            column selected, then datasheet_raster will attempt to find one.
+            column selected, then datasheet_rasters will attempt to find one.
         iteration : Int, List, or Range, optional
             The iteration to subset by. The default is None.
         timestep : Int, List, or Range, optional
             The timestep to subset by. The default is None.
         filter_column : String
-            The column and value to filter the output rasters by 
+            The column to filter the output rasters by 
             (e.g. "TransitionGroupID=20"). The default is None.
+        filter_value : String, Int, Logical
+            The value to filter the filter_column by. The default is None.
+        path_only : Logical
+            Instead of returning a Raster Class Instance, a filepath to the
+            raster is returned. The default is False.
 
         Returns
         -------
@@ -396,7 +404,8 @@ class Scenario(object):
         datasheet = self.library._Library__check_datasheet_name(datasheet)
         
         # Retrieve Datasheet as DataFrame
-        d = self.datasheets(name = datasheet, filter_column = filter_column)
+        d = self.datasheets(name = datasheet, filter_column = filter_column,
+                            filter_value = filter_value)
         
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",
@@ -522,6 +531,10 @@ class Scenario(object):
   
                 # Index column with raster data
                 rpaths = os.path.join(fpath, d[column].loc[i])
+        
+        # Return only filepaths to rasters if path_only is True
+        if path_only:
+            return rpaths
         
         # Iterate through all raster files in Datasheet
         for i in range(0, len(rpaths)):

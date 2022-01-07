@@ -239,7 +239,8 @@ def test_library_datasheets():
     with pytest.raises(
             ValueError,
             match="filter column Test not in Datasheet stsim_RunControl"):
-        myLibrary.datasheets(name="RunControl", filter_column="Test=1")
+        myLibrary.datasheets(name="RunControl", filter_column="Test",
+                             filter_value=1)
         
     # Test datasheets method outputs
     assert isinstance(myLibrary.datasheets(), pd.DataFrame)
@@ -358,7 +359,7 @@ def test_library_run():
         myLibrary.run(jobs="1")
     
     runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", None, False, 1)
+                                      "Scenario", None, None, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
     myLibrary.save_datasheet("RunControl", runcontrol, "Scenario", 1)
@@ -582,13 +583,16 @@ def test_scenario_datasheets():
     assert len(myScenario.datasheets(optional=True).columns) == 6
     assert isinstance(myScenario.datasheets(
         name="RunControl",
-        filter_column="MinimumIteration=1"), pd.DataFrame)
+        filter_column="MinimumIteration", 
+        filter_value="1"), pd.DataFrame)
     assert len(myScenario.datasheets(
         name="RunControl",
-        filter_column="MinimumIteration=1") == 1)
+        filter_column="MinimumIteration",
+        filter_value="1") == 1)
     assert myScenario.datasheets(
         name="RunControl",
-        filter_column="MinimumIteration=2").empty    
+        filter_column="MinimumIteration",
+        filter_value="2").empty    
     assert myScenario.datasheets(name="InputDatasheet").empty is False
     assert myScenario.datasheets(name="InputDatasheet", empty=True).empty
 
@@ -661,86 +665,120 @@ def test_scenario_run_and_results():
     assert isinstance(myResultsScenario.run_log(), pd.DataFrame)
     assert not isinstance(myScenario.run_log(), pd.DataFrame)
     
-    # Test datasheet_raster
+    # Test datasheet_rasters
     with pytest.raises(TypeError, match="datasheet must be a String"):
-        myResultsScenario.datasheet_raster(datasheet=1, column="test")
+        myResultsScenario.datasheet_rasters(datasheet=1, column="test")
         
     with pytest.raises(TypeError, match="column must be a String"):
-        myResultsScenario.datasheet_raster(datasheet="test", column=1)
+        myResultsScenario.datasheet_rasters(datasheet="test", column=1)
         
     with pytest.raises(TypeError, match="iteration must be an Integer"):
-        myResultsScenario.datasheet_raster(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
                                            iteration="test")
         
     with pytest.raises(TypeError, match="timestep must be an Integer"):
-        myResultsScenario.datasheet_raster(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
                                            timestep="test")
         
     with pytest.raises(ValueError,
                        match="Scenario must be a Results Scenario"):
-        myScenario.datasheet_raster(datasheet="test", column="test")
+        myScenario.datasheet_rasters(datasheet="test", column="test")
         
     with pytest.raises(RuntimeError,
                        match="The data sheet does not exist"):
-        myResultsScenario.datasheet_raster(datasheet="test", column="test")
+        myResultsScenario.datasheet_rasters(datasheet="test", column="test")
         
     with pytest.raises(ValueError,
                        match="No raster columns found in Datasheet"):
-        myResultsScenario.datasheet_raster(datasheet="OutputDatasheet")
+        myResultsScenario.datasheet_rasters(datasheet="OutputDatasheet")
     
     with pytest.raises(
             ValueError,
             match="Column test not found in Datasheet"):
-        myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+        myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                            column="test")
         
     with pytest.raises(
             ValueError, 
             match="Specified iteration above range of plausible values"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           iteration=3) 
        
-    with pytest.raises( ValueError, match="iteration cannot be below 1"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+    with pytest.raises(ValueError, match="iteration cannot be below 1"):
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           iteration=0)
        
-    with pytest.raises( ValueError,
+    with pytest.raises(ValueError,
                        match="Some iteration values outside of range"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           iteration=[1, 2, 3])  
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep above range of plausible values"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           timestep=3) 
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep below range of plausible values"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           timestep=0) 
        
-    with pytest.raises( ValueError,
+    with pytest.raises(ValueError,
                        match="Some timestep values outside of range"):
-       myResultsScenario.datasheet_raster(datasheet="IntermediateDatasheet",
+       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
                                           column="OutputRasterFile",
                                           timestep=[1, 2, 3])  
+       
+    with pytest.raises(
+            ValueError, 
+            match = "Must specify a filter_value to filter the filter_column"):
+        myResultsScenario.datasheet_rasters(
+            datasheet="IntermediateDatasheet",
+            column = None,
+            filter_column="IntermediateDatasheetID") 
+        
+    with pytest.raises(
+            ValueError, 
+            match = "filter column test not in Datasheet"
+            ):
+        myResultsScenario.datasheet_rasters(
+            datasheet="IntermediateDatasheet",
+            column = None,
+            filter_column="test",
+            filter_value="test") 
+       
+    with pytest.raises(
+            ValueError, 
+            match="filter_value test does not exist in filter_column"):
+        myResultsScenario.datasheet_rasters(
+            datasheet="IntermediateDatasheet",
+            column = None,
+            filter_column="IntermediateDatasheetID",
+            filter_value="test") 
       
-    raster1 = myResultsScenario.datasheet_raster(
+    raster1 = myResultsScenario.datasheet_rasters(
         datasheet="IntermediateDatasheet", column="OutputRasterFile",
         iteration=1, timestep=1)
     assert isinstance(raster1, ps.Raster)
     
-    raster2 = myResultsScenario.datasheet_raster(
+    raster2 = myResultsScenario.datasheet_rasters(
         datasheet="IntermediateDatasheet", column="OutputRasterFile")
     assert len(raster2) == 4
     assert all([isinstance(x, ps.Raster) for x in raster2])
+    
+    raster3 = myResultsScenario.datasheet_rasters(
+        datasheet = "IntermediateDatasheet", 
+        column = None,
+        filter_column="IntermediateDatasheetID",
+        filter_value=2)
+    assert isinstance(raster3, ps.Raster)
     
     # Test raster class attributes
     assert os.path.isfile(raster1.source)

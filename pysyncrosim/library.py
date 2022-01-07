@@ -494,8 +494,8 @@ class Library(object):
         
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   scope="Library", filter_column=None, include_key=False, 
-                   *ids):
+                   scope="Library", filter_column=None, filter_value=None,
+                   include_key=False, *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -514,8 +514,9 @@ class Library(object):
             Datasheet scope. Options include "Library", "Project", or 
             "Scenario". The default is "Library".
         filter_column : String
-            The column and value to filter the output Datasheet by 
-            (e.g. "TransitionGroupID=20"). The default is None.
+            The column to filter the output Datasheet by. The default is None.
+        filter_value : String, Int, or Logical
+            The value to filter the filter_column by. The default is None.
         include_key : Logical, optional
             Whether to include the primary key of the Datasheet, corresponding
             to the SQL database. Default is False.
@@ -564,23 +565,28 @@ class Library(object):
         # Can only use filter_column arg if name of Datasheet is specified
         if (filter_column is not None) and (name is not None):
             
+            # Check that filter_value is not None
+            if filter_value is None:
+                raise ValueError("Must specify a filter_value to filter the "+
+                                 "filter_column by")
+            
             # Check if filter_column exists in Datasheet
             name = self.__check_datasheet_name(name)            
-            col = filter_column.split("=")[0]
-            col_id = filter_column.split("=")[1]
+            # col = filter_column.split("=")[0]
+            # col_id = filter_column.split("=")[1]
             check_args = ["--list", "--columns",
                           "--lib=%s" % self.location, 
                           "--sheet=%s" % name]
             ds_cols = self.__console_to_csv(check_args)
             
-            if col not in ds_cols.Name.values:
+            if filter_column not in ds_cols.Name.values:
                 raise ValueError(
-                    f"filter column {col} not in Datasheet {name}")
+                    f"filter column {filter_column} not in Datasheet {name}")
                
             tempfile_path = None
             try:
                 
-                col_id = int(col_id)
+                filter_value = int(filter_value)
                 
             except ValueError:
                     
@@ -590,9 +596,10 @@ class Library(object):
                 
                 ds_row = self.__datasheets[self.__datasheets.Name == name]
                 
-                if ds_row["IsOutput"].values[0] == "Yes":
+                if ds_row["Is Output"].values[0] == "Yes":
                     input_sheet_name = ds_cols[
-                        ds_cols.Name == col].Formula1.values[0]
+                        ds_cols.Name == filter_column].Formula1.values[0]
+                    filter_column = "Name" # TODO: Check if this is true for all cases
                 else:
                     input_sheet_name = name
                 
@@ -622,19 +629,28 @@ class Library(object):
                         
                     if input_scope == "Project" and len(ids) > 0:
                         if scope == "Scenario":
-                            pid = self.scenarios(sid=121).project.pid
+                            pid = self.scenarios(sid=ids[0]).project.pid
                         else:
-                            pid = ids
+                            pid = ids[0]
                         check_args += ["--pid=%d" % pid]
                     
                     if input_scope == "Scenario" and len(ids) > 0:               
-                        check_args += ["--sid=%d" % ids]
+                        check_args += ["--sid=%d" % ids[0]]
                 
                 self.session._Session__call_console(check_args)
                 input_datasheet = pd.read_csv(tempfile_path)
-                col_id = input_datasheet[
-                    input_datasheet.Name == col_id][col].values[0]
-                # TODO: subset to find correct column / ID
+                
+                if (input_datasheet[filter_column] != filter_value).all():
+                    raise ValueError(f"filter_value {filter_value} does not "+
+                                     f"exist in filter_column {filter_column}")
+                
+                # Get primary key and ID for filter column/value
+                primary_key = input_datasheet.columns[0]
+                primary_value = input_datasheet[
+                    input_datasheet[filter_column] == filter_value
+                    ][primary_key].values[0]
+                filter_column = primary_key
+                filter_value = primary_value
             
             finally:
                 if tempfile_path is not None and os.path.exists(tempfile_path):
@@ -642,7 +658,7 @@ class Library(object):
                 self.__datasheets = None
             
             # If all checks pass, then add filter_column to args
-            args += ["--filtercol=%s" % col + "=" + str(col_id)]
+            args += ["--filtercol=%s" % filter_column + "=" + str(filter_value)]
         
         if name is None:
             
