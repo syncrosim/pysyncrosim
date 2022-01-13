@@ -189,7 +189,8 @@ class Session(object):
         Parameters
         ----------
         packages : List or String
-            Name or list of names of packages to install.
+            Name or list of names of packages to install. Can also be a 
+            filepath (or list of filepaths) to a local package.
 
         Returns
         -------
@@ -220,7 +221,11 @@ class Session(object):
                 if pkg in installed:
                     print(f'{pkg} already installed')
                     continue
-                args = ["--install=%s" % pkg]
+                
+                if os.path.exists(pkg):
+                    args = ["--finstall=%s" % pkg]
+                else:
+                    args = ["--install=%s" % pkg]
                 self.__call_console(args)
                 
             # Reset packages
