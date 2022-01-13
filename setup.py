@@ -2,9 +2,10 @@
 # MIT License
 
 from setuptools import setup, find_packages
+from pysyncrosim._version import __version__
 
 setup(name="pysyncrosim",
-      version="1.0.2",
+      version=__version__,
       description="Python interface to SyncroSim",
       author="ApexRMS",
       author_email="info@apexrms.com",
