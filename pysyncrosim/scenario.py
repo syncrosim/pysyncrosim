@@ -9,65 +9,6 @@ class Scenario(object):
     """
     A class representing a SyncroSim Scenario.
     
-    ...
-    
-    Attributes
-    ----------
-    sid : Int
-        Retrieves Scenario ID.
-    name : String
-        Retrieves or sets a Scenario name.
-    project : Project
-        Retrieves Project class instance associated with this Scenario.
-    library : Library
-        Retrieves Library class instance associated with this Library.
-    info : pandas DataFrame
-        Retrieves Scenario information.
-    owner : String
-       Gets or sets the owner of this Scenario.
-    date_modified : String
-        Gets the last date this Scenario was modified.
-    readonly : String
-        Gets or sets the read-only status for this Scenario.
-    project_id : Int
-        Gets the Project ID associated with this Scenario.
-    description : String
-        Gets or sets the Scenario description.
-    is_result : Logical
-        Retrieves information about whether this Scenario is a Results
-        Scenario or not
-    parent_id : Int
-        Retrieves the ID of the parent Scenario of a Results Scenario.
-    
-    Methods
-    -------
-    datasheets(name=None, summary=True, optional=False, empty=False,
-               filter_column=None, include_key=False):
-        Retrieves a DataFrame of Scenario Datasheets.
-    datasheet_rasters(datasheet, column, iteration=None, timestep=None,
-                      filter_column=None, path_only=False):
-        Retrieves spatial data columns from one or more SyncroSim Datasheets.
-    save_datasheet(name, data):
-        Saves a pandas DataFrame as a SyncroSim Datasheet.
-    delete(force=False):
-        Deletes a Scenario.
-    copy(name=None):
-        Creates a copy of an existing Scenario class instance.
-    dependencies(dependency=None, remove=False, force=False):
-        Gets, sets, or removes dependencies from a Scenario.
-    ignore_dependencies(value=None):
-        Retrieves or sets the Datafeeds to ignore for a Scenario.
-    merge_dependencies(value=None):
-        Retrieves or sets whether or not a Scenario is configured to merge
-        dependencies at run time.
-    run(jobs=1, copy_external_inputs=False):
-        Runs a Scenario.
-    run_log():
-        Returns a run log for a Results Scenario.
-    results(sid=None):
-        Retrieves DataFrame of Results Scenarios or retrieves a Results 
-        Scenario instance for this Scenario.
-    
     """
     __datasheets = None
     __results = None

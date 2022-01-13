@@ -5,33 +5,6 @@ class Raster(object):
     """
     A class to represent a raster object.
     
-    ...
-    
-    Attributes
-    ----------
-    source : String
-        Gets the filepath of the raster.
-    
-    name : String
-        Gets the name of the raster.
-    
-    dimensions : pandas Dictionary
-        Gets the dimensions of the raster.
-    
-    resolution :
-        Gets the resolution of the raster.
-    
-    extent : pandas Dictionary
-        Gets the extent of the raster.
-    
-    crs : String
-        Gets the coordinate system of the raster.
-    
-    Methods
-    -------
-    values : numpy array
-        Gets the values in each cell of the raster.
-    
     """
     
     def __init__(self, source, iteration=None, timestep=None):

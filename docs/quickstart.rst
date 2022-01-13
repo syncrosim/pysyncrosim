@@ -83,7 +83,7 @@ Finally, check if the ``helloworldTime`` package is already installed. Use the :
    
 .. code-block:: pycon
    
-   # Check which SyncroSim Packages are installed
+    # Check which SyncroSim Packages are installed
     >>> mySession.packages()
     Empty DataFrame
     Columns: [index, Name, Description, Version, Extends]
