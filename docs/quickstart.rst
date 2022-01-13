@@ -698,7 +698,7 @@ Pysyncrosim and the SyncroSim Windows User Interface
 ----------------------------------------------------
 It can be useful to work in both Pysyncrosim and the SyncroSim Windows User Interface at the same time. You can easily modify Datasheets and run Scenarios in Pysyncrosim, while simultaneously refreshing the Library and plotting outputs in the User Interface as you go. To sync the Library in the User Interface with the latest changes from the Pysyncrosim code, click the refresh icon (circled in red below) in the upper tool bar of the User Interface.
 
-.. image:: img/pysyncrosim-with-UI.png
+.. image:: img/pysyncrosim-with-UI.PNG
 
 SyncroSim Package Development
 -----------------------------
