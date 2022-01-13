@@ -101,15 +101,24 @@ Install `helloworldTime` using the `add_package()` method from the Session class
 
 .. code-block:: pycon
            
-   # Install helloworldSpatial Package
+   # Install helloworldTime Package
    >>> mySession.add_packages("helloworldTime")
    ['helloworldTime'] installed successfully
    
-To install a package from a `.ssimpkg` file on your local computer rather than installing directly from the server, you can use the Session `add_package()` method with the `filepath` argument set to `True`. Instead of using the Package name as the argument, the file path to the `.ssimpkg` is used.
+To install a package from a `.ssimpkg` file on your local computer rather than installing directly from the server, you can use the Session `add_packages()` method with the `packages` argument set to the filepath to the local Package.
    
+.. code-block:: pycon
+
+    # Install helloworldTime Package locally
+    >>> mySession.add_packages("path/to/helloworldTime.ssimpkg")
+
+Now `helloworldTime` should be included in the Package list.
+
+.. code-block:: pycon
+
    >>> mySession.packages()
-           index                   Name                                      Description Version Extends 
-        0      0      helloworldSpatial    Example demonstrating how to use spatial data   1.0.2     NaN 
+           index                Name                                   Description Version Extends 
+        0      0      helloworldTime    Example demonstrating how to use timesteps   1.0.0     NaN 
         
 You can also update or remove a SyncroSim Package from your Session using the :func:`~pysyncrosim.Session.update_packages` function and the :func:`~pysyncrosim.Session.remove_packages` function.
 
@@ -123,46 +132,50 @@ You can also update or remove a SyncroSim Package from your Session using the :f
    
 Create a Modeling Workflow
 --------------------------
-To begin creating the modeling workflow, we need to specify a SyncroSim [Library](), [Project](), and [Scenario](). 
+When creating a new modeling workflow from scratch, we need to create class instances of the following scopes:
+
+* [Library]()
+* [Project]()
+* [Scenario]()
    
-These objects are hierarchical, such that a Library can contain many Projects, and each Project can contain many Scenarios. All parameters or configurations set in a Library are inherited by all Projects within the Library, and all parameters or configurations set in a Project are inherited by all Scenarios within that Project.
+These classes are hierarchical, such that a Library can contain many Projects, and each Project can contain many Scenarios. All parameters or configurations set in a Library are inherited by all Projects within the Library, and all parameters or configurations set in a Project are inherited by all Scenarios within that Project.
 
 Create a New Library
 ^^^^^^^^^^^^^^^^^^^^
-A SyncroSim Library is a file (with .ssim extension) that stores all of your model inputs and outputs. The format of each SyncroSim Library is unique to the SyncroSim Package with which it is associated. We use the ssimLibrary() function to create a new SsimLibrary object in R that is connected (through your Session) to a SyncroSim Library file.
+A SyncroSim Library is a file (with .ssim extension) that stores all of your model inputs and outputs. The format of each SyncroSim Library is unique to the SyncroSim Package with which it is associated. We create a new Library class instance that is connected (through your Session) to a SyncroSim Library file.
 
 .. code-block:: pycon
 
     # Create a new Library
-    >>> myLibrary = ps.library(name = "spatialDemo",
+    >>> myLibrary = ps.library(name = "helloworldLibrary",
     >>>                        session = mySession, 
-    >>>                        package = "helloworldSpatial")
+    >>>                        package = "helloworldTime")
     
     # Check Library information
     >>> myLibrary.info   
-                        Property                                          Value  
-    0                      Name:                                example-library
-    1                     Owner:                                            NaN
-    2             Last Modified:                          2021-09-10 at 3:13 PM  
-    3                      Size:                            200 KB  (204,800 B)
-    4                 Read Only:                                             No
-    5              Package Name:                              helloworldSpatial
-    6       Package Description:  Example demonstrating how to use spatial data
-    7   Current Package Version:                                          1.0.2
-    8   Minimum Package Version:                                          1.0.2
-    9      External input files:                         spatialSemo.ssim.input
-    10    External output files:                        spatialSemo.ssim.output
-    11          Temporary files:                          spatialSemo.ssim.temp
-    12             Backup files:                        spatialSemo.ssim.backup
+                        Property                                       Value  
+    0                      Name:                           helloworldLibrary
+    1                     Owner:                                         NaN
+    2             Last Modified:                       2021-09-10 at 3:13 PM  
+    3                      Size:                         196 KB  (200,704 B)
+    4                 Read Only:                                          No
+    5              Package Name:                              helloworldTime
+    6       Package Description:  Example demonstrating how to use timesteps
+    7   Current Package Version:                                       1.0.0
+    8   Minimum Package Version:                                       1.0.0
+    9      External input files:                helloworldLibrary.ssim.input
+    10    External output files:               helloworldLibrary.ssim.output
+    11          Temporary files:                 helloworldLibrary.ssim.temp
+    12             Backup files:               helloworldLibrary.ssim.backup
     
-We can also use the ps.Library() function to open an existing Library. For instance, now that we have created a Library called “helloworldLibrary.ssim”, we would simply specify that we want to open this Library using the `name` argument.    
+We can also use the ps.library() function to open an existing Library. For instance, now that we have created a Library called “helloworldLibrary.ssim”, we would simply specify that we want to open this Library using the `name` argument.    
 
 .. code-block:: pycon
 
     # Open existing Library
-    >>> myLibrary = ps.library(name = "spatialDemo")
+    >>> myLibrary = ps.library(name = "helloworldLibrary")
                            
-Note that if you want to create a new Library file with an existing Library name rather than opening the existing Library, you can use `overwrite=TRUE` for the ps.Library() function.
+Note that if you want to create a new Library file with an existing Library name rather than opening the existing Library, you can use `overwrite=True` when initializing the Library class instance.
 
 Create a New Project
 ^^^^^^^^^^^^^^^^^^^^
@@ -177,7 +190,7 @@ Each SyncroSim Library contains one or more SyncroSim Projects, each represented
     >>> myProject.info
                Property                   Value
     0         ProjectID                       1
-    1              Name           Spatial Model
+    1              Name             Definitions
     2             Owner                     NaN
     3  DateLastModified  2021-12-21 at 10:48 PM
     4        IsReadOnly                      No
@@ -193,17 +206,17 @@ Each Scenario can be identified by its unique scenario_id. The scenarios() metho
 .. code-block:: pycon
 
     # Create a new Scenario using the Library class instance
-    myScenario = myLibrary.scenarios(name = "Spatial Scenario")
+    myScenario = myLibrary.scenarios(name = "My First Scenario")
     
     # Open the newly-created Scenario using the Project class instance
-    myScenario = myProject.scenarios(name = "Spatial Scenario")
+    myScenario = myProject.scenarios(name = "My First Scenario")
     
     # Check Scenario information
     >>> myScenario.info
                   Property                  Value
     0           ScenarioID                      1
     1            ProjectID                      1
-    2                 Name            My Scenario
+    2                 Name      My First Scenario
     3             IsResult                     No
     4             ParentID                    NaN
     5                Owner                    NaN
