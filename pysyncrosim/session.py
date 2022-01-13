@@ -8,30 +8,6 @@ class Session(object):
     """
     A class to represent a SyncroSim Session.
     
-    ...
-    
-    Attributes
-    ----------
-    location : String
-        Retrieves the location for this Session.
-    silent : Logical
-        Gets or sets the silent status for this Session.
-    print_cmd : Logical
-        Gets or sets the print_cmd status of the SyncroSim Session.
-        
-    Methods
-    -------
-    version():
-        Retrieves SyncroSim version.
-    packages(installed=True):
-        Retrieves DataFrame of installed packages.
-    add_packages(packages):
-        Installs a package.
-    remove_packages(packages):
-        Uninstalls a package.
-    update_packages(packages=None):
-        Updates a package to the newest version.
-    
     """
     __pkgs = None
     

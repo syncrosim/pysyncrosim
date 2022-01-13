@@ -3,41 +3,6 @@ import pysyncrosim as ps
 class Project(object):
     """
     A class to represent a SyncroSim Project.
-    
-    ...
-    
-    Attributes
-    ----------
-    pid : Int
-        Retrieves Project ID.
-    name : String
-        Retrieves or sets Project name.
-    library : Library
-        Retrieves the Library the Project belongs to.
-    info : pandas DataFrame
-        Retrieves Project information.
-    owner : String
-        Gets or sets the owner of this Project.
-    date_modified : String
-        Gets the last date this Project was modified.
-    readonly : String
-        Gets or sets the read-only status for this Project.
-    description : String
-        Gets or sets the Project description.
-        
-    Methods
-    -------
-    scenarios(name=None, sid=None, optional=False, summary=True):
-        Retrieve a DataFrame of Scenarios in this Project.
-    datasheets(name=None, summary=True, optional=False, empty=False,
-               filter_column=None):
-        Retrieves a DataFrame of Project Datasheets.
-    delete(scenario=None, force=False):
-        Deletes a Project or Scenario.    
-    save_datasheet(name, data):
-        Saves a Project-scoped Datasheet.
-    copy(name=None):
-        Creates a copy of an existing Project.
         
     """
     __scenarios = None

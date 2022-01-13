@@ -13,57 +13,7 @@ pd.set_option("max_columns", 5)
 
 class Library(object):
     """
-    A class to represent a SyncroSim Library.
-    
-    ...
-    
-    Attributes
-    ----------
-    session : Session
-        Retrieves the Session associated with this Library.
-    name : String
-        Retrieves or sets the name of this Library.
-    location : String
-        Retrieves the file path to this Library.
-    package : String
-        Retrieves the package this Library is using.
-    addons : pandas DataFrame
-        Retrieves the addon(s) this Library is using.
-    info : pandas DataFrame
-        Retrieves information about this Library.
-    owner : String
-        Gets or sets the owner of this Library.
-    readonly : String
-        Gets or sets the read-only status of this Library.
-    description : String
-        Gets or sets the description for this Library.
-    date_modified : String
-        Retrieves the last date this Library was modified.
-    
-    Methods
-    -------
-    projects(name=None, pid=None, summary=True, overwrite=False):
-        Creates or opens one or more SyncroSim Projects in the Library.
-    scenarios(name=None, project=None, sid=None, pid=None, overwrite=False,
-              optional=False, summary=True, results=False):
-        Retrieves a Scenario or DataFrame of Scenarios in this Library.
-    datasheets(name=None, summary=True, optional=False, empty=False,
-               scope="Library", filter_column=None, *ids):
-        Retrieves a DataFrame of Library Datasheets.
-    delete(project=None, scenario=None, force=False):
-        Deletes a SyncroSim class instance.
-    save_datasheet(name, data, scope="Library", *ids):
-        Saves a pandas DataFrane as a SyncroSim Datasheet.
-    run(scenarios=None, project=None, jobs=1):
-        Runs a list of Scenario objects.
-    update():
-        Updates a SyncroSim Library.
-    backup():
-        Creates a backup of a SyncroSim Library.
-    enable_addons(name):
-        Enable addon package(s) of a SyncroSim Library.
-    disable_addons(name):
-        Disable addon package(s) of a SyncroSim Library.    
+    A class to represent a SyncroSim Library. 
         
     """
     __projects = None
