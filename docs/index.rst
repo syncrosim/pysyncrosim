@@ -18,22 +18,7 @@ pysyncrosim is the Python interface to `SyncroSim`_
    quickstart
    spyder_usage
    support
-   modules
-    
-.. automodule:: Library
-    :members:
-
-.. automodule:: Project
-    :members:
-    
-.. automodule:: Raster
-    :members:
-    
-.. automodule:: Scenario
-    :members:
-    
-.. automodule:: Session
-    :members:
+   source/modules
 
 Indices and tables
 ==================

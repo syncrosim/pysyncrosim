@@ -4,32 +4,105 @@ import numpy as np
 import re
 
 def runtime_input_folder(scenario, datasheet_name):
-    # Creates and returns a SyncroSim Datasheet input folder
+    """
+    Creates a SyncroSim Datasheet input folder.
+
+    Parameters
+    ----------
+    scenario : Scenario
+        Scenario class instance.
+    datasheet_name : String
+        Name of SyncroSim Datasheet.
+
+    Returns
+    -------
+    String
+        Path to input folder.
+
+    """    
     _validate_environment()
     parent_folder = _environment.input_directory.item()
+    
     return _create_scenario_folder(scenario, parent_folder, datasheet_name)
 
 def runtime_output_folder(scenario, datasheet_name):
-    # Creates and returns a SyncroSim Datasheet output folder
+    """
+    Creates a SyncroSim Datasheet output folder.
+
+    Parameters
+    ----------
+    scenario : Scenario
+        Scenario class instance.
+    datasheet_name : String
+        Name of SyncroSim Datasheet.
+
+    Returns
+    -------
+    String
+        Path to ouput folder.
+
+    """
     _validate_environment()
     parent_folder = _environment.output_directory.item()
+    
     return _create_scenario_folder(scenario, parent_folder, datasheet_name)
 
 def runtime_temp_folder(folder_name):
-    # Creates and returns a SyncroSim Temporary Folder
+    """
+    Creates a SyncroSim Datasheet temporary folder.
+
+    Parameters
+    ----------
+    folder_name : String
+        Name of temporary folder.
+
+    Returns
+    -------
+    String
+        Path to temporary folder.
+
+    """
     _validate_environment()
     return _create_temp_folder(folder_name)
 
 def progress_bar(report_type="step", iteration=None, timestep=None,
                  total_steps=None):
-    # Begins, steps, ends, and reports progress for a SyncroSim simulation
+    """
+    Begins, steps, ends, and reports progress for a SyncroSim simulation.
+
+    Parameters
+    ----------
+    report_type : String, optional
+        Directive to "begin", "end", "report", or "step" the simulation. The
+        default is "step".
+    iteration : Int, optional
+        Number of iterations. The default is None.
+    timestep : Int, optional
+        Number of timesteps. The default is None.
+    total_steps : Int, optional
+        Number of total steps in the simulation. The default is None.
+
+    Raises
+    ------
+    TypeError
+        If iteration, timestep, or total_steps are not Integers.
+    ValueError
+        If report_type is not "begin", "end", "step" or "report".
+
+    Returns
+    -------
+    None.
+
+    """
     _validate_environment()
     
     # Begin progress bar tracking
     if report_type == "begin": 
-        if isinstance(total_steps, int) or isinstance(total_steps, np.int64):
+        try:
+            assert total_steps % 1 == 0
+            total_steps = int(total_steps)
             print("ssim-task-start=%d\r\n" % total_steps, flush=True)
-        else:
+        except AssertionError or TypeError:
             raise TypeError("total_steps must be an Integer")
             
     # End progress bar tracking
@@ -42,12 +115,14 @@ def progress_bar(report_type="step", iteration=None, timestep=None,
     
     # Report iteration and timestep
     elif report_type == "report":
-        if isinstance(iteration, int) or isinstance(iteration, np.int64) or \
-            isinstance(timestep, int) or isinstance(timestep, np.int64):
-                print(
-                    f"ssim-task-status=Simulating -> Iteration is {iteration} - Timestep is {timestep}\r\n",
-                    flush=True)
-        else:
+        try:
+            assert iteration % 1 == 0
+            assert timestep % 1 == 0
+            print(
+                f"ssim-task-status=Simulating -> Iteration is {iteration}" +
+                " - Timestep is {timestep}\r\n",
+                flush=True)
+        except AssertionError or TypeError:
             raise TypeError("iteration and timestep must be Integers")
     else:
         raise ValueError("Invalid report_type")
