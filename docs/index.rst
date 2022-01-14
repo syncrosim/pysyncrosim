@@ -17,6 +17,7 @@ pysyncrosim is the Python interface to `SyncroSim`_
    install
    quickstart
    spyder_usage
+   module_summary
    support
    modules
 

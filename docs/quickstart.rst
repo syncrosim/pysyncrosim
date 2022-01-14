@@ -1,5 +1,5 @@
-Python Quickstart
-=================
+Quickstart
+==========
 Pysyncrosim is the Python interface to the `SyncroSim software framework`_, a program that structures and models your data. This tutorial will cover the basics of using the Pysyncrosim package within the SyncroSim software framework.
 
 	.. _SyncroSim software framework: https://syncrosim.com
@@ -205,7 +205,7 @@ Note that if you want to create a new Library file with an existing Library name
 
 Create a New Project
 ^^^^^^^^^^^^^^^^^^^^
-Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represented by an instance of class Project object in Pysyncrosim. Projects typically store model inputs that are common to all your Scenarios. In most situations you will need only a single Project for your Library; by default each new Library starts with a single Project named "Definitions" (with a unique ``project_id`` = 1). The :meth:`~pysyncrosim.library.Library.projects()` method of the Libarry class is used to both create and retrieve Projects for a specific Library.
+Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represented by an instance of class Project in Pysyncrosim. Projects typically store model inputs that are common to all your Scenarios. In most situations you will need only a single Project for your Library; by default each new Library starts with a single Project named "Definitions" (with a unique ``project_id`` = 1). The :meth:`~pysyncrosim.library.Library.projects()` method of the Libarry class is used to both create and retrieve Projects for a specific Library.
 
     .. _Projects: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
@@ -225,7 +225,7 @@ Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represen
     
 Create a New Scenario
 ^^^^^^^^^^^^^^^^^^^^^
-Finally, each SyncroSim Project contains one or more `Scenarios`_, each represented by an instance of class Scenario object in Pysyncrosim.
+Finally, each SyncroSim Project contains one or more `Scenarios`_, each represented by an instance of class Scenario in Pysyncrosim.
 
     .. _Scenarios: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
