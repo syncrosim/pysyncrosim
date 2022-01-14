@@ -22,7 +22,8 @@ copyright = '2021, ApexRMS'
 author = 'ApexRMS'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.2'
+import pysyncrosim as ps
+release = ps._version.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,10 +32,12 @@ release = '1.0.2'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 import sphinx_rtd_theme
-
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx_rtd_theme', 'sphinx.ext.napoleon'
+    'sphinx.ext.autodoc', 'sphinx_rtd_theme', 'sphinx.ext.napoleon', 
+    'sphinx.ext.autosummary'
 ]
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
