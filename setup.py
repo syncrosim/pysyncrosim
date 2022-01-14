@@ -12,3 +12,4 @@ setup(name="pysyncrosim",
       url="https://www.apexrms.com",
       packages=find_packages(exclude="tests"))
 
+install_requires=['numpy', 'pandas', 'rasterio']
