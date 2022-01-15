@@ -13,3 +13,5 @@ setup(name="pysyncrosim",
       packages=find_packages(exclude="tests"))
 
 install_requires=['numpy', 'pandas', 'rasterio']
+
+extras_require=['numpy', 'pandas', 'rasterio']
