@@ -9,6 +9,9 @@ setup(name="pysyncrosim",
       description="Python interface to SyncroSim",
       author="ApexRMS",
       author_email="info@apexrms.com",
-      url="www.apexrms.com",
+      url="https://www.apexrms.com",
       packages=find_packages(exclude="tests"))
 
+install_requires=['numpy', 'pandas', 'rasterio']
+
+extras_require=['numpy', 'pandas', 'rasterio']
