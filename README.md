@@ -1,4 +1,4 @@
-# pysyncrosim <img src="docs/img/logo.png" align="right" width=140/>
+# pysyncrosim <img src="https://github.com/syncrosim/pysyncrosim/raw/main/docs/img/logo.png" align="right" width=140/>
 
 The Python interface to [SyncroSim](https://syncrosim.com/)
 
