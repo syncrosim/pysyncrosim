@@ -1,4 +1,5 @@
-# pysyncrosim
+# pysyncrosim <img src="docs/logo.png" align="right" width=140/>
+
 The Python interface to [SyncroSim](https://syncrosim.com/)
 
 ## Installation
