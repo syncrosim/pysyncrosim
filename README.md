@@ -1,4 +1,4 @@
-# pysyncrosim <img src="docs/logo.png" align="right" width=140/>
+# pysyncrosim <img src="docs/img/logo.png" align="right" width=140/>
 
 The Python interface to [SyncroSim](https://syncrosim.com/)
 
@@ -98,7 +98,7 @@ spyder
 
 3. Within the IDE, change the working directory to the directory containing your `pysyncrosim` scripts (e.g. [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif))
 
-![alt-text](./docs/spyder.PNG)
+![Using pysyncrosim in Spyder](https://github.com/syncrosim/pysyncrosim/raw/main/docs/img/spyder.PNG)
 
 4. Open and run your `pysyncrosim` scripts from the left-hand window. You can run scripts line-by-line in `spyder` by selecting the line(s) you want to run and pressing F9.
 

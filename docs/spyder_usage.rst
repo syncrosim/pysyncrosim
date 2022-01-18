@@ -28,7 +28,7 @@ If using ``conda``, the ``spyder`` IDE is easy to install and straightforward to
 	.. _spatial_demo.py: https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py
 	.. _input-raster.tif: https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif
 
-.. figure:: spyder.PNG
+.. figure:: img/spyder.PNG
 	:width: 800px
 	:align: center
 	:alt: alternate text
