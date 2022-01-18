@@ -1,9 +1,10 @@
-# pysyncrosim
+# pysyncrosim <img src="docs/logo.png" align="right" width=140/>
+
 The Python interface to [SyncroSim](https://syncrosim.com/)
 
 ## Installation
 
-`pysyncrosim` can be installed using either the `conda` or `pip` package managers. `conda` is a general package manager capable of installing packages from many sources, but `pip` is strictly a Python package manager. For this reason, using `pip` requires downloading and installing dependency binaries, so we recommend using the `conda` installation method. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install `pysyncrosim` for Linux.
+`pysyncrosim` can be installed using either the `conda` or `pip` package managers. `conda` is a general package manager capable of installing packages from many sources, but `pip` is strictly a Python package manager. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install `pysyncrosim` for Linux.
 
 Before beginning the installation of `pysyncrosim`, make sure you have the latest release of [SyncroSim](https://syncrosim.com/download/) installed.
 
@@ -45,25 +46,10 @@ You should now see that "(base)" has been replaced with "(myenv)" at the beginni
 conda config --add channels conda-forge
 ```
 
-5. Install `pysyncrosim` dependencies, `numpy`, `pandas`, and `rasterio`, using the following code.
+5. Install `pysyncrosim` using `conda install`. Installing `pysyncrosim` will also install its dependencies: `pandas`, `numpy`, and `rasterio`.
 ```
-# Install numpy requirement
-conda install numpy
-
-# Install pandas requirement
-conda install pandas
-
-# Install rasterio requirement
-conda install rasterio
-```
-
-6. Install `pysyncrosim` from GitHub using `pip`. If you do not have `git` or `pip` installed already, use `conda` to install these packages. Then, use `pip` and `git` to install the latest GitHub release of `pysyncrosim`. Run the following code to install `git`, `pip`, and `pysyncrosim`.
-```
-# Install git and pip
-conda install git pip
-
 # Install pysyncrosim
-pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.2.tar.gz
+conda install pysyncrosim
 ```
 
 `pysyncrosim` should now be installed and ready to use!
@@ -72,25 +58,13 @@ pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.2.tar
 
 Use `pip` to install `pysyncrosim` to your default python installation. You can install Python from https://www.python.org/downloads/. You can also find information on how to install `pip` from the [pip documentation](https://pip.pypa.io/en/stable/installation/).
 
-Before installing `pysyncrosim`, you must install `GDAL` and `rasterio` separately. To do this, download the binaries for [GDAL](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal) and [rasterio](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio). Note that the **cp39** in the wheel name refers to Python 3.9. Then use `pip` to install these binaries from your **Downloads** folder. You must also install the dependencies `numpy` and `pandas`.
+Install `pysyncrosim` using `pip install`. Installing `pysyncrosim` will also install its dependencies: `pandas`, `numpy`, and `rasterio`.
 ```
 # Make sure you are using the latest version of pip
 pip install --upgrade pip
 
-# Install GDAL before rasterio
-pip install GDAL-3.3.2-cp39-cp39-win_amd64.whl
-
-# Install rasterio
-pip install rasterio-1.2.8-cp39-cp39-win_amd64.whl
-
-# Install numpy
-pip install numpy
-
-# Install pandas
-pip install pandas
-
 # Install pysyncrosim
-pip install https://github.com/syncrosim/pysyncrosim/archive/refs/tags/1.0.2.tar.gz
+pip install pysyncrosim
 ```
 
 ## Usage
