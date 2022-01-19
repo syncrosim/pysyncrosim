@@ -1,13 +1,13 @@
 Quickstart
 ==========
-Pysyncrosim is the Python interface to the `SyncroSim software framework`_, a program that structures and models your data. This tutorial will cover the basics of using the Pysyncrosim package within the SyncroSim software framework.
+``pysyncrosim`` is the Python interface to the `SyncroSim software framework`_, a program that structures and models your data. This tutorial will cover the basics of using the ``pysyncrosim`` package within the SyncroSim software framework.
 
 	.. _SyncroSim software framework: https://syncrosim.com
 	
-To complete this tutorial, you must `install SyncroSim`_ and `install Pysyncrosim`_. You will also need to install the `helloworldTime`_ SyncroSim Package.
+To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosim`_. You will also need to install the `helloworldTime`_ SyncroSim Package.
 
 	.. _install SyncroSim: https://syncrosim.com/download/
-	.. _install Pysyncrosim: https://pysyncrosim.readthedocs.io/en/latest/install.html
+	.. _install pysyncrosim: https://pysyncrosim.readthedocs.io/en/latest/install.html
 	.. _helloworldTime: https://apexrms.github.io/helloworldEnhanced/
 
 Overview of SyncroSim
@@ -20,11 +20,11 @@ For more details consult the `SyncroSim online documentation`_.
 
     .. _SyncroSim online documentation: https://docs.syncrosim.com/
 
-Overview of Pysyncrosim
+Overview of ``pysyncrosim``
 -----------------------
-Pysyncrosim is a Python package designed to facilitate the development of modeling workflows for the SyncroSim software framework. Using the Pysyncrosim interface, simulation models can be added and run through SyncroSim to transform Scenario-based datasets into model forecasts. This Python package takes advantage of general features of SyncroSim, such as defining Scenarios with spatial or non-spatial inputs, running Monte Carlo simulations, and summarizing model outputs. 
+``pysyncrosim`` is a Python package designed to facilitate the development of modeling workflows for the SyncroSim software framework. Using the ``pysyncrosim`` interface, simulation models can be added and run through SyncroSim to transform Scenario-based datasets into model forecasts. This Python package takes advantage of general features of SyncroSim, such as defining Scenarios with spatial or non-spatial inputs, running Monte Carlo simulations, and summarizing model outputs. 
 
-Pysyncrosim requires SyncroSim 2.3.6 or higher.
+``pysyncrosim`` requires SyncroSim 2.3.6 or higher.
 
 SyncroSim Package: `helloworldTime`
 -----------------------------------
@@ -41,17 +41,17 @@ Set Up
 
 Install SyncroSim
 ^^^^^^^^^^^^^^^^^
-Before using Pysyncrosim, you will first need to `download and install`_ the SyncroSim software. Versions of SyncroSim exist for both Windows and Linux.
+Before using ``pysyncrosim``, you will first need to `download and install`_ the SyncroSim software. Versions of SyncroSim exist for both Windows and Linux.
 
     .. _download and install: https://syncrosim.com/download/
 
 Installing and Loading Python Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install Pysyncrosim using either ``conda install`` or ``pip install``. See the `Installation`_ page for more detailed installation instructions.
+Install ``pysyncrosim`` using either ``conda install`` or ``pip install``. See the `Installation`_ page for more detailed installation instructions.
 
     .. _Installation: https://pysyncrosim.readthedocs.io/en/latest/install.html
 
-Then, in a new Python script, import Pysyncrosim.
+Then, in a new Python script, import ``pysyncrosim``.
 
 .. code-block:: pycon
 
@@ -59,7 +59,7 @@ Then, in a new Python script, import Pysyncrosim.
     
 Connecting Python to SyncroSim 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The next step in setting up the Python environment for the Pysyncrosim workflow is to create a SyncroSim Session instance in Python that provides the connection to your installed copy of the SyncroSim software. A new Session is created using the :class:`~pysyncrosim.session.Session()` class. The Session can be initialized with a path to the folder on your computer where SyncroSim has been installed. If no arguments are specified when the Session class is initialized, then the default install folder is used (Windows only).
+The next step in setting up the Python environment for the ``pysyncrosim`` workflow is to create a SyncroSim Session instance in Python that provides the connection to your installed copy of the SyncroSim software. A new Session is created using the :class:`~pysyncrosim.session.Session()` class. The Session can be initialized with a path to the folder on your computer where SyncroSim has been installed. If no arguments are specified when the Session class is initialized, then the default install folder is used (Windows only).
 
 .. code-block:: pycon
 
@@ -205,7 +205,7 @@ Note that if you want to create a new Library file with an existing Library name
 
 Create a New Project
 ^^^^^^^^^^^^^^^^^^^^
-Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represented by an instance of class Project in Pysyncrosim. Projects typically store model inputs that are common to all your Scenarios. In most situations you will need only a single Project for your Library; by default each new Library starts with a single Project named "Definitions" (with a unique ``project_id`` = 1). The :meth:`~pysyncrosim.library.Library.projects()` method of the Libarry class is used to both create and retrieve Projects for a specific Library.
+Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represented by an instance of class Project in ``pysyncrosim``. Projects typically store model inputs that are common to all your Scenarios. In most situations you will need only a single Project for your Library; by default each new Library starts with a single Project named "Definitions" (with a unique ``project_id`` = 1). The :meth:`~pysyncrosim.library.Library.projects()` method of the Libarry class is used to both create and retrieve Projects for a specific Library.
 
     .. _Projects: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
@@ -225,7 +225,7 @@ Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represen
     
 Create a New Scenario
 ^^^^^^^^^^^^^^^^^^^^^
-Finally, each SyncroSim Project contains one or more `Scenarios`_, each represented by an instance of class Scenario in Pysyncrosim.
+Finally, each SyncroSim Project contains one or more `Scenarios`_, each represented by an instance of class Scenario in ``pysyncrosim``.
 
     .. _Scenarios: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
@@ -302,13 +302,13 @@ To view a specific Datasheet rather than just a DataFrame of available Datasheet
     Columns: [m, b]
     Index: []
     
-Here, we are viewing the contents of a SyncroSim Datasheet as a Python Pandas DataFrame. Although both SyncroSim Datasheets and Pandas DataFrames are both represented as tables of data with predefined columns and an unlimited number of rows, the underlying structure of these tables differ.
+Here, we are viewing the contents of a SyncroSim Datasheet as a Python ``pandas`` DataFrame. Although both SyncroSim Datasheets and ``pandas`` DataFrames are both represented as tables of data with predefined columns and an unlimited number of rows, the underlying structure of these tables differ.
 
 Configure Model Inputs
 ^^^^^^^^^^^^^^^^^^^^^^
 Currently our input Scenario Datasheets are empty! We need to add some values to our input Datasheet (``InputDatasheet``) and run control Datasheet (``RunControl``) so we can run our model.
 
-First, assign the contents of the input Datasheet to a new Pandas DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method, then check the columns that need input values.
+First, assign the contents of the input Datasheet to a new ``pandas`` DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method, then check the columns that need input values.
 
 .. code-block:: pycon
 
@@ -333,9 +333,9 @@ The input Datasheet requires two values:
 * *m* : the slope of the linear equation.
 * *b* : the intercept of the linear equation.
 
-Now we will update the input DataFrame. This can be done in many ways, such as creating a new Pandas DataFrame with matching column names, or appending values as a dictionary to ``myInputDataframe``.
+Now we will update the input DataFrame. This can be done in many ways, such as creating a new ``pandas`` DataFrame with matching column names, or appending values as a dictionary to ``myInputDataframe``.
 
-For this example, we will append values to ``myInputDataframe`` using a Python dictionary and the Pandas ``append()`` function. Note that in the previous section we discovered that the input Datasheets only accept a single row of values, so we can only have one value each for our slope (*m*) and intercept (*b*).
+For this example, we will append values to ``myInputDataframe`` using a Python dictionary and the ``pandas`` ``append()`` function. Note that in the previous section we discovered that the input Datasheets only accept a single row of values, so we can only have one value each for our slope (*m*) and intercept (*b*).
 
 .. code-block:: pycon
 
@@ -362,14 +362,14 @@ Now that we have a complete DataFrame of input values, we will save this DataFra
     
 Configuring the RunControl Datasheet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-There is one other Datasheet that we need to configure for our model to run. The ``RunControl`` Datasheet provides information about how many time steps to use in the model. Here, we set the minimum and maximum time steps for our model. Similar to above, we’ll add this information to a Python dictionary and then add it to the ``RunControl`` Datasheet using the Pandas ``append()`` function. We need to specify data for the following two columns:
+There is one other Datasheet that we need to configure for our model to run. The ``RunControl`` Datasheet provides information about how many time steps to use in the model. Here, we set the minimum and maximum time steps for our model. Similar to above, we’ll add this information to a Python dictionary and then add it to the ``RunControl`` Datasheet using the ``pandas`` ``append()`` function. We need to specify data for the following two columns:
 
 * *MinimumTimestep* : the starting time point of the simulation.
 * *MaximumTimestep* : the end time point of the simulation.
 
 .. code-block:: pycon
 
-    # Load RunControl Datasheet to a Pandas DataFrame
+    # Load RunControl Datasheet to a ``pandas`` DataFrame
     >>> runSettings = myScenario.datasheets(
     >>>     name = "helloworldTime_RunControl")
     
@@ -493,7 +493,7 @@ You may want to test multiple alternative Scenarios that have slightly different
     2                               My Second Scenario
     Name: Name, dtype: object
     
-To edit the new Scenario, let's first load the contents of the input Datasheet and assign it to a new Pandas DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method. We will set the ``empty`` argument to ``True`` so that instead of getting the values from the existing Scenario, we can start with an empty DataFrame again.
+To edit the new Scenario, let's first load the contents of the input Datasheet and assign it to a new ``pandas`` DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method. We will set the ``empty`` argument to ``True`` so that instead of getting the values from the existing Scenario, we can start with an empty DataFrame again.
 
 .. code-block:: pycon
 
@@ -513,7 +513,7 @@ To edit the new Scenario, let's first load the contents of the input Datasheet a
     dtypes: object(2)
     memory usage: 0.0+ bytes
     
-Now, all we need to do is add some new values the same way we did before, using the Pandas ``append()`` function.
+Now, all we need to do is add some new values the same way we did before, using the ``pandas`` ``append()`` function.
 
 .. code-block:: pycon
 
@@ -533,7 +533,7 @@ Finally, we will save the updated DataFrame to a SyncroSim Datasheet using the S
 
 .. code-block:: pycon
 
-    # Save Pandas DataFrame to a SyncroSim Datasheet
+    # Save pandas DataFrame to a SyncroSim Datasheet
     >>> myNewScenario.save_datasheet(name = "helloworldTime_InputDatasheet",
     >>>                              data = myNewInputDataframe)
     
@@ -682,7 +682,7 @@ Once you have finished running your models, you may want to backup the inputs an
     # Add IncludeOutput to the Library's Backup Datasheet
     >>> myDataframe["IncludeOutput"] = "Yes"
     
-    # Save the Pandas DataFrame to a SyncroSim Datasheet
+    # Save the pandas DataFrame to a SyncroSim Datasheet
     >>> myLibrary.save_datasheet(name = "core_Backup", data = myDataframe)
     
     # Check to make sure IncludeOutput is now set to "Yes"
@@ -694,9 +694,9 @@ Now, you can use the Library :meth:`~pysyncrosim.library.Library.backup()` metho
 
     >>> myLibrary.backup()
     
-Pysyncrosim and the SyncroSim Windows User Interface
+``pysyncrosim`` and the SyncroSim Windows User Interface
 ----------------------------------------------------
-It can be useful to work in both Pysyncrosim and the SyncroSim Windows User Interface at the same time. You can easily modify Datasheets and run Scenarios in Pysyncrosim, while simultaneously refreshing the Library and plotting outputs in the User Interface as you go. To sync the Library in the User Interface with the latest changes from the Pysyncrosim code, click the refresh icon (circled in red below) in the upper tool bar of the User Interface.
+It can be useful to work in both ``pysyncrosim`` and the SyncroSim Windows User Interface at the same time. You can easily modify Datasheets and run Scenarios in ``pysyncrosim``, while simultaneously refreshing the Library and plotting outputs in the User Interface as you go. To sync the Library in the User Interface with the latest changes from the ``pysyncrosim`` code, click the refresh icon (circled in red below) in the upper tool bar of the User Interface.
 
 .. image:: img/pysyncrosim-with-UI.PNG
 

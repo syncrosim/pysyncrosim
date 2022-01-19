@@ -1,4 +1,4 @@
-Running Pysyncrosim in Spyder
+Running ``pysyncrosim`` in Spyder
 =============================
 
 If using ``conda``, the ``spyder`` IDE is easy to install and straightforward to use.
@@ -23,7 +23,7 @@ If using ``conda``, the ``spyder`` IDE is easy to install and straightforward to
 
 	you may get a pop-up saying you have a missing dependency, ``rtree``. You can safely ignore this warning.
 
-3. Within the IDE, change the working directory to the directory containing your pysyncrosim scripts (e.g. `spatial_demo.py`_ and `input-raster.tif`_)
+3. Within the IDE, change the working directory to the directory containing your ``pysyncrosim`` scripts (e.g. `spatial_demo.py`_ and `input-raster.tif`_)
 
 	.. _spatial_demo.py: https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py
 	.. _input-raster.tif: https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif

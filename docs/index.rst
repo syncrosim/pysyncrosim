@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pysyncrosim's documentation!
+Welcome to ``pysyncrosim``'s documentation!
 =======================================
 
-pysyncrosim is the Python interface to `SyncroSim`_
+``pysyncrosim`` is the Python interface to `SyncroSim`_
 
 .. _SyncroSim: https://syncrosim.com/
 
