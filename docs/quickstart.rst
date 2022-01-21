@@ -710,9 +710,9 @@ If you wish to design SyncroSim packages using python and pysyncrosim, you can f
 
 .. note::
 
-	`SyncroSim v2.3.6`_ is required to develop python-based SyncroSim packages.
+	`SyncroSim v2.3.10`_ is required to develop python-based SyncroSim packages.
 
-		.. _SyncroSim v2.3.6: https://syncrosim.com/download/
+		.. _SyncroSim v2.3.10: https://syncrosim.com/download/
 
     
     
