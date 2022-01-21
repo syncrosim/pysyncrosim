@@ -10,7 +10,7 @@ Before beginning the installation of `pysyncrosim`, make sure you have the lates
 
 ### Dependencies
 
-`pysyncrosim` was tested and developed using Python 3.8 and SyncroSim 2.3.5. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
+`pysyncrosim` was tested and developed using **Python 3.8** and **SyncroSim 2.3.10**. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
 
 ```
 python>=3.8
@@ -104,4 +104,4 @@ spyder
 
 ### SyncroSim Package Development
 
-If you wish to design SyncroSim packages using python and `pysyncrosim`, you can follow the [Creating a Package](http://docs.syncrosim.com/how_to_guides/package_create_overview.html) and [Enhancing a Package](http://docs.syncrosim.com/how_to_guides/package_enhance_overview.html) tutorials on the [SyncroSim documentation website](http://docs.syncrosim.com/). Note that [SyncroSim v2.3.6](https://syncrosim.com/download/) is required to develop python-based SyncroSim packages.
+If you wish to design SyncroSim packages using python and `pysyncrosim`, you can follow the [Creating a Package](http://docs.syncrosim.com/how_to_guides/package_create_overview.html) and [Enhancing a Package](http://docs.syncrosim.com/how_to_guides/package_enhance_overview.html) tutorials on the [SyncroSim documentation website](http://docs.syncrosim.com/). Note that [SyncroSim v2.3.10](https://syncrosim.com/download/) is required to develop python-based SyncroSim packages.

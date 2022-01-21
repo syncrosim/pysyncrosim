@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to ``pysyncrosim``'s documentation!
-=======================================
+===========================================
 
 ``pysyncrosim`` is the Python interface to `SyncroSim`_
 
