@@ -24,7 +24,7 @@ Overview of ``pysyncrosim``
 -----------------------
 ``pysyncrosim`` is a Python package designed to facilitate the development of modeling workflows for the SyncroSim software framework. Using the ``pysyncrosim`` interface, simulation models can be added and run through SyncroSim to transform Scenario-based datasets into model forecasts. This Python package takes advantage of general features of SyncroSim, such as defining Scenarios with spatial or non-spatial inputs, running Monte Carlo simulations, and summarizing model outputs. 
 
-``pysyncrosim`` requires SyncroSim 2.3.6 or higher.
+``pysyncrosim`` requires SyncroSim 2.3.10 or higher.
 
 SyncroSim Package: `helloworldTime`
 -----------------------------------
@@ -710,9 +710,9 @@ If you wish to design SyncroSim packages using python and pysyncrosim, you can f
 
 .. note::
 
-	`SyncroSim v2.3.6`_ is required to develop python-based SyncroSim packages.
+	`SyncroSim v2.3.10`_ is required to develop python-based SyncroSim packages.
 
-		.. _SyncroSim v2.3.6: https://syncrosim.com/download/
+		.. _SyncroSim v2.3.10: https://syncrosim.com/download/
 
     
     
