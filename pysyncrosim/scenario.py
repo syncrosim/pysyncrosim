@@ -558,7 +558,7 @@ class Scenario(object):
         if name is None:
             name = self.name + " - Copy"
         
-        args = ["--copy", "--scenario", "--slib=%s" % self.library.name,
+        args = ["--copy", "--scenario", "--slib=%s" % self.library.location,
                 "--sid=%d" % self.sid, "--name=%s" % name]
         
         self.library.session._Session__call_console(args)
@@ -835,7 +835,7 @@ class Scenario(object):
 
         """
         try:
-            args = ["--list", "--runlog", "--lib=%s" % self.library.name,
+            args = ["--list", "--runlog", "--lib=%s" % self.library.location,
                     "--sid=%d" % self.sid]
             return self.library._Library__console_to_csv(args)
         except RuntimeError as e:
