@@ -3,6 +3,7 @@ import io
 import subprocess
 import pandas as pd
 import pysyncrosim as ps
+from pysyncrosim._version import __version__
 
 class Session(object):
     """
@@ -31,6 +32,9 @@ class Session(object):
         ------
         ValueError
             Raises error if the location given does not exist.
+        RuntimeError
+            Raises error if the version of the SyncroSim installation is 
+            incompatible with the current version of pysyncrosim.
 
         Returns
         -------
@@ -42,6 +46,21 @@ class Session(object):
         self.__silent = silent
         self.__print_cmd = print_cmd
         self.__pkgs = self.packages()
+        
+        # Add check to make sure that correct version of SyncroSim is being used
+        ssim_required_version = "2.3.10"
+        ssim_current_version = self.version().split(" ")[-1]
+        ssim_required_bits = ssim_required_version.split(".")
+        ssim_current_bits = ssim_current_version.split(".")
+        
+        for i in range(0, len(ssim_required_bits)):
+            status = int(ssim_current_bits[i]) >= int(ssim_required_bits[i])
+        
+        if not status:
+            raise RuntimeError(f"SyncroSim v{ssim_required_version} " + 
+                               "is required to run pysyncrosim v" +
+                               __version__ + ", but you have SyncroSim v" + 
+                               ssim_current_version + " installed")
      
     @property
     def location(self):
