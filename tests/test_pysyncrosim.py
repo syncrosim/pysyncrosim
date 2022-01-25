@@ -29,7 +29,7 @@ def test_session_attributes():
     with pytest.raises(TypeError,
                        match="installed must be Logical or 'BASE'"):
         mySession.packages(installed=1)
-       
+        
         
 def test_session_package_functions():
     
