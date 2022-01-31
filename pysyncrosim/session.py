@@ -207,6 +207,7 @@ class Session(object):
         self.console_exe = self.__init_console(pkgman=True)
         
         exception = True
+        pkgs_installed = []
         try:
         
             if not isinstance(packages, list):
@@ -222,10 +223,14 @@ class Session(object):
                 else:
                     args = ["--install=%s" % pkg]
                 self.__call_console(args)
+                pkgs_installed.append(pkg)
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            self.__pkgs = self.packages()
+            if len(pkgs_installed) == 0:
+                return
+            else:
+                self.__pkgs = self.packages()
                 
         except RuntimeError as e:
             print(e)
@@ -234,10 +239,13 @@ class Session(object):
             exception = False
         
         finally:
+            
             if exception is False:
-                print(f"{packages} installed successfully")
+                print(f"{pkgs_installed} installed successfully")
+                
             # Set executable back to console
-            self.console_exe = self.__init_console(console=True)
+            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+                self.console_exe = self.__init_console(console=True)
     
     def remove_packages(self, packages):
         """
@@ -268,6 +276,7 @@ class Session(object):
         self.console_exe = self.__init_console(pkgman=True)
         
         exception = True
+        pkgs_removed = []
         try:
         
             if not isinstance(packages, list):
@@ -279,10 +288,14 @@ class Session(object):
                     continue
                 args = ["--uninstall=%s" % pkg]
                 self.__call_console(args)
+                pkgs_removed.append(pkg)
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            self.__pkgs = self.packages()
+            if len(pkgs_removed) == 0:
+                return
+            else:
+                self.__pkgs = self.packages()
             
         except RuntimeError as e:
             print(e)
@@ -291,10 +304,13 @@ class Session(object):
             exception = False
         
         finally:
+            
             if exception is False:
-                print(f"{packages} removed successfully")
+                print(f"{pkgs_removed} removed successfully")
+                
             # Set executable back to console
-            self.console_exe = self.__init_console(console=True)
+            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+                self.console_exe = self.__init_console(console=True)
     
     def update_packages(self, packages=None):
         """
