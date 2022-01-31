@@ -9,7 +9,7 @@ import pysyncrosim as ps
 from pysyncrosim import helper
 from pysyncrosim.environment import _environment
 
-pd.set_option("max_columns", 5)
+pd.set_option("display.max_columns", 5)
 
 class Library(object):
     """
@@ -154,6 +154,7 @@ class Library(object):
         args = ["--setprop", "--lib=%s" % self.location, "--owner=%s" % value]
         self.session._Session__call_console(args)
         self.__owner = value
+        self.__init_info()
         
     @property
     def readonly(self):
@@ -181,7 +182,7 @@ class Library(object):
         args = ["--setprop", "--lib=%s" % self.location,
                 "--readonly=%s" % self.__readonly]
         self.session._Session__call_console(args)
-        self.__readonly = value
+        self.__init_info()
         
     @property
     def description(self):
@@ -200,7 +201,6 @@ class Library(object):
     def description(self, value):
         if not isinstance(value, str):
             raise AttributeError("description must be a String")
-        self.__description = value
         args = ["--setprop", "--lib=%s" % self.location,
                 "--description=%s" % value]
         self.session._Session__call_console(args)
