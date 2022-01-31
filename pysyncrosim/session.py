@@ -164,7 +164,7 @@ class Session(object):
             args = ["--list", "--addons"]
             addons = self.__call_console(args, decode=True, csv=True)
             addons = pd.read_csv(io.StringIO(addons))
-            self.__pkgs = self.__pkgs.append(addons).reset_index()
+            self.__pkgs = pd.concat([self.__pkgs, addons]).reset_index(drop=True)
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
