@@ -98,7 +98,7 @@ pipelineDataFrame1 = myScenario.datasheets(name = "core_Pipeline")
 pipelineDataFrame2 = pd.DataFrame({"StageNameID": ["First Model",
                                                    "Second Model"],
                                    "RunOrder": [1, 2]})
-pipelineDataFrame1 = pipelineDataFrame1.append(pipelineDataFrame2)
+pipelineDataFrame1 = pd.concat([pipelineDataFrame1, pipelineDataFrame2])
 
 myScenario.save_datasheet(name = "core_Pipeline", data = pipelineDataFrame1)
 

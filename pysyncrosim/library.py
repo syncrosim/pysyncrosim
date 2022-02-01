@@ -801,7 +801,10 @@ class Library(object):
                 if scope == "Scenario":
                     args += ["--sid=%d" % ids]
 
-                self.__session._Session__call_console(args)
+                result = self.__session._Session__call_console(args)
+                
+                if result.returncode == 0:
+                    print(f"{name} saved successfully")
 
             finally:
                 shutil.rmtree(temp_folder, ignore_errors=True)
