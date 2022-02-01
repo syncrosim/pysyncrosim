@@ -802,13 +802,14 @@ class Scenario(object):
         if jobs > 1 and copy_external_inputs is False:
             args += ["--noextfiles"]
             
-        self.library.session._Session__call_console(args)
+        print(f"Running Scenario [{self.sid}] {self.name}")
+        result = self.library.session._Session__call_console(args)
+        
+        if result.returncode == 0:
+            print("Run successful")
         
         # Reset Project Scenarios
         self.project._Project__scenarios = None
-        
-        # Have this print a statement based on output message of whether the 
-        # run was successful or not
 
         # Reset results
         self.__results = None
