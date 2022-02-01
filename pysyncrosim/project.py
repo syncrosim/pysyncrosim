@@ -1,4 +1,5 @@
 import pysyncrosim as ps
+import numpy as np
 
 class Project(object):
     """
@@ -293,6 +294,80 @@ class Project(object):
         """
         
         self.library.save_datasheet(name, data, "Project", self.pid)
+        
+    def run(self, scenarios=None, jobs=1, copy_external_inputs=False):
+        """
+        Runs a list of Scenario objects.
+
+        Parameters
+        ----------
+        scenarios : Scenario, String, Int, or List
+            List of Scenrios, SyncroSim Scenario instance, name of Scenario,
+            or Scenario ID.
+        jobs : Int, optional
+            Number of multiprocessors to use. The default is 1.
+        copy_external_inputs : Logical, optional
+            If False, then a copy of external input files (e.g. GeoTIFF files)
+            is not created for each job. Otherwise, a copy of external inputs 
+            is created for each job. Applies only when jobs > 1. The default is
+            False.
+
+        Returns
+        -------
+        result_dict : Dictionary
+            Dictionary of Results Scenarios.
+
+        """
+        # Type checks
+        if scenarios is not None and not isinstance(
+                scenarios, ps.Scenario) and not isinstance(
+                    scenarios, int) and not isinstance(
+                    scenarios, np.int64) and not isinstance(
+                        scenarios, str) and not isinstance(
+                            scenarios, list):
+            raise TypeError(
+                "scenarios must be Scenario instance, String, Integer, or List")
+        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
+            raise TypeError("jobs must be an Integer")
+        
+        # Collect output in a dictionary
+        result_list = []
+        
+        if scenarios is None:
+                
+            # Run all Scenarios in a Project
+            scenarios = self.scenarios(summary=False)
+            
+            if not isinstance(scenarios, list):
+                scenarios = [scenarios]
+            
+            result_list = [
+                scn.run(
+                    jobs=jobs, copy_external_inputs=copy_external_inputs
+                    ) for scn in scenarios]
+                    
+        elif scenarios is not None:
+                
+            if not isinstance(scenarios, list):
+                scenarios = [scenarios]
+                
+            if isinstance(scenarios[0], int):
+                scenario_list = [
+                    self.scenarios(sid=scn) for scn in scenarios]
+            elif isinstance(scenarios[0], str):
+                scenario_list = [
+                    self.scenarios(name=scn) for scn in scenarios]
+            else:
+                scenario_list = scenarios
+
+            result_list = [scn.run(
+                jobs=jobs, copy_external_inputs=copy_external_inputs
+                ) for scn in scenario_list]
+            
+        if len(result_list) == 1:
+            return result_list[0]
+        else:                
+            return result_list
     
     def copy(self, name=None):
         """
