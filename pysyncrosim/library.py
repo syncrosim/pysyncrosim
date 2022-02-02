@@ -9,7 +9,7 @@ import pysyncrosim as ps
 from pysyncrosim import helper
 from pysyncrosim.environment import _environment
 
-pd.set_option("display.max_columns", 5)
+pd.set_option("display.max_columns", 50)
 
 class Library(object):
     """
@@ -616,9 +616,29 @@ class Library(object):
             if summary is True or summary == "CORE":
                 self.__init_datasheets(scope=scope, summary=summary)
                 if optional is False:
-                    self.__datasheets = self.__datasheets.iloc[:, 1:4]
+                    return self.__datasheets.iloc[:, 1:4]
+                elif scope != "Scenario":
+                    return self.__datasheets
+                else:
+                    # Find out if datasheets contain any data
+                    optional_args = ["--list", "--datasources",
+                                     "--lib=%s" % self.location,
+                                     "--sid=%d" % ids]
+                    optional_cols = self.__console_to_csv(optional_args)
+                    optional_cols = optional_cols.replace({"No": False, 
+                                                           "Yes": True})
+                    if optional_cols["Data Inherited"].sum() > 0:
+                        add_cols = ["Name", "Data", "Data Inherited",
+                                    "Data Source"]
+                    else:
+                        add_cols = ["Name", "Data"]
                     
-                return self.__datasheets
+                    # Only retain relevant optional columns
+                    optional_cols = optional_cols[add_cols]
+                    
+                    # Merge optional columns with datasheets and return
+                    optional_ds = self.__datasheets.merge(optional_cols)
+                    return optional_ds
         
             # Return List of DataFrames
             if summary is False:

@@ -63,7 +63,7 @@ myScenario = myProject.scenarios(name = "Spatial Scenario")
 # =============================================================================
 
 # List Datasheets for this Scenario
-myScenario.datasheets()
+myScenario.datasheets(optional=True)
 
 # Modify RunControl
 myScenario.datasheets(name = "helloworldSpatial_RunControl")
@@ -106,6 +106,7 @@ myScenario.datasheets(name = "core_Pipeline")
 
 # Copy the Scenario with all its Datasheets
 myCopiedScenario = myScenario.copy(name = "My Copied Scenario")
+
 
 # =============================================================================
 # # Run Scenarios
