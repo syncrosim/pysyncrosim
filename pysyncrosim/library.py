@@ -517,7 +517,7 @@ class Library(object):
             
             # Check that filter_value is not None
             if filter_value is None:
-                raise ValueError("Must specify a filter_value to filter the "+
+                raise ValueError("Must specify a filter_value to filter the " +
                                  "filter_column by")
             
             # Check if filter_column exists in Datasheet
@@ -531,7 +531,6 @@ class Library(object):
                 raise ValueError(
                     f"filter column {filter_column} not in Datasheet {name}")
                
-            tempfile_path = None
             try:
                 
                 filter_value = int(filter_value)
@@ -553,42 +552,8 @@ class Library(object):
                 else:
                     input_sheet_name = name
                 
-                tempfile_path = os.path.join(self.location + ".temp",
-                                             "temp.csv")
-                check_args = ["--export", "--lib=%s" % self.location,
-                              "--sheet=%s" % input_sheet_name, 
-                              "--file=%s" % tempfile_path, "--includepk",
-                              "--valsheets", "--extfilepaths", "--force"]
-                
-                # Check the scope of the input_sheet_name
-                scope_list = ["Project", "Scenario"]
-                
-                if (self.__datasheets.Name == input_sheet_name).any():
-                    
-                    input_scope = scope
-                    
-                    if input_scope == "Project" and len(ids) > 0:
-                        check_args += ["--pid=%d" % ids]
-                    
-                    if input_scope == "Scenario" and len(ids) > 0:               
-                        check_args += ["--sid=%d" % ids]
-                        
-                else:
-                    scope_list.remove(scope)
-                    input_scope = scope_list[0]
-                        
-                    if input_scope == "Project" and len(ids) > 0:
-                        if scope == "Scenario":
-                            pid = self.scenarios(sid=ids[0]).project.pid
-                        else:
-                            pid = ids[0]
-                        check_args += ["--pid=%d" % pid]
-                    
-                    if input_scope == "Scenario" and len(ids) > 0:               
-                        check_args += ["--sid=%d" % ids[0]]
-                
-                self.session._Session__call_console(check_args)
-                input_datasheet = pd.read_csv(tempfile_path)
+                input_datasheet = self.__slow_query(input_sheet_name, scope,
+                                                    ids)
                 
                 if (input_datasheet[filter_column] != filter_value).all():
                     raise ValueError(f"filter_value {filter_value} does not "+
@@ -603,8 +568,7 @@ class Library(object):
                 filter_value = primary_value
             
             finally:
-                if tempfile_path is not None and os.path.exists(tempfile_path):
-                    os.remove(tempfile_path)
+
                 self.__datasheets = None
             
             # If all checks pass, then add filter_column to args
@@ -653,11 +617,16 @@ class Library(object):
                 args += ["--sheet"]
                 
                 for ds in d_summary["Name"]:
-                    args[-1] = "--sheet=%s" % ds
-                    self.__datasheets = None
-                    self.__init_datasheets(scope=scope, summary=False,
-                                           name=ds, args=args)
-                    ds_list.append(self.__datasheets)
+                    
+                    ds = self.__check_datasheet_name(ds)
+                    ds_full = self.__slow_query(ds, scope, ids)
+                    ds_list.append(ds_full)
+                    
+                    # args[-1] = "--sheet=%s" % ds
+                    # self.__datasheets = None
+                    # self.__init_datasheets(scope=scope, summary=False,
+                    #                        name=ds, args=args)
+                    # ds_list.append(self.__datasheets)
                     
                 return ds_list
         
@@ -666,16 +635,13 @@ class Library(object):
             # If package is not included in name, add it
             name = self.__check_datasheet_name(name)
             
+            # Initialize list of datasheets
+            self.__init_datasheets(scope=scope, summary=True)
+            
             # Add arguments
-            args += ["--sheet=%s" % name] 
+            ds = self.__slow_query(name, scope, ids)
             
-            if name.startswith("core"):
-                args += ["--includesys"]
-                
-            self.__init_datasheets(scope=scope, summary=False,
-                                   name=name, args=args)
-            
-            return self.__datasheets
+            return ds
         
     def delete(self, project=None, scenario=None, force=False):
         """
@@ -1279,8 +1245,59 @@ class Library(object):
             csv=True)
         
         return pd.read_csv(io.StringIO(console_output), index_col=index_col)
+    
+    def __slow_query(self, input_sheet_name, scope, *ids):
         
+        tempfile_path = os.path.join(self.location + ".temp",
+                                     "temp.csv")
         
+        try:
+            
+            # Get datasheet
+            args = ["--export", "--lib=%s" % self.location,
+                          "--sheet=%s" % input_sheet_name, 
+                          "--file=%s" % tempfile_path, "--includepk",
+                          "--valsheets", "--extfilepaths", "--force"]
+            
+            if input_sheet_name.startswith("core"):
+                args += ["--includesys"]
+            
+            # Check the scope of the input_sheet_name
+            scope_list = ["Project", "Scenario"]
+            
+            if (self.__datasheets.Name == input_sheet_name).any():
+                
+                input_scope = scope
+                
+                if input_scope == "Project" and len(ids) > 0:
+                    args += ["--pid=%d" % ids[0]]
+                
+                if input_scope == "Scenario" and len(ids) > 0:               
+                    args += ["--sid=%d" % ids[0]]
+                    
+            else:
+                scope_list.remove(scope)
+                input_scope = scope_list[0]
+                    
+                if input_scope == "Project" and len(ids) > 0:
+                    if scope == "Scenario":
+                        pid = self.scenarios(sid=ids[0]).project.pid
+                    else:
+                        pid = ids[0]
+                    args += ["--pid=%d" % pid]
+                
+                if input_scope == "Scenario" and len(ids) > 0:               
+                    args += ["--sid=%d" % ids[0]]
+            
+            self.session._Session__call_console(args)
+            ds = pd.read_csv(tempfile_path)
+            ds = ds.dropna(axis=1)
+            id_column = input_sheet_name.split("_")[1] + "ID"
+            ds = ds.drop([id_column], axis=1)
         
-        
-
+        finally:
+            
+            if tempfile_path is not None and os.path.exists(tempfile_path):
+                os.remove(tempfile_path)
+            
+        return ds
