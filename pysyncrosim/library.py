@@ -445,7 +445,7 @@ class Library(object):
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    scope="Library", filter_column=None, filter_value=None,
-                   include_key=False, *ids):
+                   include_key=False, return_hidden=False, *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -470,6 +470,9 @@ class Library(object):
         include_key : Logical, optional
             Whether to include the primary key of the Datasheet, corresponding
             to the SQL database. Default is False.
+        return_hidden : Logical, optional
+            If set to True, returns all records in a Datasheet, including those
+            hidden from the user. Results in a slower query. Default is False. 
 
         Returns
         -------
@@ -479,167 +482,51 @@ class Library(object):
             If `optional=True`, also returns Scope, Is Single, and Is Output.
 
         """
-        # Type checks
-        if name is not None and not isinstance(name, str):
-            raise TypeError("name must be a String")
-        if not isinstance(summary, bool) and summary != "CORE":
-            raise TypeError("summary must be a Logical or 'CORE'")
-        if not isinstance(optional, bool):
-            raise TypeError("optional must be a Logical")
-        if not isinstance(empty, bool):
-            raise TypeError("empty must be a Logical")
-        if not isinstance(filter_column, str) and filter_column is not None:
-            raise TypeError("filter_column must be a String")
-        if not isinstance(include_key, bool):
-            raise TypeError("include_key must be a Logical")
         
-        self.__datasheets = None
+        self.__validate_datasheets_inputs(name, summary, optional, empty,
+                                          filter_column, include_key,
+                                          return_hidden)
         
+        # TODO: Instead of setting to None here, make sure datasheets are 
+        # refreshed when updates are made - saves computational time
+        self.__datasheets = None        
         # TODO: Check if datasheet exists in desired scope
         
-        # Initialize base arguments
-        args = ["--export", "--lib=%s" % self.__location]
-        
-        if scope == "Project" and len(ids) > 0:
-            args += ["--pid=%d" % ids]
-        
-        if scope == "Scenario" and len(ids) > 0:               
-            args += ["--sid=%d" % ids]
-            
-        if empty:
-            args += ["--schemaonly"]
-            
-        if include_key:
-            args += ["--includepk"]
-         
-        # Can only use filter_column arg if name of Datasheet is specified
-        if (filter_column is not None) and (name is not None):
-            
-            # Check that filter_value is not None
-            if filter_value is None:
-                raise ValueError("Must specify a filter_value to filter the " +
-                                 "filter_column by")
-            
-            # Check if filter_column exists in Datasheet
-            name = self.__check_datasheet_name(name)            
-            check_args = ["--list", "--columns",
-                          "--lib=%s" % self.location, 
-                          "--sheet=%s" % name]
-            ds_cols = self.__console_to_csv(check_args)
-            
-            if filter_column not in ds_cols.Name.values:
-                raise ValueError(
-                    f"filter column {filter_column} not in Datasheet {name}")
-               
-            try:
-                
-                filter_value = int(filter_value)
-
-                
-            except ValueError:
-                    
-                # Initialize Datasheets summary
-                # TODO: find out why Library and project scoped datasheets not showing up
-                self.__init_datasheets(scope=scope, summary=True)
-                
-                ds_row = self.__datasheets[self.__datasheets.Name == name]
-                
-                if ds_row["Is Output"].values[0] == "Yes":
-                    input_sheet_name = ds_cols[
-                        ds_cols.Name == filter_column].Formula1.values[0]
-                    filter_column = "Name" # TODO: Check if this is true for all cases
-                    
-                else:
-                    input_sheet_name = name
-                
-                input_datasheet = self.__slow_query(input_sheet_name, scope,
-                                                    ids)
-                
-                if (input_datasheet[filter_column] != filter_value).all():
-                    raise ValueError(f"filter_value {filter_value} does not "+
-                                     f"exist in filter_column {filter_column}")
-                
-                # Get primary key and ID for filter column/value
-                primary_key = input_datasheet.columns[0]
-                primary_value = input_datasheet[
-                    input_datasheet[filter_column] == filter_value
-                    ][primary_key].values[0]
-                filter_column = primary_key
-                filter_value = primary_value
-            
-            finally:
-
-                self.__datasheets = None
-            
-            # If all checks pass, then add filter_column to args
-            args += ["--filtercol=%s" % filter_column + "=" + str(filter_value)]
+        args = self.__initialize_export_args(scope, ids, empty, include_key)
         
         if name is None:
             
-            # Return DataFrame of Datasheets
             if summary is True or summary == "CORE":
-                self.__init_datasheets(scope=scope, summary=summary)
-                if optional is False:
-                    return self.__datasheets.iloc[:, 1:4]
-                elif scope != "Scenario":
-                    return self.__datasheets
-                else:
-                    # Find out if datasheets contain any data
-                    optional_args = ["--list", "--datasources",
-                                     "--lib=%s" % self.location,
-                                     "--sid=%d" % ids]
-                    optional_cols = self.__console_to_csv(optional_args)
-                    optional_cols = optional_cols.replace({"No": False, 
-                                                           "Yes": True})
-                    if optional_cols["Data Inherited"].sum() > 0:
-                        add_cols = ["Name", "Data", "Data Inherited",
-                                    "Data Source"]
-                    else:
-                        add_cols = ["Name", "Data"]
-                    
-                    # Only retain relevant optional columns
-                    optional_cols = optional_cols[add_cols]
-                    
-                    # Merge optional columns with datasheets and return
-                    optional_ds = self.__datasheets.merge(optional_cols)
-                    return optional_ds
+                
+                ds_frame = self.__return_summarized_datasheets(scope, summary,
+                                                               optional, ids)
+                
+                return ds_frame
         
-            # Return List of DataFrames
             if summary is False:
-            
-                self.__init_datasheets(scope=scope, summary=True)
-                d_summary = self.__datasheets.copy()
-                self.__datasheets = None
-                                
-                ds_list = []
                 
-                # Add arguments
-                args += ["--sheet"]
-                
-                for ds in d_summary["Name"]:
-                    
-                    ds = self.__check_datasheet_name(ds)
-                    ds_full = self.__slow_query(ds, scope, ids)
-                    ds_list.append(ds_full)
-                    
-                    # args[-1] = "--sheet=%s" % ds
-                    # self.__datasheets = None
-                    # self.__init_datasheets(scope=scope, summary=False,
-                    #                        name=ds, args=args)
-                    # ds_list.append(self.__datasheets)
+                ds_list = self.__return_list_of_full_datasheets(scope, args,
+                                                                return_hidden,
+                                                                ids)
                     
                 return ds_list
         
-        if name is not None:
+        else:
             
             # If package is not included in name, add it
             name = self.__check_datasheet_name(name)
             
-            # Initialize list of datasheets
-            self.__init_datasheets(scope=scope, summary=True)
+            if filter_column is not None:
             
-            # Add arguments
-            ds = self.__slow_query(name, scope, ids)
+                filter_column, filter_value = self.__find_filter_column_args(
+                    filter_column, filter_value, name, scope, ids)
+                
+                args += ["--filtercol=%s" % filter_column + "=" + filter_value]
+                        
+            if return_hidden:
+                ds = self.__slow_query_datasheet(name, scope, ids)               
+            else:
+                ds = self.__fast_query_datasheet(name, scope, args)            
             
             return ds
         
@@ -1246,58 +1133,260 @@ class Library(object):
         
         return pd.read_csv(io.StringIO(console_output), index_col=index_col)
     
-    def __slow_query(self, input_sheet_name, scope, *ids):
+    def __validate_datasheets_inputs(self, name, summary, optional, empty,
+                                     filter_column, include_key, 
+                                     return_hidden):
+            
+        if name is not None and not isinstance(name, str):
+            raise TypeError("name must be a String")
+        if not isinstance(summary, bool) and summary != "CORE":
+            raise TypeError("summary must be a Logical or 'CORE'")
+        if not isinstance(optional, bool):
+            raise TypeError("optional must be a Logical")
+        if not isinstance(empty, bool):
+            raise TypeError("empty must be a Logical")
+        if not isinstance(filter_column, str) and filter_column is not None:
+            raise TypeError("filter_column must be a String")
+        if not isinstance(include_key, bool):
+            raise TypeError("include_key must be a Logical")
+        if not isinstance(return_hidden, bool):
+            raise TypeError("return_hidden must be a Logical")
+            
+    
+    def __initialize_export_args(self, scope, ids, empty, include_key):
+    
+        args = ["--export", "--lib=%s" % self.__location]
         
-        tempfile_path = os.path.join(self.location + ".temp",
-                                     "temp.csv")
+        if scope == "Project" and len(ids) > 0:
+            args += ["--pid=%d" % ids]
+        
+        if scope == "Scenario" and len(ids) > 0:               
+            args += ["--sid=%d" % ids]
+            
+        if empty:
+            args += ["--schemaonly"]
+            
+        if include_key:
+            args += ["--includepk"]
+            
+        return args
+    
+    def __find_filter_column_args(self, filter_column, filter_value, name, scope,
+                                ids):
+        
+        # Check that filter_value is not None
+        if filter_value is None:
+            raise ValueError("Must specify a filter_value to filter the " +
+                             "filter_column by")
+        
+        # Check if filter_column exists in Datasheet
+        check_args = ["--list", "--columns",
+                      "--lib=%s" % self.location, 
+                      "--sheet=%s" % name]
+        ds_cols = self.__console_to_csv(check_args)
+        
+        if filter_column not in ds_cols.Name.values:
+            raise ValueError(
+                f"filter column {filter_column} not in Datasheet {name}")
+           
+        try:
+            
+            filter_value = int(filter_value)
+            
+        except ValueError:
+                
+            # Initialize Datasheets summary
+            # TODO: find out why Library and project scoped datasheets not showing up
+            self.__init_datasheets(scope=scope, summary=True)
+            
+            ds_row = self.__datasheets[self.__datasheets.Name == name]
+            
+            if ds_row["Is Output"].values[0] == "Yes":
+                input_sheet_name = ds_cols[
+                    ds_cols.Name == filter_column].Formula1.values[0]
+                filter_column = "Name" # TODO: Check if this is true for all cases
+                
+            else:
+                input_sheet_name = name
+            
+            input_datasheet = self.__slow_query_datasheet(input_sheet_name,
+                                                          scope, ids)
+            
+            if (input_datasheet[filter_column] != filter_value).all():
+                raise ValueError(f"filter_value {filter_value} does not "+
+                                 f"exist in filter_column {filter_column}")
+            
+            # Get primary key and ID for filter column/value
+            primary_key = input_datasheet.columns[0]
+            primary_value = input_datasheet[
+                input_datasheet[filter_column] == filter_value
+                ][primary_key].values[0]
+            filter_column = primary_key
+            filter_value = primary_value
+        
+        finally:
+
+            self.__datasheets = None
+            
+            return filter_column, str(filter_value)
+        
+    def __find_datasheets_with_all_cols(self, ids):
+        
+        # Find out if datasheets contain any data
+        optional_args = ["--list", "--datasources",
+                         "--lib=%s" % self.location,
+                         "--sid=%d" % ids]
+        optional_cols = self.__console_to_csv(optional_args)
+        optional_cols = optional_cols.replace({"No": False, 
+                                               "Yes": True})
+        
+        if optional_cols["Data Inherited"].sum() > 0:
+            add_cols = ["Name", "Data", "Data Inherited",
+                        "Data Source"]
+        else:
+            add_cols = ["Name", "Data"]
+        
+        # Only retain relevant optional columns
+        optional_cols = optional_cols[add_cols]
+        
+        # Merge optional columns with datasheets and return
+        optional_ds = self.__datasheets.merge(optional_cols)
+        
+        return optional_ds
+    
+    def __return_summarized_datasheets(self, scope, summary, optional, ids):
+    
+        self.__init_datasheets(scope=scope, summary=summary)
+        
+        if optional is False:
+            
+            return self.__datasheets.iloc[:, 1:4]
+        
+        elif scope != "Scenario":
+            
+            return self.__datasheets
+        
+        else:
+            
+            optional_ds = self.__find_datasheets_with_all_cols(ids)
+    
+            return optional_ds
+    
+    def __return_list_of_full_datasheets(self, scope, args, return_hidden,
+                                         ids):
+
+        self.__init_datasheets(scope=scope, summary=True)
+        d_summary = self.__datasheets.copy()
+        self.__datasheets = None
+                        
+        ds_list = []
+        
+        # Add arguments
+        args += ["--sheet"]
+        
+        for ds in d_summary["Name"]:
+            
+            ds = self.__check_datasheet_name(ds)
+            
+            if return_hidden:
+                ds_full = self.__slow_query_datasheet(ds, scope, ids)
+            else:
+                ds_full = self.__fast_query_datasheet(ds, scope, args)
+                
+            ds_list.append(ds_full)
+            
+        return ds_list
+    
+    def __fast_query_datasheet(self, name, scope, args):
+        
+        # Add arguments
+        args += ["--sheet=%s" % name] 
+        
+        if name.startswith("core"):
+            args += ["--includesys"]
+            
+        self.__init_datasheets(scope=scope, summary=False,
+                               name=name, args=args)
+        
+        return self.__datasheets
+    
+    def __slow_query_datasheet(self, input_sheet_name, scope, ids):
+        
+        tempfile_path = self.__generate_tempfile_path()
         
         try:
             
             # Get datasheet
             args = ["--export", "--lib=%s" % self.location,
-                          "--sheet=%s" % input_sheet_name, 
-                          "--file=%s" % tempfile_path, "--includepk",
-                          "--valsheets", "--extfilepaths", "--force"]
+                    "--sheet=%s" % input_sheet_name, 
+                    "--file=%s" % tempfile_path, "--includepk",
+                    "--valsheets", "--extfilepaths", "--force"]
             
             if input_sheet_name.startswith("core"):
                 args += ["--includesys"]
             
             # Check the scope of the input_sheet_name
-            scope_list = ["Project", "Scenario"]
-            
-            if (self.__datasheets.Name == input_sheet_name).any():
-                
-                input_scope = scope
-                
-                if input_scope == "Project" and len(ids) > 0:
-                    args += ["--pid=%d" % ids[0]]
-                
-                if input_scope == "Scenario" and len(ids) > 0:               
-                    args += ["--sid=%d" % ids[0]]
-                    
-            else:
-                scope_list.remove(scope)
-                input_scope = scope_list[0]
-                    
-                if input_scope == "Project" and len(ids) > 0:
-                    if scope == "Scenario":
-                        pid = self.scenarios(sid=ids[0]).project.pid
-                    else:
-                        pid = ids[0]
-                    args += ["--pid=%d" % pid]
-                
-                if input_scope == "Scenario" and len(ids) > 0:               
-                    args += ["--sid=%d" % ids[0]]
+            args = self.__find_scope_id_args(input_sheet_name, scope, ids,
+                                             args)
             
             self.session._Session__call_console(args)
             ds = pd.read_csv(tempfile_path)
-            ds = ds.dropna(axis=1)
-            id_column = input_sheet_name.split("_")[1] + "ID"
-            ds = ds.drop([id_column], axis=1)
+            ds = self.__remove_unnecessary_datasheet_columns(ds,
+                                                             input_sheet_name)
         
         finally:
             
             if tempfile_path is not None and os.path.exists(tempfile_path):
                 os.remove(tempfile_path)
             
+        return ds
+    
+    def __generate_tempfile_path(self):
+        
+        temp_folder = self.location + "temp"
+
+        if not os.path.exists(temp_folder):
+            os.mkdir(temp_folder)
+        
+        tempfile_path = os.path.join(temp_folder,
+                                     "temp.csv")
+        
+        return tempfile_path
+    
+    def __find_scope_id_args(self, input_sheet_name, scope, ids, args):
+        
+        scope_list = ["Project", "Scenario", "Library"]
+        
+        if (self.__datasheets.Name == input_sheet_name).any():
+            
+            input_scope = scope
+            
+            if input_scope == "Project" and len(ids[0]) > 0:
+                args += ["--pid=%d" % ids[0]]
+            
+            if input_scope == "Scenario" and len(ids[0]) > 0:               
+                args += ["--sid=%d" % ids[0]]
+                
+        else:
+            scope_list.remove(scope)
+            input_scope = scope_list[0]
+                
+            if input_scope == "Project" and len(ids[0]) > 0:
+                if scope == "Scenario":
+                    pid = self.scenarios(sid=ids[0]).project.pid
+                else:
+                    pid = ids[0]
+                args += ["--pid=%d" % pid]
+            
+            if input_scope == "Scenario" and len(ids[0]) > 0:               
+                args += ["--sid=%d" % ids[0]]
+                
+        return args
+    
+    def __remove_unnecessary_datasheet_columns(self, ds, input_sheet_name):
+        
+        ds = ds.dropna(axis=1)
+        id_column = input_sheet_name.split("_")[1] + "ID"
+        ds = ds.drop([id_column], axis=1)
+        
         return ds
