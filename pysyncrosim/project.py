@@ -218,7 +218,8 @@ class Project(object):
         return self.__scenarios
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, filter_value=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False,
+                   return_hidden=False):
         """
         Retrieves a DataFrame of Project Datasheets.
         
@@ -253,7 +254,7 @@ class Project(object):
                                                     empty, "Project",
                                                     filter_column, 
                                                     filter_value, include_key,
-                                                    self.pid)
+                                                    return_hidden, self.pid)
         return self.__datasheets
     
     def delete(self, scenario=None, force=False):

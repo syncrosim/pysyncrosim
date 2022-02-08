@@ -247,7 +247,8 @@ class Scenario(object):
         return self.__parent_id
     
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, filter_value=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False,
+                   return_hidden=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -282,7 +283,7 @@ class Scenario(object):
                                                     empty, "Scenario",
                                                     filter_column, 
                                                     filter_value, include_key,
-                                                    self.sid)
+                                                    return_hidden, self.sid)
         return self.__datasheets
     
 

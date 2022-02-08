@@ -708,74 +708,17 @@ class Library(object):
             Dictionary of Results Scenarios.
 
         """
-        # Type checks
-        if scenarios is not None and not isinstance(
-                scenarios, ps.Scenario) and not isinstance(
-                    scenarios, int) and not isinstance(
-                    scenarios, np.int64) and not isinstance(
-                        scenarios, str) and not isinstance(
-                            scenarios, list):
-            raise TypeError(
-                "scenarios must be Scenario instance, String, Integer, or List")
-        if project is not None and not isinstance(
-                project, ps.Project) and not isinstance(
-                    project, int) and not isinstance(
-                    project, np.int64) and not isinstance(project, str):
-            raise TypeError(
-                "project must be Project instance, String, or Integer")
-        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
-            raise TypeError("jobs must be an Integer")
-        
-        # Collect output in a dictionary
-        result_list = []
-        
-        if scenarios is None:
-            
-            if project is None:
-                
-                if len(self.projects()) == 1:
-                    project = self.projects(
-                        pid=self.__projects.ProjectID.item())
-                    
-                else:
-                    raise ValueError(
-                        "Must specify project when > 1 Project in the Library")
-            
-            # Convert project to Project instance
-            if isinstance(project, int):
-                project = self.projects(pid=project)
-            if isinstance(project, str):
-                project = self.projects(name=project)
-                
-            # Run all Scenarios in a Project
-            scenarios = project.scenarios(summary=False)
-            
-            if not isinstance(scenarios, list):
-                scenarios = [scenarios]
-            
-            result_list = [
-                scn.run(
-                    jobs=jobs, copy_external_inputs=copy_external_inputs
-                    ) for scn in scenarios]
-                    
-        elif scenarios is not None:
-                
-            if not isinstance(scenarios, list):
-                scenarios = [scenarios]
-                
-            if isinstance(scenarios[0], int):
-                scenario_list = [
-                    self.scenarios(sid=scn) for scn in scenarios]
-            elif isinstance(scenarios[0], str):
-                scenario_list = [
-                    self.scenarios(
-                        name=scn, project=project) for scn in scenarios]
-            else:
-                scenario_list = scenarios
 
-            result_list = [scn.run(
-                jobs=jobs, copy_external_inputs=copy_external_inputs
-                ) for scn in scenario_list]
+        self.__validate_run_inputs(scenarios, project, jobs,
+                                   copy_external_inputs)
+        
+        scenario_list = self.__generate_scenarios_list_to_run(scenarios,
+                                                              project)
+
+        # Collect output from all runs
+        result_list = [scn.run(
+            jobs=jobs, copy_external_inputs=copy_external_inputs
+            ) for scn in scenario_list]
             
         if len(result_list) == 1:
             return result_list[0]
@@ -1152,6 +1095,28 @@ class Library(object):
         if not isinstance(return_hidden, bool):
             raise TypeError("return_hidden must be a Logical")
             
+    def __validate_run_inputs(self, scenarios, project, jobs,
+                               copy_external_inputs):
+    
+        if scenarios is not None and not isinstance(
+                scenarios, ps.Scenario) and not isinstance(
+                    scenarios, int) and not isinstance(
+                    scenarios, np.int64) and not isinstance(
+                        scenarios, str) and not isinstance(
+                            scenarios, list):
+            raise TypeError(
+                "scenarios must be Scenario instance, String, Integer, or List")
+        if project is not None and not isinstance(
+                project, ps.Project) and not isinstance(
+                    project, int) and not isinstance(
+                    project, np.int64) and not isinstance(project, str):
+            raise TypeError(
+                "project must be Project instance, String, or Integer")
+        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
+            raise TypeError("jobs must be an Integer")
+        if not isinstance(copy_external_inputs, bool):
+            raise TypeError("copy_external_inputs must be a Logical")
+            
     
     def __initialize_export_args(self, scope, ids, empty, include_key):
     
@@ -1390,3 +1355,55 @@ class Library(object):
         ds = ds.drop([id_column], axis=1)
         
         return ds
+    
+    def __generate_scenarios_list_to_run(self, scenarios, project):
+    
+        if scenarios is None:
+            
+            scenario_list = self.__find_scenarios_from_project(project)
+            
+            return scenario_list
+                    
+        elif scenarios is not None:
+                
+            if not isinstance(scenarios, list):
+                scenarios = [scenarios]
+                
+            if isinstance(scenarios[0], int):
+                scenario_list = [
+                    self.scenarios(sid=scn) for scn in scenarios]
+            elif isinstance(scenarios[0], str):
+                scenario_list = [
+                    self.scenarios(
+                        name=scn, project=project) for scn in scenarios]
+            else:
+                scenario_list = scenarios
+    
+            return scenario_list
+        
+    def __find_scenarios_from_project(self, project):
+        
+        if project is None:
+            
+            if len(self.projects()) == 1:
+                project = self.projects(
+                    pid=self.__projects.ProjectID.item())
+                
+            else:
+                raise ValueError(
+                    "Must specify project when > 1 Project in the Library")
+        
+        # Convert project to Project instance
+        if isinstance(project, int):
+            project = self.projects(pid=project)
+            
+        if isinstance(project, str):
+            project = self.projects(name=project)
+            
+        # Run all Scenarios in a Project
+        scenario_list = project.scenarios(summary=False)
+        
+        if not isinstance(scenario_list, list):
+            scenario_list = [scenario_list]
+            
+        return scenario_list
