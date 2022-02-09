@@ -359,7 +359,7 @@ def test_library_run():
         myLibrary.run(jobs="1")
     
     runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", None, None, False, 1)
+                                      "Scenario", None, None, False, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
     myLibrary.save_datasheet("RunControl", runcontrol, "Scenario", 1)
@@ -580,7 +580,7 @@ def test_scenario_datasheets():
     assert myScenario.datasheets(
         summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myScenario.datasheets().columns) == 3
-    assert len(myScenario.datasheets(optional=True).columns) == 6
+    assert len(myScenario.datasheets(optional=True).columns) == 7
     assert isinstance(myScenario.datasheets(
         name="RunControl",
         filter_column="MinimumIteration", 
@@ -755,8 +755,8 @@ def test_scenario_run_and_results():
             filter_value="test") 
        
     with pytest.raises(
-            ValueError, 
-            match="filter_value test does not exist in filter_column"):
+            RuntimeError, 
+            match="Cannot find a value for: test"):
         myResultsScenario.datasheet_rasters(
             datasheet="IntermediateDatasheet",
             column = None,

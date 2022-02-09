@@ -363,54 +363,9 @@ class Library(object):
             of Scenario information for this Library.
 
         """
-        # Check types
-        if name is not None and not isinstance(name, str)\
-            and not isinstance(name, int)\
-                and not isinstance(name, list):
-            raise TypeError("name must be a String, Integer, or List of these")
-            
-        if isinstance(name, list) and isinstance(sid, list):
-            name = None
-            
-        if isinstance(name, list):
-           if not all(isinstance(item, int) for item in name)\
-               and not all(isinstance(item, str) for item in name):
-               raise TypeError("All values in name list must be either" + 
-                               " Strings or Integers")
-        elif name is not None:
-            name = [name]
-               
-        if project is not None and project.__class__.__name__ != "Project":
-            if not isinstance(project, str) and not isinstance(project, int):
-                raise TypeError(
-                    "project must be Project instance, String, or Integer")
-                
-        if sid is not None and not isinstance(sid, int)\
-            and not isinstance(sid, np.int64)\
-                and not isinstance(sid, list):
-            raise TypeError("sid must be an Integer or List of Integers")
-            
-        if isinstance(sid, list):
-            if not all(isinstance(item, int) for item in sid):
-                raise TypeError("All values in sid list must be Integers")
-        elif sid is not None:
-            sid = [sid]
-                
-        if pid is not None and not isinstance(
-                pid, int) and not isinstance(pid, np.int64):
-            raise TypeError("pid must be an Integer")
-            
-        if not isinstance(overwrite, bool):
-            raise TypeError("overwrite must be a Logical")
-            
-        if not isinstance(optional, bool):
-            raise TypeError("optional must be a Logical")
-            
-        if not isinstance(summary, bool) and summary is not None:
-            raise TypeError("summary must be a Logical or None")
-            
-        if not isinstance(results, bool):
-            raise TypeError("results must be a Logical")
+        
+        self.__validate_scenarios_inputs(name, sid, project, pid, overwrite,
+                                         optional, summary, results)
           
         # Set the summary argument
         if summary is None:
@@ -418,21 +373,24 @@ class Library(object):
                 summary = False
             else:
                 summary = True
-        
-        if (sid is not None and len(sid) == 1)\
-            and (name is not None and len(name) == 1):
-                print("Both Scenario ID and name specified, using Scenario ID")
-                output = self.__extract_scenario(None, project, sid[0], pid,
-                                                 overwrite, optional, summary,
-                                                 results)
-        elif sid is not None:
+                
+        if sid is not None:
+            if not isinstance(sid, list):
+                sid = [sid]
+            if name is not None:
+                print("Both name and sid specified - using sid")
+                name = None
             output = [self.__extract_scenario(
                 name, project, s, pid, overwrite, optional, summary, results
                 ) for s in sid]
+            
         elif name is not None:
+            if not isinstance(name, list):
+                name = [name]
             output = [self.__extract_scenario(
                 n, project, sid, pid, overwrite, optional, summary, results
                 ) for n in name]
+            
         else:
             output = self.__extract_scenario(None, project, None, pid,
                                              overwrite, optional, summary,
@@ -1076,6 +1034,53 @@ class Library(object):
         
         return pd.read_csv(io.StringIO(console_output), index_col=index_col)
     
+    def __validate_scenarios_inputs(self, name, sid, project, pid, overwrite,
+                                    optional, summary, results):
+
+        if name is not None and not isinstance(name, str)\
+            and not isinstance(name, int)\
+                and not isinstance(name, list):
+            raise TypeError("name must be a String, Integer, or List of these")
+            
+        if isinstance(name, list) and isinstance(sid, list):
+            name = None
+            
+        if isinstance(name, list):
+           if not all(isinstance(item, int) for item in name)\
+               and not all(isinstance(item, str) for item in name):
+               raise TypeError("All values in name list must be either" + 
+                               " Strings or Integers")
+               
+        if project is not None and project.__class__.__name__ != "Project":
+            if not isinstance(project, str) and not isinstance(project, int):
+                raise TypeError(
+                    "project must be Project instance, String, or Integer")
+                
+        if sid is not None and not isinstance(sid, int)\
+            and not isinstance(sid, np.int64)\
+                and not isinstance(sid, list):
+            raise TypeError("sid must be an Integer or List of Integers")
+            
+        if isinstance(sid, list):
+            if not all(isinstance(item, int) for item in sid):
+                raise TypeError("All values in sid list must be Integers")
+                
+        if pid is not None and not isinstance(
+                pid, int) and not isinstance(pid, np.int64):
+            raise TypeError("pid must be an Integer")
+            
+        if not isinstance(overwrite, bool):
+            raise TypeError("overwrite must be a Logical")
+            
+        if not isinstance(optional, bool):
+            raise TypeError("optional must be a Logical")
+            
+        if not isinstance(summary, bool) and summary is not None:
+            raise TypeError("summary must be a Logical or None")
+            
+        if not isinstance(results, bool):
+            raise TypeError("results must be a Logical")
+    
     def __validate_datasheets_inputs(self, name, summary, optional, empty,
                                      filter_column, include_key, 
                                      return_hidden):
@@ -1242,12 +1247,9 @@ class Library(object):
 
         self.__init_datasheets(scope=scope, summary=True)
         d_summary = self.__datasheets.copy()
-        self.__datasheets = None
                         
         ds_list = []
         
-        # Add arguments
-        args += ["--sheet"]
         
         for ds in d_summary["Name"]:
             
@@ -1264,14 +1266,18 @@ class Library(object):
     
     def __fast_query_datasheet(self, name, scope, args):
         
+        # Refresh datasheets
+        self.__datasheets=None
+        
         # Add arguments
-        args += ["--sheet=%s" % name] 
+        fast_query_args = list(args)
+        fast_query_args.append("--sheet=%s" % name)
         
         if name.startswith("core"):
-            args += ["--includesys"]
+            fast_query_args += ["--includesys"]
             
         self.__init_datasheets(scope=scope, summary=False,
-                               name=name, args=args)
+                               name=name, args=fast_query_args)
         
         return self.__datasheets
     
