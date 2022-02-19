@@ -48,6 +48,10 @@ class Library(object):
         # All above attributes get created by below function
         self.__init_info()
         self.__description = self.__init_description()
+        
+        # Initialize projects and scenarios
+        self.scenarios()
+        self.projects()
 
     @property
     def session(self):
@@ -244,30 +248,13 @@ class Library(object):
 
         """
         
-        # Add unit tests for argument types later
-        if name is not None and not isinstance(name, str):
-            raise TypeError("name must be a String")
-        if pid is not None and not isinstance(
-                pid, int) and not isinstance(pid, np.int64):
-            raise TypeError("pid must be an Integer")
-        if not isinstance(summary, bool):
-            raise TypeError("summary must be a Logical")
-        if not isinstance(overwrite, bool):
-            raise TypeError("overwrite must be a Logical")
+        self.__validate_projects_inputs(name, pid, summary, overwrite)
         
         if overwrite is True:
             self.delete(project=name)
         
-        self.__init_projects()
-        
-        # If pid provided, check that pid exists
-        if pid is not None:
-            if pid not in self.__projects["ProjectID"].values:
-                raise ValueError(f"Project ID {pid} does not exist")
-            elif name is not None and name != self.__projects[
-                    self.__projects["ProjectID"] == pid]["Name"].values[0]:
-                raise ValueError(
-                    f"Project ID {pid} does not match Project name {name}")
+        if self.__projects is None:
+            self.__init_projects()
           
         p = self.__get_project(name=name, pid=pid)
         
@@ -276,50 +263,27 @@ class Library(object):
             if summary is True:
                 
                 # Return DataFrame of Project information
-                if name is not None:
-                    return self.__projects[self.__projects.Name == name]
-                if pid is not None:
-                    return self.__projects[self.__projects.ProjectID == pid]
-                else:
-                    return self.__projects
+                project_summary = self.__extract_project_summary(name, pid)
+                
+                return project_summary
                 
             if summary is False:
-        
-                proj_list = []
                 
-                for i in range(0, len(self.__projects)):
-                    
-                    proj = ps.Project(self.__projects["ProjectID"].loc[i],
-                                      self.__projects["Name"].loc[i],
-                                      self)
-                    
-                    proj_list.append(proj)
-    
-                return proj_list   
+                project_list = self.__extract_projects()
+        
+                return project_list  
             
         elif p.empty:
-             
-            # If specified Project does not exist, then create it    
-            args = ["--create", "--project", "--lib=%s" % self.__location,
-                    "--name=%s" % name]
-            self.session._Session__call_console(args)
             
-            # Reset Projects
-            self.__projects = None
-            self.__init_projects()
-            p = self.__get_project(name, pid)
+            new_project = self.__create_new_project(name)
             
-            # Convert np.int64 to native int
-            pid = p["ProjectID"].values[0].tolist()
-            
-            return ps.Project(pid, p["Name"].values[0], self)
+            return new_project
                 
         else:
             
-            # Convert np.int64 to native int
-            pid = p["ProjectID"].values[0].tolist()
+            existing_project = self.__open_existing_project(p)
              
-            return ps.Project(pid, p["Name"].values[0], self)
+            return existing_project
                 
         
     def scenarios(self, name=None, project=None, sid=None, pid=None,
@@ -867,6 +831,11 @@ class Library(object):
             return self.__projects[self.__projects["Name"] == name]
         else:
             return self.__projects[self.__projects["ProjectID"] == pid]
+        
+    def __refresh_projects(self):
+        # Call SyncroSim DB to refresh project list
+        self.__projects = None
+        self.__init_projects()
             
     def __get_scenario(self, name=None, sid=None):
         # Retrieves Scenario info from the name or ID
@@ -876,6 +845,11 @@ class Library(object):
             return self.__scenarios[self.__scenarios["Name"] == name]
         else:
             return self.__scenarios[self.__scenarios["ScenarioID"] == sid]
+        
+    def __refresh_scenarios(self):
+        # Call SyncroSim DB to refresh scenario list
+        self.__scenarios = None
+        self.__init_scenarios()
         
     def __extract_scenario(self, name, project, sid, pid, overwrite, optional,
                            summary, results):
@@ -892,35 +866,16 @@ class Library(object):
         
         # Find project if not specified
         if summary is False:
-            if project is None and pid is None:
+            
+            if pid is None:
                 
-                self.__init_scenarios()
-                if sid is not None and self.__get_scenario(sid=sid).empty is False:
-                    pid = self.__get_scenario(sid=sid)["ProjectID"].item()
-                    project = self.projects(pid=pid)
-                if name is not None and len(self.__get_scenario(name=name)) == 1:
-                    pid = self.__get_scenario(name=name)["ProjectID"].item()
-                    project = self.projects(pid=pid)
-                elif self.__projects is None or self.__projects.empty:
-                    project = self.projects(name = "Definitions")
-                    pid = project.pid
-                elif len(self.__projects) == 1:
-                    pid = self.__projects.ProjectID.item()
-                    project = self.projects(pid=pid)
-                else:
-                    raise ValueError("More than one Project in Library." + 
-                                     " Please specify a Project.")
-                    
-            elif isinstance(project, int) or isinstance(project, np.int64):
-                pid = project
-            elif isinstance(project, str):
-                pid = self.__projects[
-                    self.__projects.Name == project].ProjectID.item()
-            elif isinstance(project, ps.Project):
-                pid = project.pid
+                pid = self.__find_project_id(project)
                 
             if overwrite is True:
-                self.delete(project=project, scenario=name, force=True)
+                if project is None:                
+                    self.delete(project=pid, scenario=name, force=True)
+                else:
+                    self.delete(project=project, scenario=name, force=True)
                     
         # Retrieve Scenario DataFrame
         self.__init_scenarios(pid=pid)
@@ -928,12 +883,7 @@ class Library(object):
         # If sid provided, check that sid exists
         if sid is not None:
             
-            if self.__get_scenario(sid=sid).empty:
-                raise ValueError(f"Scenario ID {sid} does not exist")
-            elif name is not None and name != self.__get_scenario(
-                    sid=1).Name.item():
-                raise ValueError(
-                    f"Scenario ID {sid} does not match Scenario name {name}")
+            self.__validate_sid(sid, name)
         
         s = self.__get_scenario(name=name, sid=sid)
         
@@ -942,87 +892,38 @@ class Library(object):
             # Retrieve DataFrame of available Scenarios
             if summary:
                 
-                if optional is False:
-                    ds =  self.__scenarios[['ScenarioID',
-                                            'ProjectID',
-                                            'Name',
-                                            'IsResult']]
-                else:
-                    ds = self.__scenarios
-                    
-                if results:
-                    ds = ds[ds["IsResult"] == "Yes"]
+                scenario_summary = self.__extract_scenario_summary(optional,
+                                                                   results,
+                                                                   name, sid)
                 
-                if name is not None:
-                    return ds[ds.Name == name]
-                
-                if sid is not None:
-                    return ds[ds["ScenarioID"] == sid]
-                
-                return ds
+                return scenario_summary
               
             # Return list of Scenario objects    
             if summary is False:
                 
-                s_summary = self.__scenarios
-                s_summary = s_summary[s_summary["IsResult"] == "No"]
+                scenario_list = self.__extract_scenario_list(project, pid) # better name needed
                 
-                if not isinstance(project, ps.Project):
-                    project = self.projects(pid=pid) 
-                                
-                scn_list = []
-                
-                for i in range(0, len(s_summary)):
-                    
-                    scn = ps.Scenario(s_summary["ScenarioID"].loc[i],
-                                      s_summary["Name"].loc[i],
-                                      project, self)
-                    
-                    scn_list.append(scn)
+                return scenario_list                
     
-                return scn_list                
-        
-        
         # Create a Scenario
         if s.empty:
             
-            if isinstance(project, int):
-                pid = project
-            elif isinstance(project, str):
-                self.__init_projects()
-                p = self.__get_project(name=project)
-                pid = p["ProjectID"].values[0]
-            elif isinstance(project, ps.Project):
-                pid = project.pid
-             
-            # Create Scenario using console    
-            args = ["--create", "--scenario", "--pid=%d" % pid,
-                    "--lib=%s" % self.__location, "--name=%s" % name]
-            self.session._Session__call_console(args)
+            if project is None:
+                project = pid
             
-            # Reset Scenarios
-            self.__scenarios = None
-            self.__init_scenarios()
-            s = self.__get_scenario(name=name, sid=sid)
+            new_scenario = self.__create_new_scenario(project, name, sid)
             
-            if not isinstance(project, ps.Project):
-                project = self.projects(pid=pid)
-            
-            return ps.Scenario(s["ScenarioID"].values[0],
-                               s["Name"].values[0], project, self)
+            return new_scenario
         
         # Open a Scenario
         else:
-                            
-            # Retrieve the name of a Scenario using only the sid
-            pid = s["ProjectID"].values[0].tolist()
-
-            if not isinstance(project, ps.Project):
-                project = self.projects(pid=pid)
-
-            sid = s["ScenarioID"].values[0].tolist()
             
-            return ps.Scenario(sid, s["Name"].values[0], project, self)
+            if project is None:
+                project = pid
+            
+            existing_scenario = self.__open_existing_scenario(s, project)
+                            
+            return existing_scenario
 
         
     def __console_to_csv(self, args, index_col=None):
@@ -1033,6 +934,209 @@ class Library(object):
             csv=True)
         
         return pd.read_csv(io.StringIO(console_output), index_col=index_col)
+    
+    def __validate_pid(self, pid, name):
+        
+        # If Scenario specified before project, then project should be created
+        # if (self.__scenarios is not None and not self.__scenarios.empty):
+        #     if pid == self.__scenarios["ProjectID"].item():
+        #         return
+        
+        if self.__projects is None or self.__projects.empty:
+            raise ValueError("pid specified, but no Projects created yet")
+        elif pid not in self.__projects["ProjectID"].values:
+            raise ValueError(f"Project ID {pid} does not exist")
+        elif name is not None and name != self.__projects[
+                self.__projects["ProjectID"] == pid]["Name"].values[0]:
+            raise ValueError(
+                f"Project ID {pid} does not match Project name {name}")
+            
+    def __validate_sid(self, sid, name):
+    
+        if self.__get_scenario(sid=sid).empty:
+            raise ValueError(f"Scenario ID {sid} does not exist")
+        elif name is not None and name != self.__get_scenario(
+                sid=1).Name.item():
+            raise ValueError(
+                f"Scenario ID {sid} does not match Scenario name {name}")
+            
+    def __extract_project_summary(self, name, pid):
+    
+        if name is not None:
+            return self.__projects[self.__projects.Name == name]
+        if pid is not None:
+            return self.__projects[self.__projects.ProjectID == pid]
+        else:
+            return self.__projects
+        
+    def __extract_projects(self):
+        
+        self.__refresh_projects()
+
+        proj_list = []
+        
+        for i in range(0, len(self.__projects)):
+            
+            proj = ps.Project(self.__projects["ProjectID"].loc[i],
+                              self.__projects["Name"].loc[i],
+                              self)
+            
+            proj_list.append(proj)
+    
+        return proj_list
+        
+    def __create_new_project(self, name):
+     
+        # If specified Project does not exist, then create it    
+        args = ["--create", "--project", "--lib=%s" % self.__location,
+                "--name=%s" % name]
+        self.session._Session__call_console(args)
+        
+        # Reset Projects
+        self.__refresh_projects()
+        p = self.__get_project(name, pid=None)
+        
+        # Convert np.int64 to native int
+        pid = p["ProjectID"].values[0].tolist()
+        
+        new_project = ps.Project(pid, p["Name"].values[0], self)
+        
+        return new_project
+    
+    def __open_existing_project(self, project):
+    
+        # Convert np.int64 to native int
+        pid = project["ProjectID"].values[0].tolist()
+         
+        return ps.Project(pid, project["Name"].values[0], self)
+    
+    def __find_project_from_scenario(self, sid, name):
+            
+        if sid is not None and self.__get_scenario(sid=sid).empty is False:
+            pid = self.__get_scenario(sid=sid)["ProjectID"].item()
+            project = self.projects(pid=pid)
+        elif name is not None and len(self.__get_scenario(name=name)) == 1:
+            pid = self.__get_scenario(name=name)["ProjectID"].item()
+            project = self.projects(pid=pid)
+        elif self.__projects is None or self.__projects.empty:
+            project = self.projects(name = "Definitions")
+            pid = project.pid
+        elif len(self.__projects) == 1:
+            pid = self.__projects.ProjectID.item()
+            project = self.projects(pid=pid)     
+        else:
+            raise ValueError("More than one Project in Library." + 
+                             " Please specify a Project.")
+            
+        return project
+    
+    def __find_project_id(self, project):
+    
+        if isinstance(project, int) or isinstance(project, np.int64):
+            pid = project
+        elif isinstance(project, str):
+            # may need to refresh project here
+            pid = self.__projects[
+                self.__projects.Name == project].ProjectID.item()
+        elif isinstance(project, ps.Project):
+            pid = project.pid
+        elif project is None:
+            self.projects()
+            if len(self.__projects) > 1:
+                raise ValueError("More than one Project in Library." +
+                                 " Please specify a Project.")
+            elif len(self.__projects) == 0:
+                self.__create_new_project("Definitions")
+            pid = self.__projects["ProjectID"].item()
+            
+        return pid
+    
+    def __extract_scenario_summary(self, optional, results, name, sid):
+    
+        if optional is False:
+            ds =  self.__scenarios[['ScenarioID',
+                                    'ProjectID',
+                                    'Name',
+                                    'IsResult']]
+        else:
+            ds = self.__scenarios
+            
+        if results:
+            ds = ds[ds["IsResult"] == "Yes"]
+        
+        if name is not None:
+            return ds[ds.Name == name]
+        
+        if sid is not None:
+            return ds[ds["ScenarioID"] == sid]
+        
+        return ds
+    
+    def __extract_scenario_list(self, project, pid): # better name needed
+    
+        s_summary = self.__scenarios
+        s_summary = s_summary[s_summary["IsResult"] == "No"]
+        
+        if not isinstance(project, ps.Project):
+            project = self.projects(pid=pid) 
+                        
+        scn_list = []
+        
+        for i in range(0, len(s_summary)):
+            
+            scn = ps.Scenario(s_summary["ScenarioID"].loc[i],
+                              s_summary["Name"].loc[i],
+                              project, self)
+            
+            scn_list.append(scn)
+    
+        return scn_list
+    
+    def __create_new_scenario(self, project, name, sid):
+    
+        pid = self.__find_project_id(project)
+         
+        # Create Scenario using console    
+        args = ["--create", "--scenario", "--pid=%d" % pid,
+                "--lib=%s" % self.__location, "--name=%s" % name]
+        self.session._Session__call_console(args)
+        
+        # Reset Scenarios
+        self.__refresh_scenarios()
+        s = self.__get_scenario(name=name, sid=sid)
+        
+        if not isinstance(project, ps.Project):
+            project = self.projects(pid=pid)
+        
+        return ps.Scenario(s["ScenarioID"].values[0],
+                           s["Name"].values[0], project, self)
+    
+    def __open_existing_scenario(self, scenarios, project):
+                    
+        # Retrieve the name of a Scenario using only the sid
+        pid = scenarios["ProjectID"].values[0].tolist()
+    
+        if not isinstance(project, ps.Project):
+            project = self.projects(pid=pid)
+    
+        sid = scenarios["ScenarioID"].values[0].tolist()
+        
+        return ps.Scenario(sid, scenarios["Name"].values[0], project, self)
+    
+    def __validate_projects_inputs(self, name, pid, summary, overwrite):
+        
+        if name is not None and not isinstance(name, str):
+            raise TypeError("name must be a String")
+        if pid is not None and not isinstance(
+                pid, int) and not isinstance(pid, np.int64):
+            raise TypeError("pid must be an Integer")
+        if not isinstance(summary, bool):
+            raise TypeError("summary must be a Logical")
+        if not isinstance(overwrite, bool):
+            raise TypeError("overwrite must be a Logical")
+            
+        if pid is not None:
+            self.__validate_pid(pid, name)
     
     def __validate_scenarios_inputs(self, name, sid, project, pid, overwrite,
                                     optional, summary, results):

@@ -140,13 +140,17 @@ def test_library_projects():
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
         myLibrary.projects(overwrite="False")
         
-    with pytest.raises(ValueError, match="Project ID 2 does not exist"):
+    with pytest.raises(ValueError,
+                       match="pid specified, but no Projects created yet"):
         myLibrary.projects(pid=2)
     
     with pytest.raises(ValueError,
                        match="Project ID 1 does not match Project name test2"):
         myLibrary.projects(name="test")
         myLibrary.projects(name="test2", pid=1)
+        
+    with pytest.raises(ValueError, match="Project ID 3 does not exist"):
+        myLibrary.projects(pid=3)
         
     # Test outputs
     assert isinstance(myLibrary.projects(), pd.DataFrame)
@@ -201,7 +205,7 @@ def test_library_scenarios():
     assert isinstance(myLibrary.scenarios(pid=1, summary=False), ps.Scenario)
     assert len(myLibrary.scenarios(pid=1).columns) == 4
     assert len(myLibrary.scenarios(pid=1, optional=True).columns) == 11
-    assert myLibrary.scenarios(name="test", overwrite=True).sid != 1
+    assert myLibrary.scenarios(name="test", pid=1, overwrite=True).sid != 1
     assert all(myLibrary.scenarios(project=1) == myLibrary.scenarios(pid=1))
     assert all(
         myLibrary.scenarios(project="test") == myLibrary.scenarios(pid=1))
