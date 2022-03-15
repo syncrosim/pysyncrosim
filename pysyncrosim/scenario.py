@@ -247,7 +247,8 @@ class Scenario(object):
         return self.__parent_id
     
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
-                   filter_column=None, filter_value=None, include_key=False):
+                   filter_column=None, filter_value=None, include_key=False,
+                   return_hidden=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -282,7 +283,7 @@ class Scenario(object):
                                                     empty, "Scenario",
                                                     filter_column, 
                                                     filter_value, include_key,
-                                                    self.sid)
+                                                    return_hidden, self.sid)
         return self.__datasheets
     
 
@@ -802,13 +803,14 @@ class Scenario(object):
         if jobs > 1 and copy_external_inputs is False:
             args += ["--noextfiles"]
             
-        self.library.session._Session__call_console(args)
+        print(f"Running Scenario [{self.sid}] {self.name}")
+        result = self.library.session._Session__call_console(args)
+        
+        if result.returncode == 0:
+            print("Run successful")
         
         # Reset Project Scenarios
         self.project._Project__scenarios = None
-        
-        # Have this print a statement based on output message of whether the 
-        # run was successful or not
 
         # Reset results
         self.__results = None
