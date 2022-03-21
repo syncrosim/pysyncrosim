@@ -108,7 +108,7 @@ def test_helper():
         ps.library("Test", template="test")
       
     # Test output
-    myLibrary = ps.library(name="Test")
+    myLibrary = ps.library(name="Test", forceUpdate=True)
     assert isinstance(myLibrary, ps.Library)
     
 def test_library_attributes():
@@ -344,7 +344,8 @@ def test_library_run():
     mySession = ps.Session()
     mySession.add_packages("helloworldSpatial")
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           template="example-library", overwrite=True)
+                           template="example-library", overwrite=True,
+                           forceUpdate=True)
     
     # Test run method
     with pytest.raises(
@@ -563,7 +564,8 @@ def test_scenarios_attributes():
 def test_scenario_datasheets():
     
     myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)
     
     # Test datasheets
@@ -603,7 +605,8 @@ def test_scenario_datasheets():
 def test_scenario_save_datasheet():
 
     myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)    
 
     # Test save_datasheet
@@ -637,7 +640,8 @@ def test_scenario_run_and_results():
     
     myLibrary = ps.library(name="Test", overwrite=True,
                            package="helloworldSpatial",
-                           template="example-library")
+                           template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2
@@ -803,7 +807,8 @@ def test_scenario_run_and_results():
 def test_scenario_copy_dep_delete():
     
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2
