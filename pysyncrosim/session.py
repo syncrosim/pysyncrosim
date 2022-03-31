@@ -375,7 +375,7 @@ class Session(object):
          
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
-        self.__location = location # dja  not working as expected,  The self.__location value set here is being over written when the function returns
+        self.__location = os.path.expanduser(location)
         e = ps.environment._environment()
         if self.__location is None:
             if e.program_directory.item() is None:
@@ -385,7 +385,7 @@ class Session(object):
         elif not os.path.isdir(self.__location):
             raise ValueError("The location is not valid")
         else :
-            return location # dja just added a statement to return the passed in location path assuming all the other tests were passed.
+            return self.__location
                         
     def __init_console(self, console=None, pkgman=None):
         
