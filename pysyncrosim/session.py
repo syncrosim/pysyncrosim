@@ -45,6 +45,7 @@ class Session(object):
         self.console_exe = self.__init_console(console=True)
         self.__silent = silent
         self.__print_cmd = print_cmd
+        self.__is_windows = os.name == 'nt'
         self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
@@ -410,7 +411,10 @@ class Session(object):
             
         if self.__print_cmd:
             print(final_args)
-        
+
+        if not self.__is_windows:
+            final_args = ["mono"] + final_args
+
         result = subprocess.run(
             final_args,
             stdout=subprocess.PIPE,
