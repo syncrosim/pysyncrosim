@@ -143,3 +143,4 @@ pysyncrosim-1.0.0.tar.gz
 /examples/stsim_test.py
 /examples/helloworld_test.py
 /examples/mariposa_test.py
+delete_test.py

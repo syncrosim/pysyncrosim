@@ -17,6 +17,7 @@
       ~Project.copy
       ~Project.datasheets
       ~Project.delete
+      ~Project.run
       ~Project.save_datasheet
       ~Project.scenarios
    

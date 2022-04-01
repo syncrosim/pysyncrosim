@@ -29,7 +29,7 @@ def test_session_attributes():
     with pytest.raises(TypeError,
                        match="installed must be Logical or 'BASE'"):
         mySession.packages(installed=1)
-       
+        
         
 def test_session_package_functions():
     
@@ -108,7 +108,7 @@ def test_helper():
         ps.library("Test", template="test")
       
     # Test output
-    myLibrary = ps.library(name="Test")
+    myLibrary = ps.library(name="Test", forceUpdate=True)
     assert isinstance(myLibrary, ps.Library)
     
 def test_library_attributes():
@@ -140,13 +140,17 @@ def test_library_projects():
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
         myLibrary.projects(overwrite="False")
         
-    with pytest.raises(ValueError, match="Project ID 2 does not exist"):
+    with pytest.raises(ValueError,
+                       match="pid specified, but no Projects created yet"):
         myLibrary.projects(pid=2)
     
     with pytest.raises(ValueError,
                        match="Project ID 1 does not match Project name test2"):
         myLibrary.projects(name="test")
         myLibrary.projects(name="test2", pid=1)
+        
+    with pytest.raises(ValueError, match="Project ID 3 does not exist"):
+        myLibrary.projects(pid=3)
         
     # Test outputs
     assert isinstance(myLibrary.projects(), pd.DataFrame)
@@ -201,7 +205,7 @@ def test_library_scenarios():
     assert isinstance(myLibrary.scenarios(pid=1, summary=False), ps.Scenario)
     assert len(myLibrary.scenarios(pid=1).columns) == 4
     assert len(myLibrary.scenarios(pid=1, optional=True).columns) == 11
-    assert myLibrary.scenarios(name="test", overwrite=True).sid != 1
+    assert myLibrary.scenarios(name="test", pid=1, overwrite=True).sid != 1
     assert all(myLibrary.scenarios(project=1) == myLibrary.scenarios(pid=1))
     assert all(
         myLibrary.scenarios(project="test") == myLibrary.scenarios(pid=1))
@@ -340,7 +344,8 @@ def test_library_run():
     mySession = ps.Session()
     mySession.add_packages("helloworldSpatial")
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           template="example-library", overwrite=True)
+                           template="example-library", overwrite=True,
+                           forceUpdate=True)
     
     # Test run method
     with pytest.raises(
@@ -359,7 +364,7 @@ def test_library_run():
         myLibrary.run(jobs="1")
     
     runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", None, None, False, 1)
+                                      "Scenario", None, None, False, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
     myLibrary.save_datasheet("RunControl", runcontrol, "Scenario", 1)
@@ -559,7 +564,8 @@ def test_scenarios_attributes():
 def test_scenario_datasheets():
     
     myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)
     
     # Test datasheets
@@ -580,7 +586,7 @@ def test_scenario_datasheets():
     assert myScenario.datasheets(
         summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myScenario.datasheets().columns) == 3
-    assert len(myScenario.datasheets(optional=True).columns) == 6
+    assert len(myScenario.datasheets(optional=True).columns) == 7
     assert isinstance(myScenario.datasheets(
         name="RunControl",
         filter_column="MinimumIteration", 
@@ -599,7 +605,8 @@ def test_scenario_datasheets():
 def test_scenario_save_datasheet():
 
     myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)    
 
     # Test save_datasheet
@@ -633,7 +640,8 @@ def test_scenario_run_and_results():
     
     myLibrary = ps.library(name="Test", overwrite=True,
                            package="helloworldSpatial",
-                           template="example-library")
+                           template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(sid=1)
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2
@@ -755,8 +763,8 @@ def test_scenario_run_and_results():
             filter_value="test") 
        
     with pytest.raises(
-            ValueError, 
-            match="filter_value test does not exist in filter_column"):
+            RuntimeError, 
+            match="Cannot find a value for: test"):
         myResultsScenario.datasheet_rasters(
             datasheet="IntermediateDatasheet",
             column = None,
@@ -799,7 +807,8 @@ def test_scenario_run_and_results():
 def test_scenario_copy_dep_delete():
     
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, template="example-library")
+                           overwrite=True, template="example-library",
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2

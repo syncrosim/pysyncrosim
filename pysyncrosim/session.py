@@ -3,6 +3,7 @@ import io
 import subprocess
 import pandas as pd
 import pysyncrosim as ps
+from pysyncrosim._version import __version__
 
 class Session(object):
     """
@@ -31,6 +32,9 @@ class Session(object):
         ------
         ValueError
             Raises error if the location given does not exist.
+        RuntimeError
+            Raises error if the version of the SyncroSim installation is 
+            incompatible with the current version of pysyncrosim.
 
         Returns
         -------
@@ -41,7 +45,23 @@ class Session(object):
         self.console_exe = self.__init_console(console=True)
         self.__silent = silent
         self.__print_cmd = print_cmd
+        self.__is_windows = os.name == 'nt'
         self.__pkgs = self.packages()
+        
+        # Add check to make sure that correct version of SyncroSim is being used
+        ssim_required_version = "2.3.10"
+        ssim_current_version = self.version().split(" ")[-1]
+        ssim_required_bits = ssim_required_version.split(".")
+        ssim_current_bits = ssim_current_version.split(".")
+        
+        for i in range(0, len(ssim_required_bits)):
+            status = int(ssim_current_bits[i]) >= int(ssim_required_bits[i])
+        
+        if not status:
+            raise RuntimeError(f"SyncroSim v{ssim_required_version} " + 
+                               "is required to run pysyncrosim v" +
+                               __version__ + ", but you have SyncroSim v" + 
+                               ssim_current_version + " installed")
      
     @property
     def location(self):
@@ -145,7 +165,7 @@ class Session(object):
             args = ["--list", "--addons"]
             addons = self.__call_console(args, decode=True, csv=True)
             addons = pd.read_csv(io.StringIO(addons))
-            self.__pkgs = self.__pkgs.append(addons).reset_index()
+            self.__pkgs = pd.concat([self.__pkgs, addons]).reset_index(drop=True)
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
@@ -188,6 +208,7 @@ class Session(object):
         self.console_exe = self.__init_console(pkgman=True)
         
         exception = True
+        pkgs_installed = []
         try:
         
             if not isinstance(packages, list):
@@ -203,10 +224,14 @@ class Session(object):
                 else:
                     args = ["--install=%s" % pkg]
                 self.__call_console(args)
+                pkgs_installed.append(pkg)
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            self.__pkgs = self.packages()
+            if len(pkgs_installed) == 0:
+                return
+            else:
+                self.__pkgs = self.packages()
                 
         except RuntimeError as e:
             print(e)
@@ -215,10 +240,13 @@ class Session(object):
             exception = False
         
         finally:
+            
             if exception is False:
-                print(f"{packages} installed successfully")
+                print(f"{pkgs_installed} installed successfully")
+                
             # Set executable back to console
-            self.console_exe = self.__init_console(console=True)
+            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+                self.console_exe = self.__init_console(console=True)
     
     def remove_packages(self, packages):
         """
@@ -249,6 +277,7 @@ class Session(object):
         self.console_exe = self.__init_console(pkgman=True)
         
         exception = True
+        pkgs_removed = []
         try:
         
             if not isinstance(packages, list):
@@ -260,10 +289,14 @@ class Session(object):
                     continue
                 args = ["--uninstall=%s" % pkg]
                 self.__call_console(args)
+                pkgs_removed.append(pkg)
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            self.__pkgs = self.packages()
+            if len(pkgs_removed) == 0:
+                return
+            else:
+                self.__pkgs = self.packages()
             
         except RuntimeError as e:
             print(e)
@@ -272,10 +305,13 @@ class Session(object):
             exception = False
         
         finally:
+            
             if exception is False:
-                print(f"{packages} removed successfully")
+                print(f"{pkgs_removed} removed successfully")
+                
             # Set executable back to console
-            self.console_exe = self.__init_console(console=True)
+            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+                self.console_exe = self.__init_console(console=True)
     
     def update_packages(self, packages=None):
         """
@@ -339,17 +375,19 @@ class Session(object):
          
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
-        self.__location = location # dja  not working as expected,  The self.__location value set here is being over written when the function returns
         e = ps.environment._environment()
-        if self.__location is None:
+        if location is None:
             if e.program_directory.item() is None:
                 return "C:/Program Files/SyncroSim"
             else:
                 return e.program_directory.item()
-        elif not os.path.isdir(self.__location):
+        else:
+            self.__location = os.path.expanduser(location)
+
+        if not os.path.isdir(self.__location):
             raise ValueError("The location is not valid")
         else :
-            return location # dja just added a statement to return the passed in location path assuming all the other tests were passed.
+            return self.__location
                         
     def __init_console(self, console=None, pkgman=None):
         
@@ -375,7 +413,10 @@ class Session(object):
             
         if self.__print_cmd:
             print(final_args)
-        
+
+        if not self.__is_windows:
+            final_args = ["mono"] + final_args
+
         result = subprocess.run(
             final_args,
             stdout=subprocess.PIPE,
