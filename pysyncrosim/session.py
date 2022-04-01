@@ -45,6 +45,7 @@ class Session(object):
         self.console_exe = self.__init_console(console=True)
         self.__silent = silent
         self.__print_cmd = print_cmd
+        self.__is_windows = os.name == 'nt'
         self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
@@ -374,17 +375,19 @@ class Session(object):
          
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
-        self.__location = location # dja  not working as expected,  The self.__location value set here is being over written when the function returns
         e = ps.environment._environment()
-        if self.__location is None:
+        if location is None:
             if e.program_directory.item() is None:
                 return "C:/Program Files/SyncroSim"
             else:
                 return e.program_directory.item()
-        elif not os.path.isdir(self.__location):
+        else:
+            self.__location = os.path.expanduser(location)
+
+        if not os.path.isdir(self.__location):
             raise ValueError("The location is not valid")
         else :
-            return location # dja just added a statement to return the passed in location path assuming all the other tests were passed.
+            return self.__location
                         
     def __init_console(self, console=None, pkgman=None):
         
@@ -410,7 +413,10 @@ class Session(object):
             
         if self.__print_cmd:
             print(final_args)
-        
+
+        if not self.__is_windows:
+            final_args = ["mono"] + final_args
+
         result = subprocess.run(
             final_args,
             stdout=subprocess.PIPE,
