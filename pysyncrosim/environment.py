@@ -64,28 +64,30 @@ def runtime_temp_folder(folder_name):
     return _create_temp_folder(folder_name)
 
 def progress_bar(report_type="step", iteration=None, timestep=None,
-                 total_steps=None):
+                 total_steps=None, message=None):
     """
     Begins, steps, ends, and reports progress for a SyncroSim simulation.
 
     Parameters
     ----------
     report_type : String, optional
-        Directive to "begin", "end", "report", or "step" the simulation. The
-        default is "step".
+        Directive to "begin", "end", "report", "message", or "step" the
+        simulation. The default is "step".
     iteration : Int, optional
         Number of iterations. The default is None.
     timestep : Int, optional
         Number of timesteps. The default is None.
     total_steps : Int, optional
         Number of total steps in the simulation. The default is None.
+    message : String, optional
+        A message to print to the progress bar status. The default is None.
 
     Raises
     ------
     TypeError
         If iteration, timestep, or total_steps are not Integers.
     ValueError
-        If report_type is not "begin", "end", "step" or "report".
+        If report_type is not "begin", "end", "step", "report", or "message".
 
     Returns
     -------
@@ -122,9 +124,56 @@ def progress_bar(report_type="step", iteration=None, timestep=None,
                 flush=True)
         except AssertionError or TypeError:
             raise TypeError("iteration and timestep must be Integers")
+
+    # Print arbitrary message
+    elif report_type == "message":
+        print(
+            "ssim-task-status=" + str(message) + "\r\n",
+            flush=True)
     else:
         raise ValueError("Invalid report_type")
-                                
+
+def update_run_log(*message, sep=""):
+    """
+    Begins, steps, ends, and reports progress for a SyncroSim simulation.
+
+    Parameters
+    ----------
+    *message : String
+        Message to write to the run log. Can be provided as multiple arguments
+        that will be concatenated together using sep.
+    sep : String, optional
+        String to use if concatenating multiple message arguments. The default
+        is an empty String.
+
+    Raises
+    ------
+    ValueError
+        If no message is provided.
+
+    Returns
+    -------
+    None.
+
+    """
+    _validate_environment()
+    
+    # Check that a message is provided
+    if len(message) == 0:
+        raise ValueError("Please include a message to send to the run log.")
+
+    # Initialize the message
+    final_message = "ssim-task-log=" + str(message[0])
+
+    # Concatenate additional message pieces
+    if len(message) > 1:
+        for m in message[1:]:
+            final_message = final_message + str(sep) + str(m)
+
+    # Finalize message
+    final_message = final_message + "\r\n"
+
+    print(final_message, flush=True)
 
 def _environment():
     env_df = pd.DataFrame(
