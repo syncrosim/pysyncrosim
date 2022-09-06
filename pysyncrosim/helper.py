@@ -119,7 +119,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
                 raise ValueError(
                     f'The addon package {addons} is not installed')
             
-            args = ["--create", "--addon", "--lib=%s" % name + ".ssim",
+            args = ["--create", "--addon", "--lib=%s" % loc,
                     "--name=%s" % addons]
             session._Session__call_console(args)
             
