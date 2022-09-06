@@ -132,6 +132,9 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         re1 = str(re1)
         if "The Library already exists" in re1:
             pass
+        else:
+            raise RuntimeError(re1)
+
     
     library_up_to_date = False
     try:
