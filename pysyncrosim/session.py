@@ -55,7 +55,10 @@ class Session(object):
         ssim_current_bits = ssim_current_version.split(".")
         
         for i in range(0, len(ssim_required_bits)):
-            status = int(ssim_current_bits[i]) >= int(ssim_required_bits[i])
+            if int(ssim_current_bits[i]) > int(ssim_required_bits[i]):
+                status = True
+                break
+            status = int(ssim_current_bits[i]) == int(ssim_required_bits[i])
         
         if not status:
             raise RuntimeError(f"SyncroSim v{ssim_required_version} " + 

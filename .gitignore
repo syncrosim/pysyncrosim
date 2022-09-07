@@ -136,6 +136,7 @@ dmypy.json
 
 # VS code
 .vs/
+.vscode/
 
 # Rough work
 /examples/ML_digits_workflow.py
