@@ -59,8 +59,6 @@ class Session(object):
                 status = True
                 break
             status = int(ssim_current_bits[i]) == int(ssim_required_bits[i])
-
-        print(status)
         
         if not status:
             raise RuntimeError(f"SyncroSim v{ssim_required_version} " + 
