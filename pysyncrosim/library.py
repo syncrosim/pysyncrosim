@@ -564,6 +564,9 @@ class Library(object):
         if name.startswith(self.package) is False:
             if name.startswith("core") is False:
                 name = self.package + "_" + name
+
+        # Convert boolean values to "Yes"/"No"
+        data = data.replace({True: "Yes", False: "No"})
             
         # Check if running in a SyncroSim environment from the user interface
         e = _environment()
