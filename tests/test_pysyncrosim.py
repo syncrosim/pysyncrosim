@@ -338,6 +338,11 @@ def test_library_save_datasheet():
     myLibrary.save_datasheet(name="core_Backup", data=initial_core_backup)
     modified_core_backup = myLibrary.datasheets(name="core_Backup")
     assert (modified_core_backup["IncludeOutput"] == "Yes").item()   
+
+    initial_core_backup["IncludeOutput"] = False
+    myLibrary.save_datasheet(name="core_Backup", data=initial_core_backup)
+    modified_core_backup = myLibrary.datasheets(name="core_Backup")
+    assert (modified_core_backup["IncludeOutput"] == "No").item() 
     
 def test_library_run():
     
