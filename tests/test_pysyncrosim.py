@@ -299,7 +299,7 @@ def test_library_delete():
     
 def test_library_save_datasheet():
     
-    myLibrary = ps.library(name="Test")
+    myLibrary = ps.library(name="Test", overwrite=True, forceUpdate=True)
     
     # Test save_datasheet method
     with pytest.raises(
@@ -329,7 +329,7 @@ def test_library_save_datasheet():
         
     with pytest.raises(RuntimeError,
                        match="The data sheet does not exist: stsim_test"):
-        myLibrary.save_datasheet(name="test", data=pd.DataFrame())
+        myLibrary.save_datasheet(name="test", data=pd.DataFrame(), force=True)
         
     with pytest.raises(
             RuntimeError,
@@ -363,7 +363,13 @@ def test_library_save_datasheet():
                             "IncludeOutput": ["Yes"], 
                             "BeforeUpdate": ["Yes"]})
     myLibrary.save_datasheet(name="core_Backup", data=myLibDF)
-    assert (myLibrary.datasheets(name="core_Backup").equals(myLibDF))
+    assert myLibrary.datasheets(name="core_Backup").equals(myLibDF)
+
+    myLibrary.save_datasheet(name="core_Backup", data=pd.DataFrame())
+    assert myLibrary.datasheets(name="core_Backup").equals(myLibDF)
+
+    myLibrary.save_datasheet(name="core_Backup", data=pd.DataFrame(), force=True)
+    assert myLibrary.datasheets(name="core_Backup").empty
     
 def test_library_run():
     
@@ -393,7 +399,9 @@ def test_library_run():
                                       "Scenario", None, None, False, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
-    myLibrary.save_datasheet("RunControl", runcontrol, "Scenario", 1)
+    myLibrary.save_datasheet("RunControl", runcontrol, 
+                             False, False,
+                             "Scenario", 1)
     
     myLibrary.run()
     assert len(myLibrary.scenarios()) == 2
@@ -516,7 +524,7 @@ def test_project_datasheets():
 def test_project_save_datasheet():
     
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+                           overwrite=True, forceUpdate=True)
     myProject = myLibrary.projects(name="Definitions")
     myLibrary.scenarios(name="test")
     myLibrary.scenarios(name="test2")
@@ -560,6 +568,12 @@ def test_project_save_datasheet():
     myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [3], "Order": [3]})
     myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False)
     assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame())
+    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame(), force=True)
+    assert myProject.datasheets(name = "core_RunSchedulerScenario").empty
 
 def test_project_copy_delete():
     
@@ -650,7 +664,7 @@ def test_scenario_datasheets():
 
 def test_scenario_save_datasheet():
 
-    myLibrary = ps.library(name="ds_test", package="helloworldUncertainty",
+    myLibrary = ps.library(name="ds_test", package="helloworld",
                            overwrite=True,
                            forceUpdate=True)
     myScenario = myLibrary.scenarios(name="test")    
@@ -671,25 +685,20 @@ def test_scenario_save_datasheet():
         
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myScenario.save_datasheet(name="test", data=1)
-        
-    runcontrol = pd.DataFrame({"MinimumIteration": [1],
-                               'MaximumIteration': [2],
-                               'MinimumTimestep': [1],
-                               'MaximumTimestep': [2],})
-    myScenario.save_datasheet("RunControl", runcontrol)
 
-    assert myScenario.datasheets(
-        name="RunControl")["MaximumIteration"].item() == 2
-    assert myScenario.datasheets(
-        name="RunControl")["MaximumTimestep"].item() == 2
+    myDataFrame = pd.DataFrame({'x': [1.0], 'a': [2]})
+    myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame)
+    assert myScenario.datasheets(name="helloworld_InputDatasheet").equals(myDataFrame)
 
-    myDataFrame = pd.DataFrame({'mMean': [1], 'mSD': [2], 'b': [2]})
-    myScenario.save_datasheet(name="helloworldTime_InputDatasheet", data=myDataFrame)
-    myScenario.datasheets(name="helloworldUncertainty_InputDatasheet")
+    myDataFrame2 = pd.DataFrame({'x': [2.0], 'a': [2]})
+    myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame2, append=True)
+    assert len(myScenario.datasheets(name="helloworld_InputDatasheet")) == 2
 
-    myDataFrame2 = pd.DataFrame({'mMean': [2], 'mSD': [2], 'b': [3]})
     myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame2, append=False)
-    myScenario.datasheets(name="helloworld_InputDatasheet")
+    assert len(myScenario.datasheets(name="helloworld_InputDatasheet")) == 1
+
+    myScenario.save_datasheet(name="helloworld_InputDatasheet", data=pd.DataFrame())
+    assert myScenario.datasheets(name="helloworld_InputDatasheet").empty
     
 def test_scenario_run_and_results():
     

@@ -600,13 +600,17 @@ class Library(object):
         # Otherwise export the data to SyncroSim
         else:
             try:
-                fpath = None;
+                fpath = None
+                delete_or_warn = self.__validate_delete_datasheet(force, append, scope, data)
 
-                if (force is True) & (append is False):
+                if delete_or_warn == "delete":
                     self.__delete_datasheet(scope, name, ids)
-                elif (force is False) & (append is False) & (scope == "Project"):
+                    if data.empty:
+                        return
+                elif delete_or_warn == "warn":
                     print("WARNING: The force argument must be set to True " 
-                          "to overwrite an existing Project or Library Datasheet.")
+                          "to overwrite or delete an existing Project or Library "
+                          "Datasheet.")
                     return
 
                 fpath = self.__save_datasheet_to_temp(data)
@@ -1449,6 +1453,8 @@ class Library(object):
                 "--sheet=%s" % name, "--force"]
         if scope == "Project":
             args += ["--pid=%d" % ids]
+        if scope == "Scenario":
+            args += ["--sid=%d" % ids]
         
         result = self.__session._Session__call_console(args)
 
@@ -1456,6 +1462,26 @@ class Library(object):
             print(f"{name} successfully deleted")
         else:
             raise RuntimeError(result.stderr)
+
+    def __validate_delete_datasheet(self, force, append, scope, data):
+
+        delete_or_warn = None
+
+        if (data.empty) & (scope == "Scenario"):
+            delete_or_warn = "delete"
+        elif (data.empty) & (force is True):
+            delete_or_warn = "delete"
+        elif (append is False) & (force is True):
+            delete_or_warn = "delete"
+
+        if (force is False) & (append is False) & (scope == "Project"):
+            delete_or_warn = "warn"
+        elif (force is False) & (data.empty) & (scope == "Project"):
+            delete_or_warn = "warn"
+        elif (force is False) & (data.empty) & (scope == "Library"):
+            delete_or_warn = "warn"
+
+        return delete_or_warn
 
     def __save_datasheet_to_temp(self, data):
 
