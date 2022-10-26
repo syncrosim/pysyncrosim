@@ -277,7 +277,7 @@ class Project(object):
         
         self.library.delete(project=self, scenario=scenario, force=force)
 
-    def save_datasheet(self, name, data):
+    def save_datasheet(self, name, data, append=True, force=False):
         """
         Saves a Project-scoped Datasheet.
 
@@ -287,6 +287,14 @@ class Project(object):
             Name of Datasheet to save.
         data : pandas.DataFrame
             DataFrame to save as Datasheet.
+        append : Logical, optional
+            If True, appends to existing Datasheet. If False, then the
+            user must also specify `force=True` to overwrite the existing
+            Datasheet. The default is True.
+        force : Logical, optional
+            If True, overwrites existing Datasheet. The user should be aware that
+            this may also delete other definitions and results, so this argument
+            should be used with care. The default is False.
 
         Returns
         -------
@@ -294,7 +302,7 @@ class Project(object):
 
         """
         
-        self.library.save_datasheet(name, data, "Project", self.pid)
+        self.library.save_datasheet(name, data, append, force, "Project", self.pid)
         
     def run(self, scenarios=None, jobs=1, copy_external_inputs=False):
         """

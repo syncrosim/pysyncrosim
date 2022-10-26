@@ -501,7 +501,7 @@ class Scenario(object):
         else:
             return raster_list
     
-    def save_datasheet(self, name, data):
+    def save_datasheet(self, name, data, append=False):
         """
         Saves a pandas DataFrame as a SyncroSim Datasheet.
 
@@ -511,13 +511,16 @@ class Scenario(object):
             Name of the SyncroSim Datasheet.
         data : pandas.DataFrame
             Data to be saved to SyncroSim Datasheet.
+        append : Logical, optional
+            If True, appends data to existing Datasheet. The default is 
+            False.
 
         Returns
         -------
         None.
 
         """
-        self.library.save_datasheet(name, data, "Scenario", self.sid)
+        self.library.save_datasheet(name, data, append, False, "Scenario", self.sid)
     
     def delete(self, force=False):
         """

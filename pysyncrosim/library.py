@@ -531,7 +531,8 @@ class Library(object):
                                     session=self.session,
                                     force=force)
     
-    def save_datasheet(self, name, data, scope="Library", *ids):
+    def save_datasheet(self, name, data, append=False, force=False, 
+                       scope="Library", *ids):
         """
         Saves a pandas DataFrane as a SyncroSim Datasheet.
 
@@ -541,6 +542,16 @@ class Library(object):
             Name of the Datasheet.
         data : pandas DataFrame
             DataFrame of Datasheet values.
+        append : Logical, optional
+            If set to True, appends the DataFrame to the existing 
+            Datasheet (if the Datasheet accepts multiple rows). If False,
+            then the user must also specify force as True to overwrite
+            the existing Datasheet. Default is False.
+        force : Logical, optional
+            If set to True while append is False, overwrites the existing
+            Datasheet. The user should be aware that this may also delete 
+            other definitions and results, so this argument should be used 
+            with care. Default is False.
         scope : String, optional
             Scope of the Datasheet. The default is "Library".
         *ids : Int
@@ -557,6 +568,10 @@ class Library(object):
             raise TypeError("name must be a String")
         if not isinstance(data, pd.DataFrame):
             raise TypeError("data must be a pandas DataFrame")
+        if not isinstance(append, bool):
+            raise TypeError("append must be a Logical")
+        if not isinstance(force, bool):
+            raise TypeError("force must be a Logical")
         if not isinstance(scope, str):
             raise TypeError("scope must be a String")
           
@@ -573,39 +588,48 @@ class Library(object):
         transfer_dir = e.transfer_directory.item()
         
         # If running from user interface, save data to transfer directory
-        if transfer_dir is not None:
+        if (transfer_dir is not None) & (append is False):
             fpath = '{}\\SSIM_OVERWRITE-{}.csv'.format(transfer_dir, name)
+            data.to_csv(fpath, index=False)
+            return
+        elif (transfer_dir is not None) & (append is True):
+            fpath = '{}\\SSIM_APPEND-{}.csv'.format(transfer_dir, name)
             data.to_csv(fpath, index=False)
             return
         
         # Otherwise export the data to SyncroSim
         else:
             try:
-                temp_folder = tempfile.mkdtemp(prefix="SyncroSim-")
-                fpath = '{}\\export.csv'.format(temp_folder)
-                data.to_csv(fpath, index=False)
+                fpath = None;
 
-                if not os.path.isfile(fpath):
-                    raise RuntimeError(f"file path {fpath} does not exist")
+                if (force is True) & (append is False):
+                    self.__delete_datasheet(scope, name, ids)
+                elif (force is False) & (append is False) & (scope == "Project"):
+                    print("WARNING: The force argument must be set to True " 
+                          "to overwrite an existing Project or Library Datasheet.")
+                    return
 
-                # Specify import arguments
+                fpath = self.__save_datasheet_to_temp(data)
+
                 args = ["--import", "--lib=%s" % self.location,
-                        "--sheet=%s" % name, "--folder=%s" % temp_folder,
+                        "--sheet=%s" % name, 
                         "--file=%s" % fpath]
 
+                if append:
+                    args += ["--append"]
                 if scope == "Project":
                     args += ["--pid=%d" % ids]
-
                 if scope == "Scenario":
                     args += ["--sid=%d" % ids]
 
                 result = self.__session._Session__call_console(args)
                 
                 if result.returncode == 0:
-                    print(f"{name} saved successfully")
+                    print(f"{name} saved successfully")                
 
             finally:
-                shutil.rmtree(temp_folder, ignore_errors=True)
+                if fpath is not None:
+                    shutil.rmtree(os.path.dirname(fpath), ignore_errors=True)
             
     def run(self, scenarios=None, project=None, jobs=1,
             copy_external_inputs=False):
@@ -1418,6 +1442,31 @@ class Library(object):
                 os.remove(tempfile_path)
             
         return ds
+
+    def __delete_datasheet(self, scope, name, ids):
+
+        args = ["--delete", "--data", "--lib=%s" % self.location,
+                "--sheet=%s" % name, "--force"]
+        if scope == "Project":
+            args += ["--pid=%d" % ids]
+        
+        result = self.__session._Session__call_console(args)
+
+        if result.returncode == 0:
+            print(f"{name} successfully deleted")
+        else:
+            raise RuntimeError(result.stderr)
+
+    def __save_datasheet_to_temp(self, data):
+
+        temp_folder = tempfile.mkdtemp(prefix="SyncroSim-")
+        fpath = '{}\\export.csv'.format(temp_folder)
+        data.to_csv(fpath, index=False)
+
+        if not os.path.isfile(fpath):
+            raise RuntimeError(f"file path {fpath} does not exist")
+
+        return fpath
     
     def __generate_tempfile_path(self):
         

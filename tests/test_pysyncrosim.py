@@ -317,6 +317,12 @@ def test_library_save_datasheet():
         
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myLibrary.save_datasheet(name="test", data=1)
+
+    with pytest.raises(TypeError, match="append must be a Logical"):
+        myLibrary.save_datasheet(name="test", data=pd.DataFrame(), append="True")
+
+    with pytest.raises(TypeError, match="force must be a Logical"):
+        myLibrary.save_datasheet(name="test", data=pd.DataFrame(), force="True")
         
     with pytest.raises(TypeError, match="scope must be a String"):
         myLibrary.save_datasheet(name="test", data=pd.DataFrame(), scope=1)
@@ -330,6 +336,15 @@ def test_library_save_datasheet():
             match="The header references a column that does not belong"):
         random_df = pd.DataFrame({"col1": [1], "col2": [2]})
         myLibrary.save_datasheet(name="core_Backup", data=random_df)
+
+    with pytest.raises(
+        RuntimeError,
+        match ="The transfer method is not valid for a single row data sheet."
+    ):
+        myLibDF = pd.DataFrame({"IncludeInput": ["Yes"],
+                                "IncludeOutput": ["Yes"], 
+                                "BeforeUpdate": ["Yes"]})
+        myLibrary.save_datasheet(name="core_Backup", data=myLibDF, append=True)
     
     initial_core_backup = myLibrary.datasheets(name="core_Backup")
     assert initial_core_backup["IncludeOutput"].isna().values[0]
@@ -343,6 +358,12 @@ def test_library_save_datasheet():
     myLibrary.save_datasheet(name="core_Backup", data=initial_core_backup)
     modified_core_backup = myLibrary.datasheets(name="core_Backup")
     assert (modified_core_backup["IncludeOutput"] == "No").item() 
+
+    myLibDF = pd.DataFrame({"IncludeInput": ["Yes"],
+                            "IncludeOutput": ["Yes"], 
+                            "BeforeUpdate": ["Yes"]})
+    myLibrary.save_datasheet(name="core_Backup", data=myLibDF)
+    assert (myLibrary.datasheets(name="core_Backup").equals(myLibDF))
     
 def test_library_run():
     
@@ -494,8 +515,12 @@ def test_project_datasheets():
     
 def test_project_save_datasheet():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial")
+    myLibrary = ps.library(name="Test", package="helloworldSpatial",
+                           overwrite=True)
     myProject = myLibrary.projects(name="Definitions")
+    myLibrary.scenarios(name="test")
+    myLibrary.scenarios(name="test2")
+    myLibrary.scenarios(name="test3")
     
     # Test save_datasheet
     with pytest.raises(
@@ -519,6 +544,22 @@ def test_project_save_datasheet():
                                   "AutoGenTagValue": [1]})
     myProject.save_datasheet(name="core_AutoGenTag", data=test_datasheet)
     assert myProject.datasheets(name="core_AutoGenTag").empty is False
+
+    myProjDF = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF)
+    assert myProject.datasheets(name = "core_RunSchedulerScenario").equals(myProjDF)
+
+    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [2], "Order": [2]})
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False, force=True)
+    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 1
+
+    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=True, force=True)
+    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+
+    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [3], "Order": [3]})
+    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False)
+    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
 
 def test_project_copy_delete():
     
@@ -609,10 +650,10 @@ def test_scenario_datasheets():
 
 def test_scenario_save_datasheet():
 
-    myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library",
+    myLibrary = ps.library(name="ds_test", package="helloworldUncertainty",
+                           overwrite=True,
                            forceUpdate=True)
-    myScenario = myLibrary.scenarios(sid=1)    
+    myScenario = myLibrary.scenarios(name="test")    
 
     # Test save_datasheet
     with pytest.raises(
@@ -631,15 +672,24 @@ def test_scenario_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myScenario.save_datasheet(name="test", data=1)
         
-    runcontrol = myScenario.datasheets(name="RunControl")
-    runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
+    runcontrol = pd.DataFrame({"MinimumIteration": [1],
+                               'MaximumIteration': [2],
+                               'MinimumTimestep': [1],
+                               'MaximumTimestep': [2],})
     myScenario.save_datasheet("RunControl", runcontrol)
 
     assert myScenario.datasheets(
         name="RunControl")["MaximumIteration"].item() == 2
     assert myScenario.datasheets(
         name="RunControl")["MaximumTimestep"].item() == 2
+
+    myDataFrame = pd.DataFrame({'mMean': [1], 'mSD': [2], 'b': [2]})
+    myScenario.save_datasheet(name="helloworldTime_InputDatasheet", data=myDataFrame)
+    myScenario.datasheets(name="helloworldUncertainty_InputDatasheet")
+
+    myDataFrame2 = pd.DataFrame({'mMean': [2], 'mSD': [2], 'b': [3]})
+    myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame2, append=False)
+    myScenario.datasheets(name="helloworld_InputDatasheet")
     
 def test_scenario_run_and_results():
     
