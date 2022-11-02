@@ -897,7 +897,7 @@ class Scenario(object):
         self.__readonly = scn_info["IsReadOnly"].item()
         self.__project_id = scn_info["ProjectID"].item()
         self.__info = scn_info.set_axis(
-            ["Value"], axis=0, inplace=False
+            ["Value"], axis=0
             ).T.rename_axis("Property").reset_index()
         
     def __init_description(self):

@@ -422,7 +422,7 @@ class Project(object):
         self.__date_modified = proj_info["DateLastModified"].item()
         self.__readonly = proj_info["IsReadOnly"].item()
         self.__info = proj_info.set_axis(
-            ["Value"], axis=0, inplace=False
+            ["Value"], axis=0
             ).T.rename_axis("Property").reset_index()
         
     def __init_description(self):
