@@ -716,7 +716,7 @@ class Scenario(object):
                     "ScenarioID"] == self.sid]["IgnoreDependencies"].item()
         elif isinstance(value, str):
             args = ["--setprop", "--lib=%s" % self.library.location,
-                    "--ignoredeps='%s'" % value, "--sid=%d" % self.sid]
+                    "--ignoredeps=%s" % value, "--sid=%d" % self.sid]
             self.library.session._Session__call_console(args)
             
             # Reset Scenario information

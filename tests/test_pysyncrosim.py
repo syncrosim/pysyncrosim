@@ -932,10 +932,10 @@ def test_scenario_copy_dep_delete():
     myNewScn.ignore_dependencies(value="RunControl")
     myNewScn.ignore_dependencies()
     
-    assert myNewScn.ignore_dependencies() == "'RunControl'"
+    assert myNewScn.ignore_dependencies() == "RunControl"
     
     myNewScn.ignore_dependencies(value="InputDatasheet,OutputDatasheet")
-    assert myNewScn.ignore_dependencies() == "'InputDatasheet,OutputDatasheet'"
+    assert myNewScn.ignore_dependencies() == "InputDatasheet,OutputDatasheet"
     
     # Test merge_dependencies
     with pytest.raises(TypeError, match="value must be a Logical"):
