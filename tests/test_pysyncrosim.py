@@ -62,6 +62,8 @@ def test_helper():
     
     mySession = ps.Session()
     mySession.add_packages("stsim")
+    mySession.add_packages("stsimsf")
+    mySession.add_packages("stsimcbmcfs3")
     
     # Type checking
     with pytest.raises(
@@ -80,9 +82,12 @@ def test_helper():
     with pytest.raises(TypeError, match="package must be a String"):
         ps.library(name="Test", package=1)
         
-    with pytest.raises(TypeError, match="addons must be a String"):
+    with pytest.raises(TypeError, match="addons must be None, a String, or a List"):
         ps.library(name="Test", addons=1)
-        
+
+    with pytest.raises(TypeError, match="addons in list are not all strings"):
+        ps.library(name="Test", addons=["addon1", 1])
+
     with pytest.raises(TypeError, match="templates must be a String"):
         ps.library(name="Test", template=1)
         
@@ -110,6 +115,29 @@ def test_helper():
     # Test output
     myLibrary = ps.library(name="Test", forceUpdate=True)
     assert isinstance(myLibrary, ps.Library)
+
+    # Test addon packages
+    myLibrary = ps.library(name = "stsimLibrary",
+                       session = mySession,
+                       package = "stsim",
+                       addons = "stsimsf",
+                       overwrite = True)
+    addon_list = myLibrary.addons["Name"].tolist()
+    assert "stsimsf" in addon_list
+    assert "stsimcbmcfs3" in addon_list
+    assert len(addon_list) >= 2
+    assert "No" in myLibrary.addons.Enabled.values
+    assert "Yes" in myLibrary.addons.Enabled.values
+
+    myLibrary = ps.library(name = "stsimLibrary",
+                       session = mySession,
+                       package = "stsim",
+                       addons = ["stsimsf", "stsimcbmcfs3"],
+                       overwrite = True)
+    addon_list = myLibrary.addons["Name"].tolist()
+    assert "stsimsf" in addon_list
+    assert "stsimcbmcfs3" in addon_list
+    assert np.unique(myLibrary.addons.Enabled.values) == "Yes"
     
 def test_library_attributes():
     

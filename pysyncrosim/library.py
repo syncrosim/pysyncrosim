@@ -20,7 +20,7 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location, session): # dja make the name more intuitive as well as matching the docstring name and internal consistentcy
+    def __init__(self, location, session):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -36,9 +36,9 @@ class Library(object):
         None.
 
         """
-        self.__name = os.path.basename(location) # dja Changed to use new parameter name.  Changed to using the os.path function basename as this makes script more understandable and pythonic 
+        self.__name = os.path.basename(location)
         self.__session = session
-        self.__location = location  # dja needed to match the name change in the class definition
+        self.__location = location
         self.__addons = self.__init_addons()
         self.__info = None
         self.__package = None

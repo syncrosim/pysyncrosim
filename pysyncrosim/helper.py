@@ -19,7 +19,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         to the SyncroSim executable. The default is None.
     package : String, optional
         The package type. The default is "stsim".
-    addons : String, optional
+    addons : String or List of Strings, optional
         One or more addon packages. The default is None.
     template : String, optional
         Creates Library with specified template. The default is None.
@@ -43,7 +43,10 @@ def library(name, session=None, package="stsim", addons=None, template=None,
     if not isinstance(package, str):
         raise TypeError("package must be a String")
     if addons is not None and not isinstance(addons, str):
-        raise TypeError("addons must be a String")
+        if not isinstance(addons, list):
+            raise TypeError("addons must be None, a String, or a List")
+        if not all(isinstance(addon, str) for addon in addons):
+            raise TypeError("addons in list are not all strings")
     if template is not None and not isinstance(template, str):
         raise TypeError("templates must be a String")
     if not isinstance(forceUpdate, bool):
@@ -53,7 +56,10 @@ def library(name, session=None, package="stsim", addons=None, template=None,
     
     if session is None:
         session = ps.Session()
-        
+
+    if addons is not None and not isinstance(addons, list):
+        addons = [addons]
+
     # Test that package specified is installed
     installed = session._Session__pkgs
     if package not in installed["Name"].values:
@@ -94,17 +100,29 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         
         # TODO: check for case when more than one addon package is included
         if addons is not None:
-            addon_temp_args = ["--list", "--templates", "--package=%s" % addons]
-            addon_temps = session._Session__call_console(addon_temp_args,
-                                                        decode=True,
-                                                        csv=True)
-            addon_temps = pd.read_csv(io.StringIO(addon_temps))
-            addon_temp = addons + "_" + template
+
+            addon_temp_list = []
+
+            for addon in addons:
+
+                addon_temp_args = ["--list", "--templates", "--package=%s" % addon]
+                addon_temps = session._Session__call_console(addon_temp_args,
+                                                            decode=True,
+                                                            csv=True)
+                if addon == addons[0]:
+                    addon_temps_all = pd.read_csv(io.StringIO(addon_temps))
+                else:
+                    addon_temps = pd.read_csv(io.StringIO(addon_temps))
+                    addon_temps_all = pd.concat([addon_temps_all, addon_temps])
+
+                addon_temp_list.append(addon + "_" + template)
         
         if base_temp in base_temps["Name"].values:
             args += ["--template=\"%s\"" % base_temp]
-        elif addons is not None and addon_temp in addon_temps["Name"].values:
-            args += ["--template=\"%s\"" % addons]
+        elif addons is not None:
+            for addon_temp in addon_temp_list:
+                if addon_temp in addon_temps["Name"].values:
+                    args += ["--template=\"%s\"" % addons]
         else:
             raise ValueError(
                 f"Template {template} does not exist in package {package}")
@@ -115,13 +133,14 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         
         if addons is not None:
             # Check if addons exists
-            if addons not in installed["Name"].values:
-                raise ValueError(
-                    f'The addon package {addons} is not installed')
+            for addon in addons:
+                if addon not in installed["Name"].values:
+                    raise ValueError(
+                        f'The addon package {addons} is not installed')
             
-            args = ["--create", "--addon", "--lib=%s" % loc,
-                    "--name=%s" % addons]
-            session._Session__call_console(args)
+                args = ["--create", "--addon", "--lib=%s" % loc,
+                        "--name=%s" % addon]
+                session._Session__call_console(args)
             
     except ValueError as ve:
         
