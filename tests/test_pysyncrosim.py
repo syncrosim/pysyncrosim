@@ -151,6 +151,11 @@ def test_library_attributes():
     assert isinstance(myLibrary.package, str)
     assert isinstance(myLibrary.addons, pd.DataFrame)
 
+    # Check environment error
+    with pytest.raises(RuntimeError,
+            match="Not in a SyncroSim environment."):
+        ps.Library()
+
 def test_library_projects():
     
     myLibrary = ps.library(name="Test", overwrite=True)

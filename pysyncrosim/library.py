@@ -20,7 +20,7 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location, session):
+    def __init__(self, location=None, session=None):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -36,9 +36,20 @@ class Library(object):
         None.
 
         """
-        self.__name = os.path.basename(location)
-        self.__session = session
         self.__location = location
+        self.__session = session
+
+        # Initialize when in a SyncroSim environment
+        if location is None and session is None:
+            e = _environment()
+            if e.program_directory.item() is not None:
+                self.__location = e.library_filepath.item()
+                self.__session = ps.Session(e.program_directory.item())
+            else:
+                raise RuntimeError("Not in a SyncroSim environment." +
+                                   " Please specify a location and session.")
+
+        self.__name = os.path.basename(self.__location)
         self.__addons = self.__init_addons()
         self.__info = None
         self.__package = None

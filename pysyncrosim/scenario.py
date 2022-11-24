@@ -466,18 +466,31 @@ class Scenario(object):
                 
         else:
             e = _environment()
-            f_base_path = e.input_directory.item()
-            fpath = self.__find_output_fpath(f_base_path, datasheet)
-            
-            for i in range(0, len(d)):
-  
-                # Index column with raster data
-                rpaths = os.path.join(fpath, d[column].loc[i])
+
+            for folder in [".input", ".temp", ".output"]:
+                
+                if folder != ".temp":
+                    lib_dir = self.__find_output_fpath(
+                        e.library_filepath.item() + folder, datasheet)
+                else:
+                    lib_dir = e.library_filepath.item() + folder
+                
+                for raster_tif in raster_tifs:
+                    for root, dirs, files in os.walk(lib_dir):
+                        if raster_tif in files:
+                            rpaths.append(os.path.join(root, raster_tif))
+                        else:
+                            break
+                        
+                    if len(rpaths) == 0:
+                        break
+                    
+                if len(rpaths) !=0:
+                    break
         
         # Return only filepaths to rasters if path_only is True
         if path_only:
             return rpaths
-
         
         # Iterate through all raster files in Datasheet
         for i in range(0, len(rpaths)):
