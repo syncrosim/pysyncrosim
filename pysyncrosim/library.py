@@ -874,6 +874,9 @@ class Library(object):
         # Retrieves Scenario info from the name or ID
         if name is None and sid is None:
             return None
+        if name is not None and sid is not None:
+            return self.__scenarios[
+                (self.__scenarios["Name"] == name) & (self.__scenarios["ScenarioID"] == sid)]
         if name is not None:
             return self.__scenarios[self.__scenarios["Name"] == name]
         else:

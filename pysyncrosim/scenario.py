@@ -570,7 +570,11 @@ class Scenario(object):
         # Reset Scenarios
         self.library._Library__scenarios = None
         self.library._Library__init_scenarios()
-        s = self.library._Library__get_scenario(name=name)
+        s = self.library._Library__scenarios
+        s = s.loc[s["Name"] == name]
+
+        if len(s) > 1:
+            s = s[-1:]
         
         return ps.Scenario(s["ScenarioID"].values[0],
                            s["Name"].values[0], self.project, self.library)
@@ -620,73 +624,32 @@ class Scenario(object):
                 # check if scenario exists
                 d_name = d
                 d = self.library._Library__scenarios[
-                    self.library._Library__scenarios.Name==d]
-                
-                if len(d) > 1:
-                    raise ValueError(
-                        "dependency name not unique, use ID or Scenario")
-                else:
-                    d = d["ScenarioID"].item()
+                    self.library._Library__scenarios.Name==d]               
+                self.__validate_dependencies(d, d_name=d_name)
+                d = d["ScenarioID"].item()
                 
             elif isinstance(d, int) or isinstance(d, np.int64):
                 # check if scenarios exists
-                d_name = self.library._Library__scenarios[
-                         self.library._Library__scenarios["ScenarioID"]==d
-                         ].Name.item()
+                deps = self.library._Library__scenarios[
+                       self.library._Library__scenarios["ScenarioID"]==d
+                    ]
+                self.__validate_dependencies(deps, d_name=d)
+                d_name = deps.Name.item()
                 
             else:
                 raise TypeError(
                     "dependency must be a Scenario, String, Integer, or List")
-            
+
             # Add dependency
             if remove is False:
                 # Remove and re-add to guarantee order
-                if d in self.__dependencies.ID.values:
-                    args = ["--delete", "--dependency", 
-                            "--lib=%s" % self.library.location,
-                            "--sid=%d" % self.sid, "--did=%d" % d, "--force"]
-                    self.library.session._Session__call_console(args)
-                
-                # Re-add now
-                args = ["--create", "--dependency",
-                        "--lib=%s" % self.library.location,
-                        "--sid=%d" % self.sid, "--did=%d" % d]
-                
-                try:
-                    self.library.session._Session__call_console(args)
-                    # Reset dependencies
-                    self.__dependencies = self.__init_dependencies()
-                    
-                except RuntimeError as e:
-                    print(e)
+                self.__remove_dependency(d, force=True)
+                self.__add_dependency(d)
                 
             # Remove dependency
             elif remove is True:
-                args = ["--delete", "--dependency",
-                        "--lib=%s" % self.library.location,
-                        "--sid=%d" % self.sid, "--did=%d" % d]
+                self.__remove_dependency(d, d_name=d_name, force=force)
                 
-                if force is False:
-                    answer = input (
-                        f"Do you really want to remove dependency {d_name} \
-                            (Y/N)?")
-                elif force is True:
-                    answer = "Y"
-                else: 
-                    raise TypeError("force must be a Logical")
-                    
-                if answer == "Y":
-                    args += ["--force"]
-                else:
-                    print(f"dependency {d_name} not removed")
-                    return
-                try:
-                    self.library.session._Session__call_console(args)
-                    # Reset dependencies
-                    self.__dependencies = self.__init_dependencies()
-                except RuntimeError as e:
-                    print(e)
-                         
             else: 
                 raise TypeError("remove must be a Logical")
     
@@ -714,15 +677,14 @@ class Scenario(object):
             return scn_info[
                 scn_info[
                     "ScenarioID"] == self.sid]["IgnoreDependencies"].item()
-        elif isinstance(value, str):
+        else:
+            self.__validate_ignore_dependencies(value)
             args = ["--setprop", "--lib=%s" % self.library.location,
                     "--ignoredeps=%s" % value, "--sid=%d" % self.sid]
             self.library.session._Session__call_console(args)
             
             # Reset Scenario information
             self.library._Library__init_scenarios()
-        else:
-            raise TypeError("value must be a String")
     
     def merge_dependencies(self, value=None):
         """
@@ -929,6 +891,70 @@ class Scenario(object):
         args = ["--list", "--dependencies", "--lib=%s" % self.library.location,
                 "--sid=%d" % self.sid, ]
         return self.library._Library__console_to_csv(args) 
+
+    def __validate_dependencies(self, dependencies, d_name):
+
+        if len(dependencies) > 1:
+            raise ValueError(
+                "dependency name not unique, use ID or Scenario")
+        elif len(dependencies) == 0:
+            raise ValueError(f"Scenario dependency {d_name} does not exist")
+
+    def __validate_ignore_dependencies(self, dependencies):
+
+        if not isinstance(dependencies, str):
+            raise TypeError("value must be a String")
+
+        scenario_list = self.library._Library__scenarios
+        scn = scenario_list["ScenarioID"].values[0]
+        scn_obj = self.library.scenarios(
+            project=self.project.pid, sid=scn)
+        scn_datasheets = scn_obj.datasheets(summary="CORE")
+        datasheet_list = scn_datasheets["Name"].values.tolist()
+        datasheet_list += [item.split(sep="_")[1] for item in datasheet_list]
+
+        dep_list = dependencies.split(sep=",")
+        for dep in dep_list:
+            if dep not in datasheet_list:
+                raise ValueError(f"Scenario dependency [{dep}] does not exist")
+
+    def __remove_dependency(self, d, d_name=None, force=False):
+
+        if d in self.__dependencies.ID.values:
+            args = ["--delete", "--dependency", 
+                    "--lib=%s" % self.library.location,
+                    "--sid=%d" % self.sid, "--did=%d" % d]
+            if force:
+                args += ["--force"]
+            else:
+                answer = input (
+                    f"Do you really want to remove dependency {d_name} \
+                        (Y/N)?")
+                if answer == "Y":
+                    args += ["--force"]
+                else:
+                    print(f"dependency {d_name} not removed")
+                    return
+
+            try:
+                self.library.session._Session__call_console(args)
+                self.__dependencies = self.__init_dependencies()
+
+            except RuntimeError as e:
+                    print(e)
+
+    def __add_dependency(self, d):
+
+        args = ["--create", "--dependency",
+                "--lib=%s" % self.library.location,
+                "--sid=%d" % self.sid, "--did=%d" % d]
+                
+        try:
+            self.library.session._Session__call_console(args)
+            self.__dependencies = self.__init_dependencies()
+            
+        except RuntimeError as e:
+            print(e)
     
     def __find_output_fpath(self, f_base_path, datasheet):
                 

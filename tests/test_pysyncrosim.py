@@ -944,12 +944,26 @@ def test_scenario_copy_dep_delete():
     
     myNewScn.dependencies(dependency=myNewerScn.name)
     assert myNewScn.dependencies().empty is False
+
+    myNewScn.dependencies(dependency=myNewerScn.name) # should not throw error
+
+    with pytest.raises(
+            ValueError,
+            match="Scenario dependency My Scenario 3 does not exist"):
+        myNewScn.dependencies(dependency=[myNewerScn.name, "My Scenario 3"])
     
     sameNameScn = myScenario.copy(name="My Scenario 2")
     with pytest.raises(
             ValueError,
             match="dependency name not unique, use ID or Scenario"):
         myNewScn.dependencies(dependency=sameNameScn.name)
+
+    myNewScn.dependencies(dependency=[myNewerScn, sameNameScn])
+    assert len(myNewScn.dependencies()) == 2
+
+    myNewScn.dependencies(dependency=[myNewerScn.sid, sameNameScn.sid],
+        remove=True, force=True)
+    assert myNewScn.dependencies().empty is True
         
     # Test ignore_dependencies
     with pytest.raises(TypeError, match="value must be a String"):
