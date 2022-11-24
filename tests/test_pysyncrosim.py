@@ -284,7 +284,7 @@ def test_library_datasheets():
     assert isinstance(myLibrary.datasheets(name="core_Backup"), pd.DataFrame)
     assert isinstance(myLibrary.datasheets(summary=False), list)
     assert len(myLibrary.datasheets().columns) == 3
-    assert len(myLibrary.datasheets(optional=True).columns) == 6
+    assert len(myLibrary.datasheets(optional=True).columns) == 7
     assert myLibrary.datasheets(name="core_Backup", empty=True).empty
     assert not myLibrary.datasheets().equals(
         myLibrary.datasheets(scope="Project"))
@@ -550,7 +550,7 @@ def test_project_datasheets():
     assert myProject.datasheets(
         summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myProject.datasheets().columns) == 3
-    assert len(myProject.datasheets(optional=True).columns) == 6
+    assert len(myProject.datasheets(optional=True).columns) == 7
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
     
@@ -679,7 +679,7 @@ def test_scenario_datasheets():
     assert myScenario.datasheets(
         summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myScenario.datasheets().columns) == 3
-    assert len(myScenario.datasheets(optional=True).columns) == 7
+    assert len(myScenario.datasheets(optional=True).columns) == 8
     assert isinstance(myScenario.datasheets(
         name="RunControl",
         filter_column="MinimumIteration", 
