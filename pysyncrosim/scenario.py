@@ -248,7 +248,7 @@ class Scenario(object):
     
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    filter_column=None, filter_value=None, include_key=False,
-                   return_hidden=False):
+                   show_full_paths=True, return_hidden=False):
         """
         Retrieves a DataFrame of Scenario Datasheets.
         
@@ -269,6 +269,12 @@ class Scenario(object):
         include_key : Logical, optional
             Whether to include the primary key of the Datasheet, corresponding
             to the SQL database. Default is False.
+        show_full_paths : Logical, optional
+            Whether to show the full path of any external files in the Datasheet.
+            Default is True.
+        return_hidden : Logical, optional
+            If set to True, returns all records in a Datasheet, including those
+            hidden from the user. Results in a slower query. Default is False. 
 
         Returns
         -------
@@ -283,6 +289,7 @@ class Scenario(object):
                                                     empty, "Scenario",
                                                     filter_column, 
                                                     filter_value, include_key,
+                                                    show_full_paths,
                                                     return_hidden, self.sid)
         return self.__datasheets
     
@@ -347,7 +354,7 @@ class Scenario(object):
         
         # Retrieve Datasheet as DataFrame
         d = self.datasheets(name = datasheet, filter_column = filter_column,
-                            filter_value = filter_value)
+                            filter_value = filter_value, show_full_paths = False)
         
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",

@@ -137,7 +137,8 @@ def test_helper():
     addon_list = myLibrary.addons["Name"].tolist()
     assert "stsimsf" in addon_list
     assert "stsimcbmcfs3" in addon_list
-    assert np.unique(myLibrary.addons.Enabled.values) == "Yes"
+    addon_enabled_list = np.unique(myLibrary.addons.Enabled.values).tolist()
+    assert "Yes" in addon_enabled_list
     
 def test_library_attributes():
     
@@ -429,7 +430,7 @@ def test_library_run():
         myLibrary.run(jobs="1")
     
     runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", None, None, False, False, 1)
+                                      "Scenario", None, None, False, True, False, 1)
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
     myLibrary.save_datasheet("RunControl", runcontrol, 

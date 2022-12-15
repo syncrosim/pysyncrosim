@@ -378,7 +378,7 @@ class Library(object):
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    scope="Library", filter_column=None, filter_value=None,
-                   include_key=False, return_hidden=False, *ids):
+                   include_key=False, show_full_paths=True, return_hidden=False, *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -403,6 +403,9 @@ class Library(object):
         include_key : Logical, optional
             Whether to include the primary key of the Datasheet, corresponding
             to the SQL database. Default is False.
+        show_full_paths : Logical, optional
+            If set to True, returns the full path of any external files in the 
+            Datasheet. Default is True.
         return_hidden : Logical, optional
             If set to True, returns all records in a Datasheet, including those
             hidden from the user. Results in a slower query. Default is False. 
@@ -425,7 +428,7 @@ class Library(object):
         self.__datasheets = None        
         # TODO: Check if datasheet exists in desired scope
         
-        args = self.__initialize_export_args(scope, ids, empty, include_key)
+        args = self.__initialize_export_args(scope, ids, empty, include_key, show_full_paths)
         
         if name is None:
             
@@ -1274,7 +1277,7 @@ class Library(object):
             raise TypeError("copy_external_inputs must be a Logical")
             
     
-    def __initialize_export_args(self, scope, ids, empty, include_key):
+    def __initialize_export_args(self, scope, ids, empty, include_key, show_full_paths):
     
         args = ["--export", "--lib=%s" % self.__location]
         
@@ -1289,6 +1292,9 @@ class Library(object):
             
         if include_key:
             args += ["--includepk"]
+        
+        if show_full_paths:
+            args += ["--extfilepaths"]
             
         return args
     
@@ -1525,7 +1531,7 @@ class Library(object):
     def __find_scope_id_args(self, input_sheet_name, scope, ids, args):
         
         scope_list = ["Project", "Scenario", "Library"]
-        
+
         if (self.__datasheets.Name == input_sheet_name).any():
             
             input_scope = scope
