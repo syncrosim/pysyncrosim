@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'pysyncrosim'
-copyright = '2022, ApexRMS'
+copyright = '2023, ApexRMS'
 author = 'ApexRMS'
 
 # The full version, including alpha/beta/rc tags
