@@ -62,6 +62,9 @@ def library(name, session=None, package=None, addons=None, template=None,
         return ps.Library(location=loc, session=session)
 
     # Test that package specified is installed
+    if package is None:
+        package = "stsim"
+        
     installed = session._Session__pkgs
     if package not in installed["Name"].values:
         raise ValueError(f'The package {package} is not installed')

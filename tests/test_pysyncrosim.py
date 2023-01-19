@@ -110,7 +110,7 @@ def test_helper():
     # Test template
     with pytest.raises(ValueError,
                        match="Template test does not exist in package"):
-        ps.library("Test", template="test")
+        ps.library("Test", package="stsim", template="test")
       
     # Test output
     myLibrary = ps.library(name="Test", forceUpdate=True)
@@ -698,6 +698,8 @@ def test_scenario_datasheets():
 
 def test_scenario_save_datasheet():
 
+    mySession = ps.Session()
+    mySession.add_packages("helloworld")
     myLibrary = ps.library(name="ds_test", package="helloworld",
                            overwrite=True,
                            forceUpdate=True)
