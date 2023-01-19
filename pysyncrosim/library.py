@@ -49,6 +49,9 @@ class Library(object):
                 raise RuntimeError("Not in a SyncroSim environment." +
                                    " Please specify a location and session.")
 
+        if self.__session is None:
+            self.__session = ps.Session()
+
         self.__name = os.path.basename(self.__location)
         self.__addons = self.__init_addons()
         self.__info = None

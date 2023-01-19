@@ -35,35 +35,14 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         SyncroSim Library class instance.
 
     """
-    # Unit tests for type checking
-    if not isinstance(name, str):
-        raise TypeError("name must be a String")
-    if session is not None and not isinstance(session, ps.Session):
-        raise TypeError("session must be None or pysyncrosim Session instance")
-    if not isinstance(package, str):
-        raise TypeError("package must be a String")
-    if addons is not None and not isinstance(addons, str):
-        if not isinstance(addons, list):
-            raise TypeError("addons must be None, a String, or a List")
-        if not all(isinstance(addon, str) for addon in addons):
-            raise TypeError("addons in list are not all strings")
-    if template is not None and not isinstance(template, str):
-        raise TypeError("templates must be a String")
-    if not isinstance(forceUpdate, bool):
-        raise TypeError("forceUpdate must be a Logical")
-    if not isinstance(overwrite, bool):
-        raise TypeError("overwrite must be a Logical")
+    _validate_library_inputs(name, session, addons, package, template,
+                             forceUpdate, overwrite)
     
     if session is None:
         session = ps.Session()
 
     if addons is not None and not isinstance(addons, list):
         addons = [addons]
-
-    # Test that package specified is installed
-    installed = session._Session__pkgs
-    if package not in installed["Name"].values:
-        raise ValueError(f'The package {package} is not installed')
         
     # Add Library extension if not already included
     if name.endswith(".ssim") is False:
@@ -77,6 +56,15 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         name = os.path.split(name)[-1]
     else:
         raise ValueError(f"Path to Library does not exist: {name}")
+
+    if os.path.exists(loc) and overwrite is False:
+        _check_library_update(session, loc, forceUpdate)
+        return ps.Library(location=loc, session=session)
+
+    # Test that package specified is installed
+    installed = session._Session__pkgs
+    if package not in installed["Name"].values:
+        raise ValueError(f'The package {package} is not installed')
     
     args = ["--create", "--library", "--package=%s" % package,
             "--name=\"%s\"" % loc]
@@ -154,14 +142,39 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         else:
             raise RuntimeError(re1)
 
-    
-    library_up_to_date = False
+    _check_library_update(session, loc, forceUpdate)
+        
+    return ps.Library(location=loc, session=session)
+
+def _validate_library_inputs(name, session, addons, package, template, forceUpdate, overwrite):
+    """
+    Validates input types for the create_library function
+    """
+    if not isinstance(name, str):
+        raise TypeError("name must be a String")
+    if session is not None and not isinstance(session, ps.Session):
+        raise TypeError("session must be None or pysyncrosim Session instance")
+    if not isinstance(package, str):
+        raise TypeError("package must be a String")
+    if addons is not None and not isinstance(addons, str):
+        if not isinstance(addons, list):
+            raise TypeError("addons must be None, a String, or a List")
+        if not all(isinstance(addon, str) for addon in addons):
+            raise TypeError("addons in list are not all strings")
+    if template is not None and not isinstance(template, str):
+        raise TypeError("templates must be a String")
+    if not isinstance(forceUpdate, bool):
+        raise TypeError("forceUpdate must be a Logical")
+    if not isinstance(overwrite, bool):
+        raise TypeError("overwrite must be a Logical")
+
+def _check_library_update(session, loc, forceUpdate):
+
     try:
         
-        # Find out if there are any unapplied updates to the library
         args = ["--list", "--addons", "--lib=%s" % loc]
         session._Session__call_console(args)
-        library_up_to_date = True
+        return
         
     except RuntimeError as re2:
         
@@ -177,14 +190,8 @@ def library(name, session=None, package="stsim", addons=None, template=None,
             if answer == "Y":
                 args = ["--update", "--lib=%s" % loc]
                 session._Session__call_console(args)
-                library_up_to_date = True
             elif answer == "N":
-                print("Updates not applied and Library not loaded.")
-    
-    finally:
-        
-        if library_up_to_date is True:
-            return ps.Library(location=loc, session=session)
+                raise Exception("Updates not applied and Library not loaded.")
 
 def _delete_library(name, session=None, force=False):
     """
