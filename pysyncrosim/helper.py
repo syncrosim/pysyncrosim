@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import io
 
-def library(name, session=None, package="stsim", addons=None, template=None,
+def library(name, session=None, package=None, addons=None, template=None,
             forceUpdate=False, overwrite=False):
     """
     Creates a new SyncroSim Library and opens it as a Library
@@ -18,7 +18,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
         creates a Session class instance using the default installation path
         to the SyncroSim executable. The default is None.
     package : String, optional
-        The package type. The default is "stsim".
+        The package type. if None selected, then "stsim" will be used.
     addons : String or List of Strings, optional
         One or more addon packages. The default is None.
     template : String, optional
@@ -57,7 +57,7 @@ def library(name, session=None, package="stsim", addons=None, template=None,
     else:
         raise ValueError(f"Path to Library does not exist: {name}")
 
-    if os.path.exists(loc) and overwrite is False:
+    if os.path.exists(loc) and overwrite is False and package is None:
         _check_library_update(session, loc, forceUpdate)
         return ps.Library(location=loc, session=session)
 
@@ -154,7 +154,7 @@ def _validate_library_inputs(name, session, addons, package, template, forceUpda
         raise TypeError("name must be a String")
     if session is not None and not isinstance(session, ps.Session):
         raise TypeError("session must be None or pysyncrosim Session instance")
-    if not isinstance(package, str):
+    if package is not None and not isinstance(package, str):
         raise TypeError("package must be a String")
     if addons is not None and not isinstance(addons, str):
         if not isinstance(addons, list):
