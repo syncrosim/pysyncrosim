@@ -219,7 +219,7 @@ class Project(object):
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    filter_column=None, filter_value=None, include_key=False,
-                   show_full_paths=True, return_hidden=False):
+                   show_full_paths=False, return_hidden=False):
         """
         Retrieves a DataFrame of Project Datasheets.
         
@@ -242,7 +242,7 @@ class Project(object):
             to the SQL database. Default is False.
         show_full_paths : Logical, optional
             Whether to show the full path of any external files in the Datasheet.
-            Default is True.
+            Default is False.
         return_hidden : Logical, optional
             If set to True, returns all records in a Datasheet, including those
             hidden from the user. Results in a slower query. Default is False. 

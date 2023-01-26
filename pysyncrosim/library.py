@@ -381,7 +381,7 @@ class Library(object):
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    scope="Library", filter_column=None, filter_value=None,
-                   include_key=False, show_full_paths=True, return_hidden=False, *ids):
+                   include_key=False, show_full_paths=False, return_hidden=False, *ids):
         """
         Retrieves a DataFrame of Library Datasheets.
 
@@ -408,7 +408,7 @@ class Library(object):
             to the SQL database. Default is False.
         show_full_paths : Logical, optional
             If set to True, returns the full path of any external files in the 
-            Datasheet. Default is True.
+            Datasheet. Default is False.
         return_hidden : Logical, optional
             If set to True, returns all records in a Datasheet, including those
             hidden from the user. Results in a slower query. Default is False. 
