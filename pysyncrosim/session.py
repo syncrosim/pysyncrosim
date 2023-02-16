@@ -12,7 +12,7 @@ class Session(object):
     """
     __pkgs = None
     
-    def __init__(self, location=None, silent=True, print_cmd=False):
+    def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None):
         """
         Initializes a pysyncrosim Session instance.
 
@@ -27,6 +27,8 @@ class Session(object):
         print_cmd : Logical, optional
             If True, arguments from the console command will be printed. The 
             default is False.
+        conda_filepath : Str, optional
+            Filepath to conda executable. If None, then uses default location
 
         Raises
         ------
@@ -45,6 +47,7 @@ class Session(object):
         self.console_exe = self.__init_console(console=True)
         self.__silent = silent
         self.__print_cmd = print_cmd
+        self.__conda_filepath = conda_filepath
         self.__is_windows = os.name == 'nt'
         self.__pkgs = self.packages()
         
@@ -65,6 +68,8 @@ class Session(object):
                                "is required to run pysyncrosim v" +
                                __version__ + ", but you have SyncroSim v" + 
                                ssim_current_version + " installed")
+
+        self.__configure_conda()
      
     @property
     def location(self):
@@ -435,6 +440,15 @@ class Session(object):
         else:    
             return result
 
+    def __configure_conda(self):
+
+        self.__call_console(["--conda", "--clear"])
+
+        if self.__conda_filepath is not None:
+            result = self.__call_console(["--conda", "--path=" + self.__conda_filepath])
+            if result.returncode != 0:
+                self.__conda_filepath = None
+                raise RuntimeError(result.stderr.decode('utf-8'))
 
 
 
