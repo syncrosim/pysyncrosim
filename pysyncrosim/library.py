@@ -20,7 +20,7 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location=None, session=None):
+    def __init__(self, location=None, session=None, use_conda=None):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -38,6 +38,7 @@ class Library(object):
         """
         self.__location = location
         self.__session = session
+        self.__use_conda = use_conda
 
         # Initialize when in a SyncroSim environment
         if location is None and session is None:
@@ -51,6 +52,9 @@ class Library(object):
 
         if self.__session is None:
             self.__session = ps.Session()
+
+        if self.__use_conda is not None:
+            self.__init_conda()
 
         self.__name = os.path.basename(self.__location)
         self.__addons = self.__init_addons()
@@ -819,6 +823,28 @@ class Library(object):
             
         # Reset addons
         self.__addons = self.__init_addons()
+
+    def create_conda_env(self, packages):
+
+        for p in packages:
+            args = ["--conda", "--createenv", "--pkg=%s" % p]
+            result = self.session._Session__call_console(args)
+            if result.returncode != 0:
+                print(result.stdout.decode("utf-8"))
+                return
+            
+
+    def __init_conda(self):
+        args = ["--setprop", "--lib=%s" % self.location]
+
+        if self.__use_conda is True:
+            args += ["--useconda=yes"]
+            current_packages = np.unique(self.__datasheets["Package"]) #TODO: check
+            self.create_conda_env(current_packages)
+        else:
+            args += ["--useconda=no"]
+        
+        self.session._Session__call_console(args)
         
     def __init_addons(self):   
         # Retrieves addons information
