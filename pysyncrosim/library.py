@@ -831,8 +831,9 @@ class Library(object):
             result = self.session._Session__call_console(args)
             if result.returncode != 0:
                 print(result.stdout.decode("utf-8"))
-                return
-            
+                self.__use_conda = False
+                self.__init_conda()
+                return         
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
