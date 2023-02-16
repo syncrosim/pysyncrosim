@@ -115,6 +115,24 @@ class Library(object):
 
         """
         return self.__location
+
+    @property
+    def use_conda(self):
+        """
+        Retrieves the Conda environment for this Library.
+
+        Returns
+        -------
+        String
+            Conda environment name.
+
+        """
+        return self.__use_conda
+
+    @use_conda.setter
+    def use_conda(self, value):
+        self.__use_conda = value
+        self.__init_conda()
     
     @property
     def package(self):
