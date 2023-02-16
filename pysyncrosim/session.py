@@ -380,6 +380,28 @@ class Session(object):
         
             # Set executable back to console
             self.console_exe = self.__init_console(console=True)
+
+    def install_conda(self):
+        """
+        Installs the Miniconda to the default installation path
+        within the SyncroSim installation folder. If you already
+        have conda installed in a non-default location, then you
+        can point SyncroSim towards that installation using the 
+        conda_filepath argument when loading the Session class.
+        
+        Returns
+        -------
+        None.
+
+        """        
+        args = ["--conda", "--install"]
+        result = self.__call_console(args)
+
+        if result.returncode == 0:
+            print("Miniconda installed successfully")
+        else:
+            print(result.stdout.decode('utf-8'))
+
          
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
