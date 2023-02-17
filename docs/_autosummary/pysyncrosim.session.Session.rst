@@ -15,6 +15,7 @@
    
       ~Session.__init__
       ~Session.add_packages
+      ~Session.install_conda
       ~Session.packages
       ~Session.remove_packages
       ~Session.update_packages
@@ -28,6 +29,7 @@
 
    .. autosummary::
    
+      ~Session.conda_filepath
       ~Session.location
       ~Session.print_cmd
       ~Session.silent
