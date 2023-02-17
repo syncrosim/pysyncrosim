@@ -43,5 +43,6 @@
       ~Library.package
       ~Library.readonly
       ~Library.session
+      ~Library.use_conda
    
    
