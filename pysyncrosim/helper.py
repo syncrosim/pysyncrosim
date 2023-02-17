@@ -4,7 +4,7 @@ import pandas as pd
 import io
 
 def library(name, session=None, package=None, addons=None, template=None,
-            forceUpdate=False, overwrite=False):
+            forceUpdate=False, overwrite=False, use_conda=None):
     """
     Creates a new SyncroSim Library and opens it as a Library
     class instance.
@@ -28,6 +28,11 @@ def library(name, session=None, package=None, addons=None, template=None,
         default is False.
     overwrite : Logical, optional
         Overwrite existing Library. The default is False.
+    use_conda : Logical, optional
+        If True, then runs the Library in a conda environment. The 
+        default is None, meaning the Library properties determine whether
+        the Library is run in a conda environment. When new Libraries are 
+        created, the default for use_conda is `False`.
 
     Returns
     -------
@@ -36,7 +41,7 @@ def library(name, session=None, package=None, addons=None, template=None,
 
     """
     _validate_library_inputs(name, session, addons, package, template,
-                             forceUpdate, overwrite)
+                             forceUpdate, overwrite, use_conda)
     
     if session is None:
         session = ps.Session()
@@ -147,9 +152,10 @@ def library(name, session=None, package=None, addons=None, template=None,
 
     _check_library_update(session, loc, forceUpdate)
         
-    return ps.Library(location=loc, session=session)
+    return ps.Library(location=loc, session=session, use_conda=use_conda)
 
-def _validate_library_inputs(name, session, addons, package, template, forceUpdate, overwrite):
+def _validate_library_inputs(name, session, addons, package, template, 
+                             forceUpdate, overwrite, use_conda):
     """
     Validates input types for the create_library function
     """
@@ -170,6 +176,8 @@ def _validate_library_inputs(name, session, addons, package, template, forceUpda
         raise TypeError("forceUpdate must be a Logical")
     if not isinstance(overwrite, bool):
         raise TypeError("overwrite must be a Logical")
+    if use_conda is not None and not isinstance(use_conda, bool):
+        raise TypeError("use_conda must be None or a Logical")
 
 def _check_library_update(session, loc, forceUpdate):
 

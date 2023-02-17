@@ -126,6 +126,24 @@ class Session(object):
         elif not isinstance(value, bool):
             raise AttributeError("print_cmd must be a Logical")
         self.__print_cmd = value
+
+    @property
+    def conda_filepath(self):
+        """
+        Gets or sets the filepath to the conda executable.
+
+        Returns
+        -------
+        String
+            Filepath to conda executable.
+
+        """
+        return self.__conda_filepath
+
+    @conda_filepath.setter
+    def conda_filepath(self, value):
+        self.__conda_filepath = value
+        self.__configure_conda()
         
         
     def version(self):

@@ -842,29 +842,37 @@ class Library(object):
         # Reset addons
         self.__addons = self.__init_addons()
 
-    def create_conda_env(self, packages):
-
-        for p in packages:
-            args = ["--conda", "--createenv", "--pkg=%s" % p]
-            result = self.session._Session__call_console(args)
-            if result.returncode != 0:
-                print(result.stdout.decode("utf-8"))
-                self.__use_conda = False
-                self.__init_conda()
-                return         
-
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
 
         if self.__use_conda is True:
             args += ["--useconda=yes"]
-            current_packages = np.unique(self.__datasheets["Package"]) #TODO: check
-            self.create_conda_env(current_packages)
+            current_packages = self.__retrieve_lib_packages()
+            self.__create_conda_env(current_packages)
         else:
             args += ["--useconda=no"]
         
         self.session._Session__call_console(args)
         
+    def __retrieve_lib_packages(self):
+        # Retrieves current packages being used by the library
+        args = ["--list", "--datasheets", "--lib=%s" % self.location]
+        result = self.session._Session__call_console(args, decode=True, csv=True)
+        result =  pd.read_csv(io.StringIO(result))
+        return np.unique(result["Package"]).tolist()
+
+    def __create_conda_env(self, packages):
+
+        for p in packages:
+            args = ["--conda", "--createenv", "--pkg=%s" % p]
+            result = self.session._Session__call_console(args)
+            result_message = result.stdout.decode('utf-8')
+            if (result.returncode != 0) | \
+                ("this package does not use Conda environments" in result_message):
+                print(result_message)
+                self.__use_conda = False
+                self.__init_conda()
+
     def __init_addons(self):   
         # Retrieves addons information
         args = ["--list", "--addons", "--lib=%s" % self.location]
