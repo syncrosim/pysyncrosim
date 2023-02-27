@@ -139,6 +139,17 @@ def test_helper():
     assert "stsimcbmcfs3" in addon_list
     addon_enabled_list = np.unique(myLibrary.addons.Enabled.values).tolist()
     assert "Yes" in addon_enabled_list
+
+    # Test addon templates
+    myLibrary = ps.library(name = "stsimLibrary",
+                           session = mySession,
+                           package = "stsim",
+                           addons = ["stsimsf", "stsimcbmcfs3"],
+                           template = "cbm-cfs3-example",
+                           overwrite = True,
+                           forceUpdate = True)
+    assert isinstance(myLibrary, ps.Library)
+    assert len(myLibrary.scenarios()) > 0
     
 def test_library_attributes():
     
