@@ -161,7 +161,7 @@ class Session(object):
         
         return v.rstrip()
     
-    def packages(self, installed=True):
+    def packages(self, installed=True, list_templates=None):
         """
         Retrieves DataFrame of installed packages.
         
@@ -171,6 +171,9 @@ class Session(object):
             If False, then shows all available packages. If "BASE", only shows
             installed base packages. If True, then shows installed 
             addons in addition to base packages. The default is True.
+        list_templates : String, optional
+            The name a SyncroSim package. If provided, then will return a
+            DataFrame of all templates in the package. The default is None.
 
         Returns
         -------
@@ -181,6 +184,8 @@ class Session(object):
         """
         if not isinstance(installed, bool) and installed != "BASE":
             raise TypeError("installed must be Logical or 'BASE'")
+        if not isinstance(list_templates, str) and list_templates is not None:
+            raise TypeError("list_templates must be a String")
         
         if installed is True or installed == "BASE":
             args = ["--list", "--basepkgs"]
@@ -201,6 +206,13 @@ class Session(object):
                 return pd.read_csv(io.StringIO(pkgs))
             finally:
                 self.console_exe = self.__init_console(console=True)
+
+        if list_templates is not None:
+            if list_templates not in self.__pkgs["Name"].values:
+                raise ValueError(f"SyncroSim Package {list_templates} is not installed")
+            args = ["--list", "--templates", f"--package={list_templates}"]
+            templates = self.__call_console(args, decode=True, csv=True)
+            return pd.read_csv(io.StringIO(templates))
 
         return self.__pkgs        
     
