@@ -501,6 +501,10 @@ class Session(object):
             if result.returncode != 0:
                 self.__conda_filepath = None
                 raise RuntimeError(result.stderr.decode('utf-8'))
+            
+        if self.__conda_filepath is None:
+            result = self.__call_console(["--conda", "--config"])
+            self.__conda_filepath = result.stdout.decode('utf-8').strip().split(": ")[1]
 
 
 
