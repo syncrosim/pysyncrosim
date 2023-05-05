@@ -411,9 +411,10 @@ class Library(object):
         ----------
         name : String, optional
             Datasheet name. The default is None.
-        summary : Logical or String, optional
-            Whether to list package Datasheets or core Datasheets. The default
-            is True.
+        summary : Logical, optional
+            When set to True return a dataframe of all available package and
+            SyncroSim core Datasheets. When set to False returns a list of 
+            Datasheet dataframes. The default is True.
         optional : Logical, optional
             Return optional columns. The default is False.
         empty : Logical, optional
@@ -457,18 +458,17 @@ class Library(object):
         
         if name is None:
             
-            if summary is True or summary == "CORE":
+            if summary is True:
                 
-                ds_frame = self.__return_summarized_datasheets(scope, summary,
-                                                               optional, ids)
+                ds_frame = self.__return_summarized_datasheets(
+                    scope, summary, optional, ids)
                 
                 return ds_frame
         
             if summary is False:
                 
-                ds_list = self.__return_list_of_full_datasheets(scope, args,
-                                                                return_hidden,
-                                                                ids)
+                ds_list = self.__return_list_of_full_datasheets(
+                    scope, args, return_hidden, ids)
                     
                 return ds_list
         
@@ -913,9 +913,6 @@ class Library(object):
         if self.__datasheets is None:
             if summary is True:
                 args = ["--list", "--datasheets", "--lib=%s" % self.__location,
-                        "--scope=%s" % scope]
-            if summary == "CORE":
-                args = ["--list", "--datasheets", "--lib=%s" % self.__location,
                         "--scope=%s" % scope, "--includesys"]
             self.__datasheets = self.__console_to_csv(args)    
             
@@ -1297,8 +1294,8 @@ class Library(object):
             
         if name is not None and not isinstance(name, str):
             raise TypeError("name must be a String")
-        if not isinstance(summary, bool) and summary != "CORE":
-            raise TypeError("summary must be a Logical or 'CORE'")
+        if not isinstance(summary, bool):
+            raise TypeError("summary must be a Logical")
         if not isinstance(optional, bool):
             raise TypeError("optional must be a Logical")
         if not isinstance(empty, bool):
