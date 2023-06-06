@@ -1042,4 +1042,30 @@ def test_scenario_copy_dep_delete():
     with pytest.raises(RuntimeError, match="The scenario does not exist"):
         myNewScn.delete(force=True)
         myNewScn.run()
+
+def test_folder_functions():
+
+    myLibrary = ps.library(name = "stsimLibrary",
+                        package = "stsim",
+                        template = "non-spatial-example",
+                        overwrite=True,
+                        forceUpdate=True)
+
+    myProject = myLibrary.projects(pid=1)
+    df = myLibrary.retrieve_folder_data()
+    assert df.empty is True
+
+    myProject.create_project_folder("test")
+    df = myLibrary.retrieve_folder_data()
+    fid = df[df["Name"] == "test"]["ID"].item()
+    assert df.empty is False
+    assert len(df) == 1
+
+    new_fid = myProject.create_nested_folder(fid, "test2")
+    df = myLibrary.retrieve_folder_data()
+    assert len(df) == 2
+
+    myScenario = myProject.scenarios(sid=5)
+    myScenario.add_scenario_to_folder(new_fid)
+
     
