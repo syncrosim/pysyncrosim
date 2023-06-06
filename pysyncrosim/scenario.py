@@ -785,8 +785,8 @@ class Scenario(object):
         args = ["--run", "--lib=%s" % self.library.location,
                 "--sid=%d" % self.__sid, "--jobs=%d" % jobs]
         
-        if jobs > 1 and copy_external_inputs is False:
-            args += ["--noextfiles"]
+        if jobs > 1 and copy_external_inputs is True:
+            args += ["--copyextfiles=yes"]
             
         print(f"Running Scenario [{self.sid}] {self.name}")
         result = self.library.session._Session__call_console(args)
@@ -869,6 +869,39 @@ class Scenario(object):
         else:
             return self.__results
         
+    def add_scenario_to_folder(self, folder_id):
+        """
+        Add a scenario to a folder within a SyncroSim project
+        
+        Parameters
+        ----------
+        session : pysyncrosim.Session
+            pysyncrosim session object
+        library : pysyncrosim.Library
+            pysyncrosim library object
+        project : pysyncrosim.Project
+            pysyncrosim project object
+        scenario : pysyncrosim.Scenario
+            pysyncrosim scenario object
+        folder_id : int 
+            Folder id
+        
+        Returns
+        -------
+        None
+        """
+        lib = self.library
+        pid = self.project.pid
+        sid = self.sid
+
+        args = ["--move", "--scenario", "--lib=%s" % lib.location, 
+                "--sid=%d" % sid, "--tfid=%d" % folder_id, "--tpid=%d" % pid]
+
+        result = lib.session._Session__call_console(args)
+
+        if result.returncode == 0:
+            print(f"Scenario {self.sid} added to folder")
+                
     def __init_info(self):
         # Set Scenario information
         scn_info = self.library.scenarios(project=self.project.pid,

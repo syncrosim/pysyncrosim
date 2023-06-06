@@ -1,5 +1,6 @@
 import pysyncrosim as ps
 import numpy as np
+import re
 
 class Project(object):
     """
@@ -356,29 +357,39 @@ class Project(object):
             
             if not isinstance(scenarios, list):
                 scenarios = [scenarios]
-            
-            result_list = [
-                scn.run(
-                    jobs=jobs, copy_external_inputs=copy_external_inputs
-                    ) for scn in scenarios]
+
+            scn_id_str = self.__create_scenario_id_string(scenarios)
                     
         elif scenarios is not None:
                 
             if not isinstance(scenarios, list):
                 scenarios = [scenarios]
-                
-            if isinstance(scenarios[0], int):
-                scenario_list = [
-                    self.scenarios(sid=scn) for scn in scenarios]
-            elif isinstance(scenarios[0], str):
-                scenario_list = [
-                    self.scenarios(name=scn) for scn in scenarios]
-            else:
-                scenario_list = scenarios
 
-            result_list = [scn.run(
-                jobs=jobs, copy_external_inputs=copy_external_inputs
-                ) for scn in scenario_list]
+            scn_id_str = self.__create_scenario_id_string(scenarios)
+
+        args = ["--run", "--lib=%s" % self.library.location, "--sid=%s" % scn_id_str,
+                "--jobs=%d" % jobs]
+        if jobs > 1 and copy_external_inputs is True:
+            args += ["--copyextfiles=yes"]
+
+        print(f"Running Scenario(s)")  
+        result = self.library.session._Session__call_console(args)
+
+        if result.returncode == 0:
+            print("Run successful")
+
+        # Reset Project Scenarios
+        self.__scenarios = None
+
+        # Reset and retrieve Scenario results
+        for scn in scenarios:
+            if isinstance(scn, int) or isinstance(scn, np.int64):
+                scn = self.scenarios(scn)
+            elif isinstance(scn, str):
+                scn = self.scenarios(scn)
+            scn._Scenario__results = None
+            result_id = scn.results()["ScenarioID"].values[-1]
+            result_list.append(self.scenarios(result_id))
             
         if len(result_list) == 1:
             return result_list[0]
@@ -420,6 +431,52 @@ class Project(object):
         return ps.Project(p["ProjectID"].values[0],
                           p["Name"].values[0], self.library)
     
+    def create_project_folder(self, folder_name):
+        """
+        Create a folder within a SyncroSim project
+        
+        Parameters
+        ----------
+        folder_name : str
+            Name of folder to create
+        
+        Returns
+        -------
+        str
+            Folder id
+        """
+
+        args = ["--create", "--folder", "--lib=%s" % self.library.location,
+                "--name=%s" % folder_name, "--tpid=%d" % self.pid]
+        out = self.library.session._Session__call_console(args, decode=True)
+        folder_id = re.findall(r'\d+', out)[0]
+
+        return folder_id
+
+    def create_nested_folder(self, parent_folder_id, folder_name):
+        """
+        Create a folder within an existing folder.
+        
+        Parameters
+        ----------
+        parent_folder_id : str
+            Parent folder id
+        folder_name : str
+            Name of folder to create
+        
+        Returns
+        -------
+        str
+            Folder id
+        """
+
+        args = ["--create", "--folder", "--lib=%s" % self.library.location,
+                "--name=%s" % folder_name, "--tfid=%d" % parent_folder_id]
+        out = self.library.session._Session__call_console(args, decode=True)
+        folder_id = re.findall(r'\d+', out)[0]
+
+        return folder_id
+    
     def __init_info(self):
         # Set projects
         self.library.projects()
@@ -438,5 +495,22 @@ class Project(object):
                 "--pid=%d" % self.pid]
         return self.library.session._Session__call_console(
             args, decode=True)
+    
+    def __create_scenario_id_string(self, scenarios):
+        # Create string list of scenarios to provide SyncroSim
+        scn_string_list = ""
+        for scn in scenarios:
+            if isinstance(scn, ps.Scenario):
+                scn_string_list += str(scn.sid) + ","
+            elif isinstance(scn, int) or isinstance(scn, np.int64):
+                scn_string_list += str(scn) + ","
+            elif isinstance(scn, str):
+                scn_object = self.scenarios(name=scn)
+                scn_string_list += str(scn_object.sid) + ","
+
+        # Remove trailing comma
+        scn_string_list = scn_string_list[:-1]
+
+        return scn_string_list
 
 
