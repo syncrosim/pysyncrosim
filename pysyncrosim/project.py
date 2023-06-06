@@ -367,8 +367,13 @@ class Project(object):
 
             scn_id_str = self.__create_scenario_id_string(scenarios)
 
-        args = ["--run", "--lib=%s" % self.library.location, "--sid=%s" % scn_id_str,
-                "--jobs=%d" % jobs]
+        args = ["--run", "--lib=%s" % self.library.location, "--jobs=%d" % jobs]
+        
+        if len(scenarios) > 1:
+            args += ["--sids=%s" % scn_id_str]
+        else:
+            args += ["--sid=%s" % scn_id_str]
+
         if jobs > 1 and copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
 
@@ -389,7 +394,7 @@ class Project(object):
                 scn = self.scenarios(scn)
             scn._Scenario__results = None
             result_id = scn.results()["ScenarioID"].values[-1]
-            result_list.append(self.scenarios(result_id))
+            result_list.append(self.scenarios(sid=result_id))
             
         if len(result_list) == 1:
             return result_list[0]

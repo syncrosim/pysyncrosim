@@ -646,7 +646,38 @@ def test_project_copy_delete():
     with pytest.raises(RuntimeError, match="The project does not exist"):
         myNewProj.delete(force=True)
         myNewProj.scenarios()
-    
+
+def test_project_run():
+    myLibrary = ps.library(name = "stsimLibrary",
+                           package = "stsim",
+                           template = "non-spatial-example",
+                           overwrite=True,
+                           forceUpdate=True)
+
+    myProject = myLibrary.projects(pid=1)
+    myProject.run([5,14])
+    scenarios = myProject.scenarios()
+    result_scenarios = scenarios[
+        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
+    assert len(result_scenarios) == 2
+
+    for result_scn in result_scenarios:
+        myProject.delete(scenario=result_scn, force=True)
+    assert len(myProject.scenarios()) == 2
+
+    myProject.run()
+    result_scenarios = scenarios[
+        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
+    assert len(result_scenarios) == 2
+
+    for result_scn in result_scenarios:
+        myProject.delete(scenario=result_scn, force=True)
+    assert len(myProject.scenarios()) == 2
+
+    myProject.run(5)
+    result_scenarios = scenarios[
+        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
+    assert len(result_scenarios) == 1 
 
 def test_scenarios_attributes():
 

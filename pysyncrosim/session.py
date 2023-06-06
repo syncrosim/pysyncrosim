@@ -68,8 +68,6 @@ class Session(object):
                                "is required to run pysyncrosim v" +
                                __version__ + ", but you have SyncroSim v" + 
                                ssim_current_version + " installed")
-
-        self.__configure_conda()
      
     @property
     def location(self):

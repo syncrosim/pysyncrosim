@@ -1244,8 +1244,10 @@ class Library(object):
     
     def __validate_projects_inputs(self, name, pid, summary, overwrite):
         
-        if name is not None and not isinstance(name, str):
-            raise TypeError("name must be a String")
+        if name is not None and not isinstance(name, str)\
+            and not isinstance(name, int)\
+                and not isinstance(name, list):
+            raise TypeError("name must be a String, Integer, or List of these")
         if pid is not None and not isinstance(
                 pid, int) and not isinstance(pid, np.int64):
             raise TypeError("pid must be an Integer")
@@ -1262,7 +1264,8 @@ class Library(object):
 
         if name is not None and not isinstance(name, str)\
             and not isinstance(name, int)\
-                and not isinstance(name, list):
+                and not isinstance(name, np.int64)\
+                    and not isinstance(name, list):
             raise TypeError("name must be a String, Integer, or List of these")
             
         if isinstance(name, list) and isinstance(sid, list):
