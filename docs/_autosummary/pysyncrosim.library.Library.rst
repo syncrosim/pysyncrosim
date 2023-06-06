@@ -20,6 +20,7 @@
       ~Library.disable_addons
       ~Library.enable_addons
       ~Library.projects
+      ~Library.retrieve_folder_data
       ~Library.run
       ~Library.save_datasheet
       ~Library.scenarios

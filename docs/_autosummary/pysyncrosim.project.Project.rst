@@ -15,6 +15,8 @@
    
       ~Project.__init__
       ~Project.copy
+      ~Project.create_nested_folder
+      ~Project.create_project_folder
       ~Project.datasheets
       ~Project.delete
       ~Project.run

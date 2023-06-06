@@ -14,6 +14,7 @@
    .. autosummary::
    
       ~Scenario.__init__
+      ~Scenario.add_scenario_to_folder
       ~Scenario.copy
       ~Scenario.datasheet_rasters
       ~Scenario.datasheets
