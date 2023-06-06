@@ -464,7 +464,7 @@ class Project(object):
         
         Parameters
         ----------
-        parent_folder_id : str
+        parent_folder_id : int
             Parent folder id
         folder_name : str
             Name of folder to create
@@ -480,7 +480,7 @@ class Project(object):
         out = self.library.session._Session__call_console(args, decode=True)
         folder_id = re.findall(r'\d+', out)[0]
 
-        return folder_id
+        return int(folder_id)
     
     def __init_info(self):
         # Set projects

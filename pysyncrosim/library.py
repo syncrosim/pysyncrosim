@@ -1244,10 +1244,8 @@ class Library(object):
     
     def __validate_projects_inputs(self, name, pid, summary, overwrite):
         
-        if name is not None and not isinstance(name, str)\
-            and not isinstance(name, int)\
-                and not isinstance(name, list):
-            raise TypeError("name must be a String, Integer, or List of these")
+        if name is not None and not isinstance(name, str):
+            raise TypeError("name must be a String")
         if pid is not None and not isinstance(
                 pid, int) and not isinstance(pid, np.int64):
             raise TypeError("pid must be an Integer")
@@ -1483,6 +1481,10 @@ class Library(object):
         for ds in d_summary["Name"]:
             
             ds = self.__check_datasheet_name(ds)
+
+            # Core LNG package datasheet cannot be exported
+            if ds == "core_LNGPackage":
+                continue
             
             if return_hidden:
                 ds_full = self.__slow_query_datasheet(ds, scope, ids)

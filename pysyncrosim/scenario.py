@@ -962,7 +962,7 @@ class Scenario(object):
         scn = scenario_list["ScenarioID"].values[0]
         scn_obj = self.library.scenarios(
             project=self.project.pid, sid=scn)
-        scn_datasheets = scn_obj.datasheets(summary="CORE")
+        scn_datasheets = scn_obj.datasheets()
         datasheet_list = scn_datasheets["Name"].values.tolist()
         datasheet_list += [item.split(sep="_")[1] for item in datasheet_list]
 

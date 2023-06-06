@@ -266,7 +266,7 @@ def test_library_datasheets():
     with pytest.raises(TypeError, match="name must be a String"):
         myLibrary.datasheets(name=1)
         
-    with pytest.raises(TypeError, match="summary must be a Logical or 'CORE'"):
+    with pytest.raises(TypeError, match="summary must be a Logical"):
         myLibrary.datasheets(summary=1)
         
     with pytest.raises(TypeError, match="optional must be a Logical"):
@@ -548,7 +548,7 @@ def test_project_datasheets():
     with pytest.raises(TypeError, match="name must be a String"):
         myProject.datasheets(name=1)
         
-    with pytest.raises(TypeError, match="summary must be a Logical or 'CORE'"):
+    with pytest.raises(TypeError, match="summary must be a Logical"):
         myProject.datasheets(summary="1")
         
     with pytest.raises(TypeError, match="optional must be a Logical"):
@@ -559,8 +559,6 @@ def test_project_datasheets():
         
     assert isinstance(myProject.datasheets(), pd.DataFrame)
     assert isinstance(myProject.datasheets(summary=False), list)
-    assert myProject.datasheets(
-        summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myProject.datasheets().columns) == 3
     assert len(myProject.datasheets(optional=True).columns) == 7
     assert myProject.datasheets(name="core_Transformer").empty is False
@@ -666,6 +664,7 @@ def test_project_run():
     assert len(myProject.scenarios()) == 2
 
     myProject.run()
+    scenarios = myProject.scenarios()
     result_scenarios = scenarios[
         scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
     assert len(result_scenarios) == 2
@@ -675,6 +674,7 @@ def test_project_run():
     assert len(myProject.scenarios()) == 2
 
     myProject.run(5)
+    scenarios = myProject.scenarios()
     result_scenarios = scenarios[
         scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
     assert len(result_scenarios) == 1 
@@ -708,7 +708,7 @@ def test_scenario_datasheets():
     with pytest.raises(TypeError, match="name must be a String"):
         myScenario.datasheets(name=1)
         
-    with pytest.raises(TypeError, match="summary must be a Logical or 'CORE'"):
+    with pytest.raises(TypeError, match="summary must be a Logical"):
         myScenario.datasheets(summary="1")
         
     with pytest.raises(TypeError, match="optional must be a Logical"):
@@ -719,8 +719,6 @@ def test_scenario_datasheets():
         
     assert isinstance(myScenario.datasheets(), pd.DataFrame)
     assert isinstance(myScenario.datasheets(summary=False), list)
-    assert myScenario.datasheets(
-        summary='CORE')["Name"].iloc[0].startswith("core")
     assert len(myScenario.datasheets().columns) == 3
     assert len(myScenario.datasheets(optional=True).columns) == 8
     assert isinstance(myScenario.datasheets(
