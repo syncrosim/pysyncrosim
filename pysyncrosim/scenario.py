@@ -246,6 +246,31 @@ class Scenario(object):
         """
         return self.__parent_id
     
+    def folders(self, folder=None, parent_folder=None, create=False):
+        """
+        Creates or retrieves a Folder in the parent Project of the Scenario.
+
+        Parameters
+        ----------
+        folder : String or Int, optional
+            Folder name or ID. If the Folder name does not currently exist in
+            the Project, then a new Folder will be created. The default is None.
+        parent_folder : String, Int, or Folder class instance, optional
+            Parent Folder name, ID, or Folder object. If provided, then the
+            current Folder will be nested within the parent Folder. The
+            default is None.
+        create : Logical, optional
+            If True, creates the Folder if it does not exist. The default is 
+            False.
+        
+        Returns
+        -------
+        Folder
+            Folder class instance.
+        """
+        folder_object = ps.Folder(self, folder, parent_folder, create)
+        return folder_object
+    
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    filter_column=None, filter_value=None, include_key=False,
                    show_full_paths=False, return_hidden=False):

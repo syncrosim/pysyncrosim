@@ -29,7 +29,7 @@ class Folder(object):
         
         # Create folder objects if folder provided and ssimobject is project or scenario
         if (self.__name is not None) and (create is True):
-            self.__create_folder()        
+            self.__create_folder()     
         
     @property
     def folder_id(self):
@@ -66,7 +66,7 @@ class Folder(object):
         Int
             Project ID
         """
-        return self.__project_id
+        return self.__project.pid
     
     @property
     def name(self):
@@ -79,15 +79,16 @@ class Folder(object):
             Folder ID.
 
         """
-        return self.__name
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        name = info_subset["Name"].values[0]
+        return name
     
     @name.setter
     def name(self, value):
         args = ["--setprop", "--lib=%s" % self.library.location, 
                 "--name=%s" % value, "--fid=%d" % self.folder_id]
         self.library.session._Session__call_console(args)
-        # Reset information
-        self.__name = value
 
     @property
     def owner(self):
@@ -99,15 +100,16 @@ class Folder(object):
         String
             Folder Owner
         """
-        return self.__owner
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        owner = info_subset["Owner"].values[0]
+        return owner
     
     @owner.setter
-    def name(self, value):
+    def owner(self, value):
         args = ["--setprop", "--lib=%s" % self.library.location, 
                 "--owner=%s" % value, "--fid=%d" % self.folder_id]
         self.library.session._Session__call_console(args)
-        # Reset information
-        self.__owner = value
 
     @property
     def readonly(self):
@@ -119,7 +121,10 @@ class Folder(object):
         Bool
             Folder read-only status
         """
-        return self.__readonly
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        readonly = info_subset["IsReadOnly"].values[0]
+        return readonly
     
     @readonly.setter
     def readonly(self, value):
@@ -132,8 +137,6 @@ class Folder(object):
         args = ["--setprop", "--lib=%s" % self.library.location, 
                 "--readonly=%s" % value, "--fid=%d" % self.folder_id]
         self.library.session._Session__call_console(args)
-        # Reset information
-        self.__init_info()
 
     @property
     def description(self):
@@ -146,14 +149,31 @@ class Folder(object):
             Folder description.
 
         """
-        return self.__description
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        description = info_subset["Description"].values[0]
+        return description
     
     @description.setter
     def description(self, value):
         args = ["--setprop", "--lib=%s" % self.library.location,
                 "--description=%s" % value, "--fid=%d" % self.folder_id]
         self.library.session._Session__call_console(args)
-        self.__description = value
+
+    @property
+    def date_modified(self):
+        """
+        Gets the date the Folder was last modified.
+        
+        Returns
+        -------
+        String
+            Date the Folder was last modified.
+        """
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        date_modified = info_subset["DateLastModified"].values[0]
+        return date_modified
 
     @property
     def published(self):
@@ -165,8 +185,10 @@ class Folder(object):
         String
             "yes" if the Folder is tagged for publication and "no" otherwise.
         """
-        # TODO: a lot of these properties should be retrieved directly from syncrosim
-        return self.__published
+        info = self.__get_folder_data()
+        info_subset = info[info["FolderID"] == self.folder_id]
+        published = info_subset["IsLite"].values[0]
+        return published
     
     @published.setter
     def published(self, value):
@@ -179,7 +201,6 @@ class Folder(object):
         args = ["--setprop", "--lib=%s" % self.library.location,
                 "--islite=%s" % value, "--fid=%d" % self.folder_id]
         self.library.session._Session__call_console(args)
-        self.__published = value
 
     def __validate_inputs(self, create):
         if not isinstance(create, bool):

@@ -217,6 +217,36 @@ class Project(object):
                                                   results=results)
         
         return self.__scenarios
+    
+    def folders(self, folder=None, parent_folder=None, create=False):
+        """
+        Retrieves a dataframe of Folder information for this Project if
+        folder=None, otherwise creates or retrieves a SyncroSim Folder 
+        object.
+        
+        Parameters
+        ----------
+        folder : String or Int, optional
+            Folder name or ID. If the Folder name does not currently exist in
+            the Project, then a new Folder will be created. The default is None.
+        parent_folder : String, Int, or Folder class instance, optional
+            Parent Folder name, ID, or Folder object. If provided, then the
+            current Folder will be nested within the parent Folder. The
+            default is None.
+        create : Logical, optional
+            If True, creates the Folder if it does not exist. The default is 
+            False.
+        
+        Returns
+        -------
+        pandas.DataFrame or pysyncrosim.Folder
+            Dataframe of Folder information for this Project or
+            Folder class instance.
+
+        """
+        folder_data = self.library.folders(project=self, folder=folder, 
+                             parent_folder=parent_folder, create=create)
+        return folder_data
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
                    filter_column=None, filter_value=None, include_key=False,

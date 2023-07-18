@@ -399,6 +399,19 @@ class Library(object):
             return output[0]
         else:
             return output
+
+
+    def folders(self):
+        """
+        Retrieves a dataframe of folder information for this Library.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe of folder information.
+        """
+        folder_data = ps.Folder(self)
+        return folder_data
         
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
