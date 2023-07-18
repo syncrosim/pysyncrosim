@@ -23,12 +23,13 @@ class Folder(object):
 
         # Return data if no folder specified
         if (self.__scenario is None) and (self.__project is None):
-            return self.__data
-        if (self.__scenario is None) and (folder is None):
-            return self.__data[self.__data["ProjectID"] == self.__project.pid]
+            data_only = True
+        elif (self.__scenario is None) and (folder is None):
+            self.__data = self.__data[self.__data["ProjectID"] == self.__project.pid]
+            data_only = True
         
         # Create folder objects if folder provided and ssimobject is project or scenario
-        if (self.__name is not None) and (create is True):
+        if (self.__name is not None) and (create is True) and (data_only is False):
             self.__create_folder()     
         
     @property
@@ -223,6 +224,7 @@ class Folder(object):
     def __get_folder_data(self):
         args = ["--lib=%s" % self.__library.location, "--list", "--folders"]
         data = self.__library.session._Session__call_console(args, decode=True, csv=True)
+        data =  pd.read_csv(io.StringIO(data))
         return data
     
     def __set_folder_id_name(self, folder):
@@ -231,7 +233,7 @@ class Folder(object):
             self.__name = None
             self.__folder_id = None
 
-        if isinstance(folder, str):
+        elif isinstance(folder, str):
             self.__name = folder
             data_subset = self.__data[self.data["FolderID"] == self.__name]
             if len(data_subset) == 1:

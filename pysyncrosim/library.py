@@ -411,7 +411,7 @@ class Library(object):
             Dataframe of folder information.
         """
         folder_data = ps.Folder(self)
-        return folder_data
+        return folder_data._Folder__data
         
         
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
@@ -854,22 +854,6 @@ class Library(object):
             
         # Reset addons
         self.__addons = self.__init_addons()
-
-    def retrieve_folder_data(self):
-        """
-        Retrieves folder data from a SyncroSim Library.
-
-        Returns
-        -------
-        folder_data : Pandas DataFrame
-            Folder data.
-        """
-
-        args = ["--list", "--folders", "--lib=%s" % self.location]
-        tt = self.session._Session__call_console(args, decode=True, csv=True)
-        folder_data =  pd.read_csv(io.StringIO(tt))
-
-        return folder_data
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
