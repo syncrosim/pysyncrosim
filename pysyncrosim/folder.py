@@ -194,7 +194,7 @@ class Folder(object):
     @published.setter
     def published(self, value):
 
-        if (value is True) or (value.tolower() == "yes"):
+        if (value is True) or (value.lower() == "yes"):
             value = "yes"
         else:
             value = "no"
@@ -248,7 +248,7 @@ class Folder(object):
             self.__folder_id = folder
             data_subset = self.__data[self.data["FolderID"] == self.__folder_id]
             if len(data_subset) == 1:
-                self.__name = data_subset["FolderName"].values[0]
+                self.__name = data_subset["Name"].values[0]
             elif len(data_subset) == 0:
                 raise ValueError("Folder ID does not exist.")
             
