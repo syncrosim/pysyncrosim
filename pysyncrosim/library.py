@@ -1528,13 +1528,14 @@ class Library(object):
                 args += ["--includesys"]
             
             # Check the scope of the input_sheet_name
+            self.__init_datasheets(scope=scope, summary=True)
             args = self.__find_scope_id_args(input_sheet_name, scope, ids,
                                              args)
             
             self.session._Session__call_console(args)
             ds = pd.read_csv(tempfile_path)
-            ds = self.__remove_unnecessary_datasheet_columns(ds,
-                                                             input_sheet_name)
+            # ds = self.__remove_unnecessary_datasheet_columns(ds,
+            #                                                  input_sheet_name)
         
         finally:
             
@@ -1610,24 +1611,24 @@ class Library(object):
             
             input_scope = scope
             
-            if input_scope == "Project" and len(ids[0]) > 0:
+            if input_scope == "Project" and len(ids) > 0:
                 args += ["--pid=%d" % ids[0]]
             
-            if input_scope == "Scenario" and len(ids[0]) > 0:               
+            if input_scope == "Scenario" and len(ids) > 0:               
                 args += ["--sid=%d" % ids[0]]
                 
         else:
             scope_list.remove(scope)
             input_scope = scope_list[0]
                 
-            if input_scope == "Project" and len(ids[0]) > 0:
+            if input_scope == "Project" and len(ids) > 0:
                 if scope == "Scenario":
                     pid = self.scenarios(sid=ids[0]).project.pid
                 else:
                     pid = ids[0]
                 args += ["--pid=%d" % pid]
             
-            if input_scope == "Scenario" and len(ids[0]) > 0:               
+            if input_scope == "Scenario" and len(ids) > 0:               
                 args += ["--sid=%d" % ids[0]]
                 
         return args
