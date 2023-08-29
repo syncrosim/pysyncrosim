@@ -1689,3 +1689,39 @@ class Library(object):
             scenario_list = [scenario_list]
             
         return scenario_list
+    
+    def __get_library_structure(self):
+
+        args = ["--list", "--library", "--lib=%s" % self.location,
+                "--tree"]
+        lib_structure = self.session._Session__call_console(args, decode=True)
+        lib_structure = lib_structure.replace("|", " ")
+        lib_structure = lib_structure.split("\r\n")
+        lib_structure.remove('')
+
+        level = []
+        item = []
+        ssim_id = []
+
+        for i in range(0, len(lib_structure)):
+            if i == 0:
+                level.append(i)
+                item.append("Library")
+                ssim_id.append(0)
+            else:
+                l = (len(lib_structure[i]) - len(lib_structure[i].lstrip())) / 3
+
+                start = "+- "
+                end = " ["
+                it = lib_structure[i][lib_structure[i].find(start) + len(start):lib_structure[i].find(end)]
+                it = it.replace("*", "")
+
+                start = "["
+                end = "]"
+                obj_id = lib_structure[i][lib_structure[i].find(start) + len(start):lib_structure[i].find(end)]
+
+                level.append(l)
+                item.append(it)
+                ssim_id.append(obj_id)
+
+        return pd.DataFrame({"level": level, "item": item, "id": ssim_id})

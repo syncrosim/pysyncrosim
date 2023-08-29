@@ -2,6 +2,7 @@ import pysyncrosim as ps
 from pysyncrosim.environment import _environment
 import os
 import io
+import re
 import pandas as pd
 import numpy as np
 
@@ -245,6 +246,24 @@ class Scenario(object):
 
         """
         return self.__parent_id
+    
+    @property
+    def folder_id(self):
+        """
+        Retrieves the ID of the folder the Scenario is contained within.
+
+        Returns
+        -------
+        Int
+            Folder ID of the folder that contains the Scenario.
+
+        """
+        self.__retrieve_scenario_folder_id()
+        return self.__folder_id
+    
+    @folder_id.setter
+    def folder_id(self, value):
+        self.__add_scenario_to_folder(value)
     
     def folders(self, folder=None, parent_folder=None, create=False):
         """
@@ -894,7 +913,24 @@ class Scenario(object):
         else:
             return self.__results
         
-    def add_scenario_to_folder(self, folder_id):
+    def __retrieve_scenario_folder_id(self):
+
+        lib_structure = self.library._Library__get_library_structure()   
+        scn_ind = lib_structure.index[lib_structure['id'] == str(self.sid)].tolist()[0]
+        scn_level = lib_structure.iloc[scn_ind]['level']
+        folder_id = None
+        for i in reversed(range(scn_ind)):
+            level = lib_structure.iloc[i]['level']
+            item = lib_structure.iloc[i]['item']
+            if (level < scn_level) & (item == "Folder"):
+                folder_id = int(lib_structure.iloc[i]['id'])
+                break
+            elif (level < scn_level) & (item == "Project"):
+                break          
+
+        self.__folder_id = folder_id
+        
+    def __add_scenario_to_folder(self, folder_id):
         """
         Add a scenario to a folder within a SyncroSim project
         
@@ -925,7 +961,8 @@ class Scenario(object):
         result = lib.session._Session__call_console(args)
 
         if result.returncode == 0:
-            print(f"Scenario {self.sid} added to folder")
+            self.__folder_id = folder_id
+            print(f"Scenario {self.sid} added to folder with id {folder_id}")
                 
     def __init_info(self):
         # Set Scenario information

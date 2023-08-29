@@ -244,7 +244,7 @@ class Project(object):
             Folder class instance.
 
         """
-        folder_data = self.library.folders(project=self, folder=folder, 
+        folder_data = ps.Folder(ssimobject=self, folder=folder, 
                              parent_folder=parent_folder, create=create)
         return folder_data
 

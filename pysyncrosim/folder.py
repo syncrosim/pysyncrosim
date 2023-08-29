@@ -19,13 +19,18 @@ class Folder(object):
 
         self.__set_ssimobject_prop(ssimobject)
         self.__data = self.__get_folder_data()
+        if self.__project is not None:
+            self.__data = self.__data[self.__data["Project ID"] == self.__project.pid]
+        if folder is not None:
+            if folder not in self.__data["Name"].values:
+                create = True
         self.__set_folder_id_name(folder)
 
         # Return data if no folder specified
+        data_only = False
         if (self.__scenario is None) and (self.__project is None):
             data_only = True
         elif (self.__scenario is None) and (folder is None):
-            self.__data = self.__data[self.__data["ProjectID"] == self.__project.pid]
             data_only = True
         
         # Create folder objects if folder provided and ssimobject is project or scenario
@@ -55,6 +60,8 @@ class Folder(object):
         Int
             Parent ID.
         """
+        self.__get_parent_folder_id()
+
         return self.__parent_id
     
     @property
@@ -81,7 +88,7 @@ class Folder(object):
 
         """
         info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
+        info_subset = info[info["ID"] == self.folder_id]
         name = info_subset["Name"].values[0]
         return name
     
@@ -123,8 +130,8 @@ class Folder(object):
             Folder read-only status
         """
         info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
-        readonly = info_subset["IsReadOnly"].values[0]
+        info_subset = info[info["ID"] == self.folder_id]
+        readonly = info_subset["Read Only"].values[0]
         return readonly
     
     @readonly.setter
@@ -187,8 +194,8 @@ class Folder(object):
             "yes" if the Folder is tagged for publication and "no" otherwise.
         """
         info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
-        published = info_subset["IsLite"].values[0]
+        info_subset = info[info["ID"] == self.folder_id]
+        published = info_subset["Is Lite"].values[0]
         return published
     
     @published.setter
@@ -227,6 +234,23 @@ class Folder(object):
         data =  pd.read_csv(io.StringIO(data))
         return data
     
+    def __get_parent_folder_id(self):
+
+        lib_structure = self.__library._Library__get_library_structure()   
+        f_ind = lib_structure.index[lib_structure['id'] == str(self.folder_id)].tolist()[0]
+        f_level = lib_structure.iloc[f_ind]['level']
+        parent_id = None
+        for i in reversed(range(f_ind)):
+            level = lib_structure.iloc[i]['level']
+            item = lib_structure.iloc[i]['item']
+            if (level < f_level) & (item == "Folder"):
+                parent_id = int(lib_structure.iloc[i]['id'])
+                break
+            elif (level < f_level) & (item == "Project"):
+                break          
+
+        self.__parent_id = parent_id
+    
     def __set_folder_id_name(self, folder):
 
         if folder is None:
@@ -235,9 +259,9 @@ class Folder(object):
 
         elif isinstance(folder, str):
             self.__name = folder
-            data_subset = self.__data[self.data["FolderID"] == self.__name]
+            data_subset = self.__data[self.__data["Name"] == self.__name]
             if len(data_subset) == 1:
-                self.__folder_id = data_subset["FolderID"].values[0]
+                self.__folder_id = data_subset["ID"].values[0]
             elif (len(data_subset) > 0) & (self.__create is False):
                 raise ValueError("Multiple folders with the same name exist. " +
                                  "Use Folder ID instead to retrieve the desired " +
@@ -246,7 +270,7 @@ class Folder(object):
             
         elif (isinstance(folder, int)) or (isinstance(folder, np.int64)):
             self.__folder_id = folder
-            data_subset = self.__data[self.data["FolderID"] == self.__folder_id]
+            data_subset = self.__data[self.__data["ID"] == self.__folder_id]
             if len(data_subset) == 1:
                 self.__name = data_subset["Name"].values[0]
             elif len(data_subset) == 0:
@@ -266,8 +290,7 @@ class Folder(object):
             args += ["--tpid=%s" % str(self.__project.pid)]
             
         out = self.__library.session._Session__call_console(args, decode=True)
-        # TODO: Check regex to find folder ID from output
-        folderId = out.split(": ")[0]
+        folderId = int(out.split()[3])
         self.__folder_id = folderId
 
     def __retrieve_parent_id(self):
