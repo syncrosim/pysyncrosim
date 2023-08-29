@@ -1050,20 +1050,87 @@ def test_folder_functions():
                         forceUpdate=True)
 
     myProject = myLibrary.projects(pid=1)
-    df = myLibrary.retrieve_folder_data()
+
+    df = myLibrary.folders()
     assert df.empty is True
 
-    myProject.create_project_folder("test")
-    df = myLibrary.retrieve_folder_data()
-    fid = df[df["Name"] == "test"]["ID"].item()
+    # Create folder object
+    my_folder = myProject.folders(folder = "test")
+    df = myLibrary.folders()
     assert df.empty is False
     assert len(df) == 1
+    assert my_folder.folder_name == "test"
+    assert my_folder.parent_id is None
+    assert my_folder.project_id is myProject.pid
 
-    new_fid = myProject.create_nested_folder(fid, "test2")
-    df = myLibrary.retrieve_folder_data()
+    my_nested_folder = myProject.create_nested_folder(fid, "test2")
+    df = myLibrary.folders()
     assert len(df) == 2
+    assert my_nested_folder.folder_name == "test2"
+    assert my_nested_folder.parent_id is not None
+    assert my_nested_folder.project_id is myProject.pid
 
-    myScenario = myProject.scenarios(sid=5)
-    myScenario.add_scenario_to_folder(new_fid)
+    fid = my_folder.folder_id
+    nested_fid = my_nested_folder.folder_id
+
+    # Grab existing folder from id
+    my_folder = myProject.folders(folder = fid)
+    df = myLibrary.folders()
+    assert len(df) == 2
+    assert my_folder.folder_name == "test"
+    assert my_folder.folder_id == fid
+
+    # Grab existing folder from name
+    my_nested_folder = myProject.folders(folder = "test2")
+    df = myLibrary.folders()
+    assert len(df) == 2
+    assert my_nested_folder.folder_name == "test2"
+    assert my_nested_folder.folder_id == nested_fid
+    assert my_nested_folder.parent_id is not None
+
+    # Move scenario into a folder
+    scn_id = myProject.scenarios()["ScenarioID"][0]
+    myScenario = myProject.scenarios(sid=scn_id)
+    assert myScenario.folder_id is None
+    myScenario.folder_id = fid
+    assert myScenario.folder_id == fid
+
+    # Create a new project and add a folder
+    myProject2 = myLibrary.projects(name = "New Project")
+    my_folder2 = myProject2.folders(folder = "test3")
+    df = myLibrary.folders()
+    assert len(df["Project ID"].unique()) == 2
+    assert my_folder2.project_id == myProject2.pid
+
+    # Test project-subsetted folder data
+    proj1_df = myProject.folders()
+    proj2_df = myProject2.folders()
+    assert proj1_df.empty is False
+    assert proj2_df.empty is False
+    assert proj1_df != proj2_df
+    assert proj1_df["ID"].unique() != proj2_df["ID"].unique()
+    assert proj1_df["Project ID"].unique() == myProject.pid
+    assert proj2_df["Project ID"].unique() == myProject2.pid
+
+    # Test readonly and publish attributes
+    assert my_folder.readonly == "No"
+    my_folder.readonly = "Yes"
+    assert my_folder.readonly == "Yes"
+    my_folder.readonly = False
+    assert my_folder.readonly == "No"
+
+    assert my_folder.publish == "No"
+    my_folder.publish = "Yes"
+    assert my_folder.publish == "Yes"
+    my_folder.publish = False
+    assert my_folder.publish == "No"
+    my_folder.publish = True
+    assert my_folder.publish == "Yes"
+    my_nested_folder.publish = "Yes"
+    assert my_nested_folder.publish == "Yes"
+    assert my_folder.publish == "No"
+
+    
+
 
     
