@@ -136,12 +136,13 @@ class Session(object):
             Filepath to conda executable.
 
         """
+        self.__retrieve_conda_filepath()
+
         return self.__conda_filepath
 
     @conda_filepath.setter
     def conda_filepath(self, value):
-        self.__conda_filepath = value
-        self.__configure_conda()
+        self.__set_conda_filepath(value)
         
         
     def version(self):
@@ -490,19 +491,19 @@ class Session(object):
         else:    
             return result
 
-    def __configure_conda(self):
-
-        self.__call_console(["--conda", "--clear"])
-
-        if self.__conda_filepath is not None:
-            result = self.__call_console(["--conda", "--path=" + self.__conda_filepath])
-            if result.returncode != 0:
-                self.__conda_filepath = None
-                raise RuntimeError(result.stderr.decode('utf-8'))
+    def __retrieve_conda_filepath(self):        
+        result = self.__call_console(["--conda", "--config"])
+        self.__conda_filepath = result.stdout.decode('utf-8').strip().split(": ")[1]
             
-        if self.__conda_filepath is None:
-            result = self.__call_console(["--conda", "--config"])
-            self.__conda_filepath = result.stdout.decode('utf-8').strip().split(": ")[1]
+    def __set_conda_filepath(self, filepath):
+        
+        self.__conda_filepath = None
 
-
-
+        if filepath is None:
+            self.__call_console(["--conda", "--clear"])
+        else:
+            result = self.__call_console(["--conda", "--path=" + filepath])
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr.decode('utf-8'))
+            else:
+                self.__conda_filepath = filepath
