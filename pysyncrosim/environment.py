@@ -161,19 +161,27 @@ def update_run_log(*message, sep=""):
     # Check that a message is provided
     if len(message) == 0:
         raise ValueError("Please include a message to send to the run log.")
-
-    # Initialize the message
-    final_message = "ssim-task-log=" + str(message[0])
-
+    
     # Concatenate additional message pieces
     if len(message) > 1:
         for m in message[1:]:
-            final_message = final_message + str(sep) + str(m)
+            full_message = full_message + str(sep) + str(m)
 
-    # Finalize message
-    final_message = final_message + "\r\n"
+    # Split the message at line breaks
+    split_message = full_message.split("\n")
 
-    print(final_message, flush=True)
+    # Standardize surrounding empty lines
+    if split_message[0] == "":
+        split_message = split_message[1:]
+    if split_message[-1] != "":
+        split_message.append("")
+
+    # Annotate messages
+    annotated_message = ["ssim-task-log=" + m + "\r\n" for m in split_message]
+
+    # Send to SyncroSim
+    for m in annotated_message:
+        print(m, flush=True)
 
 def _environment():
     env_df = pd.DataFrame(
