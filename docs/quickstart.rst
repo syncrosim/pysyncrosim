@@ -21,7 +21,7 @@ For more details consult the `SyncroSim online documentation`_.
     .. _SyncroSim online documentation: https://docs.syncrosim.com/
 
 Overview of ``pysyncrosim``
------------------------
+---------------------------
 ``pysyncrosim`` is a Python package designed to facilitate the development of modeling workflows for the SyncroSim software framework. Using the ``pysyncrosim`` interface, simulation models can be added and run through SyncroSim to transform Scenario-based datasets into model forecasts. This Python package takes advantage of general features of SyncroSim, such as defining Scenarios with spatial or non-spatial inputs, running Monte Carlo simulations, and summarizing model outputs. 
 
 ``pysyncrosim`` requires SyncroSim 2.3.10 or higher.
@@ -695,7 +695,7 @@ Now, you can use the Library :meth:`~pysyncrosim.library.Library.backup()` metho
     >>> myLibrary.backup()
     
 ``pysyncrosim`` and the SyncroSim Windows User Interface
-----------------------------------------------------
+--------------------------------------------------------
 It can be useful to work in both ``pysyncrosim`` and the SyncroSim Windows User Interface at the same time. You can easily modify Datasheets and run Scenarios in ``pysyncrosim``, while simultaneously refreshing the Library and plotting outputs in the User Interface as you go. To sync the Library in the User Interface with the latest changes from the ``pysyncrosim`` code, click the refresh icon (circled in red below) in the upper tool bar of the User Interface.
 
 .. image:: img/pysyncrosim-with-UI.PNG

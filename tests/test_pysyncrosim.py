@@ -1059,14 +1059,15 @@ def test_folder_functions():
     df = myLibrary.folders()
     assert df.empty is False
     assert len(df) == 1
-    assert my_folder.folder_name == "test"
+    assert my_folder.name == "test"
     assert my_folder.parent_id is None
     assert my_folder.project_id is myProject.pid
 
-    my_nested_folder = myProject.create_nested_folder(fid, "test2")
+    fid = my_folder.folder_id
+    my_nested_folder = myProject.folders(folder = "test2", parent_folder = fid)
     df = myLibrary.folders()
     assert len(df) == 2
-    assert my_nested_folder.folder_name == "test2"
+    assert my_nested_folder.name == "test2"
     assert my_nested_folder.parent_id is not None
     assert my_nested_folder.project_id is myProject.pid
 
@@ -1077,14 +1078,14 @@ def test_folder_functions():
     my_folder = myProject.folders(folder = fid)
     df = myLibrary.folders()
     assert len(df) == 2
-    assert my_folder.folder_name == "test"
+    assert my_folder.name == "test"
     assert my_folder.folder_id == fid
 
     # Grab existing folder from name
     my_nested_folder = myProject.folders(folder = "test2")
     df = myLibrary.folders()
     assert len(df) == 2
-    assert my_nested_folder.folder_name == "test2"
+    assert my_nested_folder.name == "test2"
     assert my_nested_folder.folder_id == nested_fid
     assert my_nested_folder.parent_id is not None
 
@@ -1107,10 +1108,10 @@ def test_folder_functions():
     proj2_df = myProject2.folders()
     assert proj1_df.empty is False
     assert proj2_df.empty is False
-    assert proj1_df != proj2_df
-    assert proj1_df["ID"].unique() != proj2_df["ID"].unique()
-    assert proj1_df["Project ID"].unique() == myProject.pid
-    assert proj2_df["Project ID"].unique() == myProject2.pid
+    assert proj1_df.equals(proj2_df) is False
+    assert proj1_df["ID"].unique().tolist() != proj2_df["ID"].unique().tolist()
+    assert proj1_df["Project ID"].unique().item() == myProject.pid
+    assert proj2_df["Project ID"].unique().item() == myProject2.pid
 
     # Test readonly and publish attributes
     assert my_folder.readonly == "No"
@@ -1119,16 +1120,16 @@ def test_folder_functions():
     my_folder.readonly = False
     assert my_folder.readonly == "No"
 
-    assert my_folder.publish == "No"
-    my_folder.publish = "Yes"
-    assert my_folder.publish == "Yes"
-    my_folder.publish = False
-    assert my_folder.publish == "No"
-    my_folder.publish = True
-    assert my_folder.publish == "Yes"
-    my_nested_folder.publish = "Yes"
-    assert my_nested_folder.publish == "Yes"
-    assert my_folder.publish == "No"
+    assert my_folder.published == "No"
+    my_folder.published = "Yes"
+    assert my_folder.published == "Yes"
+    my_folder.published = False
+    assert my_folder.published == "No"
+    my_folder.published = True
+    assert my_folder.published == "Yes"
+    my_nested_folder.published = "Yes"
+    assert my_nested_folder.published == "Yes"
+    assert my_folder.published == "No"
 
     
 

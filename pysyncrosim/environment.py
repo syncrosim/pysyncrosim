@@ -135,7 +135,7 @@ def progress_bar(report_type="step", iteration=None, timestep=None,
 
 def update_run_log(*message, sep=""):
     """
-    Begins, steps, ends, and reports progress for a SyncroSim simulation.
+    Updates the run log for a SyncroSim simulation.
 
     Parameters
     ----------

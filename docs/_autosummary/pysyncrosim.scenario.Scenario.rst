@@ -14,12 +14,12 @@
    .. autosummary::
    
       ~Scenario.__init__
-      ~Scenario.add_scenario_to_folder
       ~Scenario.copy
       ~Scenario.datasheet_rasters
       ~Scenario.datasheets
       ~Scenario.delete
       ~Scenario.dependencies
+      ~Scenario.folders
       ~Scenario.ignore_dependencies
       ~Scenario.merge_dependencies
       ~Scenario.results
@@ -37,6 +37,7 @@
    
       ~Scenario.date_modified
       ~Scenario.description
+      ~Scenario.folder_id
       ~Scenario.info
       ~Scenario.is_result
       ~Scenario.library

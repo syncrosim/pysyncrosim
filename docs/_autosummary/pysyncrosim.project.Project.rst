@@ -19,6 +19,7 @@
       ~Project.create_project_folder
       ~Project.datasheets
       ~Project.delete
+      ~Project.folders
       ~Project.run
       ~Project.save_datasheet
       ~Project.scenarios

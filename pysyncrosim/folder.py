@@ -21,7 +21,7 @@ class Folder(object):
         self.__data = self.__get_folder_data()
         if self.__project is not None:
             self.__data = self.__data[self.__data["Project ID"] == self.__project.pid]
-        if folder is not None:
+        if isinstance(folder, str):
             if folder not in self.__data["Name"].values:
                 create = True
         self.__set_folder_id_name(folder)
@@ -35,7 +35,7 @@ class Folder(object):
         
         # Create folder objects if folder provided and ssimobject is project or scenario
         if (self.__name is not None) and (create is True) and (data_only is False):
-            self.__create_folder()     
+            self.__create_folder()    
         
     @property
     def folder_id(self):
@@ -94,9 +94,9 @@ class Folder(object):
     
     @name.setter
     def name(self, value):
-        args = ["--setprop", "--lib=%s" % self.library.location, 
+        args = ["--setprop", "--lib=%s" % self.__library.location, 
                 "--name=%s" % value, "--fid=%d" % self.folder_id]
-        self.library.session._Session__call_console(args)
+        self.__library.session._Session__call_console(args)
 
     @property
     def owner(self):
@@ -115,9 +115,9 @@ class Folder(object):
     
     @owner.setter
     def owner(self, value):
-        args = ["--setprop", "--lib=%s" % self.library.location, 
+        args = ["--setprop", "--lib=%s" % self.__library.location, 
                 "--owner=%s" % value, "--fid=%d" % self.folder_id]
-        self.library.session._Session__call_console(args)
+        self.__library.session._Session__call_console(args)
 
     @property
     def readonly(self):
@@ -136,15 +136,22 @@ class Folder(object):
     
     @readonly.setter
     def readonly(self, value):
+        if isinstance(value, str):
+            value = value.lower()
+
         if value is True:
             value = "yes"
         elif value is False:
             value = "no"
+        elif value == "yes":
+            pass
+        elif value == "no":
+            pass        
         else:
             raise TypeError("value must be a Logical")
-        args = ["--setprop", "--lib=%s" % self.library.location, 
+        args = ["--setprop", "--lib=%s" % self.__library.location, 
                 "--readonly=%s" % value, "--fid=%d" % self.folder_id]
-        self.library.session._Session__call_console(args)
+        self.__library.session._Session__call_console(args)
 
     @property
     def description(self):
@@ -164,9 +171,9 @@ class Folder(object):
     
     @description.setter
     def description(self, value):
-        args = ["--setprop", "--lib=%s" % self.library.location,
+        args = ["--setprop", "--lib=%s" % self.__library.location,
                 "--description=%s" % value, "--fid=%d" % self.folder_id]
-        self.library.session._Session__call_console(args)
+        self.__library.session._Session__call_console(args)
 
     @property
     def date_modified(self):
@@ -201,14 +208,22 @@ class Folder(object):
     @published.setter
     def published(self, value):
 
-        if (value is True) or (value.lower() == "yes"):
+        if isinstance(value, str):
+            value = value.lower()
+        if value is True:
             value = "yes"
-        else:
+        elif value is False:
             value = "no"
+        elif value == "yes":
+            pass
+        elif value == "no":
+            pass
+        else:
+            raise TypeError("value must be a Logical")
 
-        args = ["--setprop", "--lib=%s" % self.library.location,
+        args = ["--setprop", "--lib=%s" % self.__library.location,
                 "--islite=%s" % value, "--fid=%d" % self.folder_id]
-        self.library.session._Session__call_console(args)
+        self.__library.session._Session__call_console(args)
 
     def __validate_inputs(self, create):
         if not isinstance(create, bool):
@@ -296,7 +311,7 @@ class Folder(object):
     def __retrieve_parent_id(self):
         if (isinstance(self.__parent_folder, int)) or\
                 (isinstance(self.__parent_folder, np.int32)):
-            data_subset = self.__data[self.data["FolderID"] == self.__parent_folder]
+            data_subset = self.__data[self.__data["ID"] == self.__parent_folder]
             if len(data_subset) == 1:
                 self.__parent_id = self.__parent_folder
                 return 

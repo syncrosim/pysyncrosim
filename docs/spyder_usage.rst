@@ -1,5 +1,5 @@
 Running ``pysyncrosim`` in Spyder
-=============================
+=================================
 
 If using ``conda``, the ``spyder`` IDE is easy to install and straightforward to use.
 

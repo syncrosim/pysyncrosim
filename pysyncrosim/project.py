@@ -246,6 +246,8 @@ class Project(object):
         """
         folder_data = ps.Folder(ssimobject=self, folder=folder, 
                              parent_folder=parent_folder, create=create)
+        if folder_data._Folder__folder_id is None:
+            return folder_data._Folder__data
         return folder_data
 
     def datasheets(self, name=None, summary=True, optional=False, empty=False,
