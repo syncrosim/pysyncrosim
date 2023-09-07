@@ -166,6 +166,8 @@ def update_run_log(*message, sep=""):
     if len(message) > 1:
         for m in message[1:]:
             full_message = full_message + str(sep) + str(m)
+    else:
+        full_message = message[0]
 
     # Split the message at line breaks
     split_message = full_message.split("\n")
