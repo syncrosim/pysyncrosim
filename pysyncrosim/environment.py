@@ -164,7 +164,8 @@ def update_run_log(*message, sep=""):
     
     # Concatenate additional message pieces
     if len(message) > 1:
-        for m in message[1:]:
+        full_message = ""
+        for m in message:
             full_message = full_message + str(sep) + str(m)
     else:
         full_message = message[0]
