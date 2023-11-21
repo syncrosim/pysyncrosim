@@ -1,0 +1,5 @@
+# python requirements file
+# https://pip.pypa.io/en/stable/user_guide/#requirements-files
+pandas
+numpy
+rasterio
