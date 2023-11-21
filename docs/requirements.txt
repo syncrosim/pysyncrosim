@@ -3,3 +3,5 @@
 pandas
 numpy
 rasterio
+sphinx
+sphinx_rtd_theme
