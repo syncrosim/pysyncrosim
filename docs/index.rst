@@ -19,7 +19,6 @@ Welcome to ``pysyncrosim``'s documentation!
    spyder_usage
    module_summary
    support
-   modules
 
 Indices and tables
 ==================

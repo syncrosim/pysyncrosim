@@ -9,6 +9,7 @@ API Reference
     :recursive:
 
     environment
+    folder.Folder
     helper
     library.Library
     project.Project
