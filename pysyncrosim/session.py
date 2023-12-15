@@ -49,10 +49,9 @@ class Session(object):
         self.__print_cmd = print_cmd
         self.__conda_filepath = conda_filepath
         self.__is_windows = os.name == 'nt'
-        self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "2.3.10"
+        ssim_required_version = "3.0.0"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -184,11 +183,6 @@ class Session(object):
             raise TypeError("installed must be Logical'")
         if not isinstance(list_templates, str) and list_templates is not None:
             raise TypeError("list_templates must be a String")
-        
-        if installed is True:
-            args = ["--list", "--packages"]
-            self.__pkgs = self.__call_console(args, decode=True, csv=True)
-            self.__pkgs = pd.read_csv(io.StringIO(self.__pkgs))
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
@@ -199,14 +193,19 @@ class Session(object):
             finally:
                 self.console_exe = self.__init_console(console=True)
 
+        if installed is True:
+            args = ["--list", "--packages"]
+            pkgs = self.__call_console(args, decode=True, csv=True)
+            pkgs = pd.read_csv(io.StringIO(pkgs))
+
         if list_templates is not None:
-            if list_templates not in self.__pkgs["Name"].values:
+            if list_templates not in pkgs["Name"].values:
                 raise ValueError(f"SyncroSim Package {list_templates} is not installed")
             args = ["--list", "--templates", f"--package={list_templates}"]
             templates = self.__call_console(args, decode=True, csv=True)
             return pd.read_csv(io.StringIO(templates))
 
-        return self.__pkgs        
+        return pkgs       
     
     def install_packages(self, packages):
         """
@@ -258,10 +257,6 @@ class Session(object):
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            if len(pkgs_installed) == 0:
-                return
-            else:
-                self.__pkgs = self.packages()
                 
         except RuntimeError as e:
             print(e)
