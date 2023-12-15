@@ -786,15 +786,12 @@ class Scenario(object):
         # Reset Scenario information
         self.library._Library__init_scenarios()
         
-    def run(self, jobs=1, copy_external_inputs=False):
+    def run(self, copy_external_inputs=False):
         """
         Runs a Scenario.
 
         Parameters
         ----------
-        jobs : Int, optional
-            Number of multiprocessors to use when running a Scenario. The 
-            default is 1.
         copy_external_inputs : Logical, optional
             If False, then a copy of external input files (e.g. GeoTIFF files)
             is not created for each job. Otherwise, a copy of external inputs 
@@ -806,15 +803,12 @@ class Scenario(object):
         Scenario
             SyncroSim Scenario class instance.
 
-        """
-        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
-            raise TypeError("jobs must be an Integer")
-        
+        """    
         # Runs the scenario
         args = ["--run", "--lib=%s" % self.library.location,
-                "--sid=%d" % self.__sid, "--jobs=%d" % jobs]
+                "--sid=%d" % self.__sid]
         
-        if jobs > 1 and copy_external_inputs is True:
+        if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
             
         print(f"Running Scenario [{self.sid}] {self.name}")
