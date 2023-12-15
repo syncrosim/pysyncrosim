@@ -58,7 +58,7 @@ class Library(object):
 
         self.__name = os.path.basename(self.__location)
         self.__info = None
-        self.__package = None
+        self.__packages = None
         self.__owner = None
         self.__date_modified = None
         self.__readonly = None
@@ -613,10 +613,8 @@ class Library(object):
         if not isinstance(scope, str):
             raise TypeError("scope must be a String")
           
-        # Add package name to Datasheet name if not included
-        if name.startswith(self.package) is False:
-            if name.startswith("core") is False:
-                name = self.package + "_" + name
+        # Check if datasheet name is valid
+        self.__check_datasheet_name(name)
 
         # Convert boolean values to "Yes"/"No"
         for col in data:
@@ -825,9 +823,9 @@ class Library(object):
             
     def __check_datasheet_name(self, name):
         # Appends package name to Datasheet name
-        if name.startswith(self.package) is False:
-            if name.startswith("core") is False:
-                name = self.package + "_" + name
+        if not name.contains("_"):
+            raise ValueError("datasheet name must be prefixed with package name")
+
         return name
             
     def __get_project(self, name=None, pid=None):
