@@ -167,9 +167,8 @@ class Session(object):
         Parameters
         ----------
         installed : Logical or String, optional
-            If False, then shows all available packages. If "BASE", only shows
-            installed base packages. If True, then shows installed 
-            addons in addition to base packages. The default is True.
+            If False, then shows all available packages. If True, then shows
+            all installed packages. The default is True.
         list_templates : String, optional
             The name a SyncroSim package. If provided, then will return a
             DataFrame of all templates in the package. The default is None.
@@ -181,21 +180,15 @@ class Session(object):
             installed base packages.
 
         """
-        if not isinstance(installed, bool) and installed != "BASE":
-            raise TypeError("installed must be Logical or 'BASE'")
+        if not isinstance(installed, bool):
+            raise TypeError("installed must be Logical'")
         if not isinstance(list_templates, str) and list_templates is not None:
             raise TypeError("list_templates must be a String")
         
-        if installed is True or installed == "BASE":
-            args = ["--list", "--basepkgs"]
+        if installed is True:
+            args = ["--list", "--packages"]
             self.__pkgs = self.__call_console(args, decode=True, csv=True)
             self.__pkgs = pd.read_csv(io.StringIO(self.__pkgs))
-            
-        if installed is True:    
-            args = ["--list", "--addons"]
-            addons = self.__call_console(args, decode=True, csv=True)
-            addons = pd.read_csv(io.StringIO(addons))
-            self.__pkgs = pd.concat([self.__pkgs, addons]).reset_index(drop=True)
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
@@ -215,9 +208,9 @@ class Session(object):
 
         return self.__pkgs        
     
-    def add_packages(self, packages):
+    def install_packages(self, packages):
         """
-        Installs a package.
+        Installs one or more SyncroSim packages.
         
         Parameters
         ----------
@@ -285,9 +278,9 @@ class Session(object):
             if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
                 self.console_exe = self.__init_console(console=True)
     
-    def remove_packages(self, packages):
+    def uninstall_packages(self, packages):
         """
-        Uninstalls a package.
+        Uninstalls one or more SyncroSim packages.
 
         Parameters
         ----------
