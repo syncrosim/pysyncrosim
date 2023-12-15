@@ -264,6 +264,69 @@ class Scenario(object):
     @folder_id.setter
     def folder_id(self, value):
         self.__add_scenario_to_folder(value)
+
+    @property
+    def dependencies(self):
+        """
+        Retrieves the dependencies of a Scenario.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Returns a pandas DataFrame of existing dependencies for the 
+            given Scenario.
+
+        """
+        
+        return self.__init_dependencies()
+            
+    @dependencies.setter
+    def dependencies(self, value):
+
+        # Create list of dependencies to add
+        if isinstance(value, list):
+            dependencies = value
+        else:
+            dependencies = [value]
+
+        did_list = []
+        for d in dependencies:
+            # Check types
+            if isinstance(d, ps.Scenario):
+                d_name = d.name
+                d = d.sid
+                
+            elif isinstance(d, str):
+                # check if scenario exists
+                d_name = d
+                d = self.library._Library__scenarios[
+                    self.library._Library__scenarios.Name==d]               
+                self.__validate_dependencies(d, name_or_id=d_name)
+                d = d["ScenarioID"].item()
+                
+            elif isinstance(d, int) or isinstance(d, np.int64):
+                # check if scenarios exists
+                deps = self.library._Library__scenarios[
+                       self.library._Library__scenarios["ScenarioID"]==d
+                    ]
+                self.__validate_dependencies(deps, name_or_id=d)
+                d_name = deps.Name.item()
+                
+            else:
+                raise TypeError(
+                    "dependency must be a Scenario, String, Integer, or List")
+
+            # Append dependency ID to list
+            did_list.append(d)
+
+        # Paste together did_list separated by comma
+        value = ",".join(map(str, did_list))
+
+        # Remove current dependencies
+        self.__remove_all_dependencies() # TODO: replace remove_dependencies with remove_all_dependencies
+
+        # Add new dependencies
+        self.__add_dependencies(value) #TODO: replace add_dependency with add_dependencies
     
     def folders(self, folder=None, parent_folder=None, create=False):
         """
@@ -388,10 +451,6 @@ class Scenario(object):
                 and not isinstance(timestep, list)\
                     and not isinstance(timestep, range):
             raise TypeError("timestep must be an Integer, List, or Range")
-        
-        # Check that self is Results Scenario
-        if self.is_result == "No":
-            raise ValueError("Scenario must be a Results Scenario")
             
         # Check that Datasheet has package prefix
         datasheet = self.library._Library__check_datasheet_name(datasheet)
@@ -642,80 +701,6 @@ class Scenario(object):
         
         return ps.Scenario(s["ScenarioID"].values[0],
                            s["Name"].values[0], self.project, self.library)
-    
-    def dependencies(self, dependency=None, remove=False, force=False):
-        """
-        Gets, sets, or removes dependencies from a Scenario.
-
-        Parameters
-        ----------
-        dependency : Scenario, Int, String, or List, optional
-            Scenario(s) to be added or removed as dependencies. If None, then 
-            returns a DataFrame of dependencies. The default is None.
-        remove : Logical, optional
-            If False, adds the dependency. If True, removes the dependency. 
-            The default is False.
-        force : Logical, optional
-            If True, then does not prompt the user when removing a dependency.
-            The default is False.
-
-        Raises
-        ------
-        TypeError
-            If arguments are not of the correct Type, throws an error.
-
-        Returns
-        -------
-        pandas.DataFrame
-            If no dependencies are specified, then returns a pandas DataFrame
-            of existing dependencies for the given Scenario.
-
-        """
-        
-        if dependency is None:
-            return self.__dependencies
-        
-        if not isinstance(dependency, list):
-            dependency = [dependency]
-        
-        for d in dependency:
-            # Check types
-            if isinstance(d, ps.Scenario):
-                d_name = d.name
-                d = d.sid
-                
-            elif isinstance(d, str):
-                # check if scenario exists
-                d_name = d
-                d = self.library._Library__scenarios[
-                    self.library._Library__scenarios.Name==d]               
-                self.__validate_dependencies(d, d_name=d_name)
-                d = d["ScenarioID"].item()
-                
-            elif isinstance(d, int) or isinstance(d, np.int64):
-                # check if scenarios exists
-                deps = self.library._Library__scenarios[
-                       self.library._Library__scenarios["ScenarioID"]==d
-                    ]
-                self.__validate_dependencies(deps, d_name=d)
-                d_name = deps.Name.item()
-                
-            else:
-                raise TypeError(
-                    "dependency must be a Scenario, String, Integer, or List")
-
-            # Add dependency
-            if remove is False:
-                # Remove and re-add to guarantee order
-                self.__remove_dependency(d, force=True)
-                self.__add_dependency(d)
-                
-            # Remove dependency
-            elif remove is True:
-                self.__remove_dependency(d, d_name=d_name, force=force)
-                
-            else: 
-                raise TypeError("remove must be a Logical")
     
     def ignore_dependencies(self, value=None):
         """
@@ -1007,13 +992,13 @@ class Scenario(object):
                 "--sid=%d" % self.sid, ]
         return self.library._Library__console_to_csv(args) 
 
-    def __validate_dependencies(self, dependencies, d_name):
+    def __validate_dependencies(self, dependencies, name_or_id):
 
         if len(dependencies) > 1:
             raise ValueError(
                 "dependency name not unique, use ID or Scenario")
         elif len(dependencies) == 0:
-            raise ValueError(f"Scenario dependency {d_name} does not exist")
+            raise ValueError(f"Scenario dependency {name_or_id} does not exist")
 
     def __validate_ignore_dependencies(self, dependencies):
 
@@ -1033,40 +1018,31 @@ class Scenario(object):
             if dep not in datasheet_list:
                 raise ValueError(f"Scenario dependency [{dep}] does not exist")
 
-    def __remove_dependency(self, d, d_name=None, force=False):
+    def __remove_all_dependencies(self):
 
-        if d in self.__dependencies.ID.values:
-            args = ["--delete", "--dependency", 
-                    "--lib=%s" % self.library.location,
-                    "--sid=%d" % self.sid, "--did=%d" % d]
-            if force:
-                args += ["--force"]
-            else:
-                answer = input (
-                    f"Do you really want to remove dependency {d_name} \
-                        (Y/N)?")
-                if answer == "Y":
-                    args += ["--force"]
-                else:
-                    print(f"dependency {d_name} not removed")
-                    return
-
-            try:
-                self.library.session._Session__call_console(args)
-                self.__dependencies = self.__init_dependencies()
-
-            except RuntimeError as e:
-                    print(e)
-
-    def __add_dependency(self, d):
-
-        args = ["--create", "--dependency",
+        args = ["--remove", "--dependency", 
                 "--lib=%s" % self.library.location,
-                "--sid=%d" % self.sid, "--did=%d" % d]
+                "--sid=%d" % self.sid, "--all", "--force"]
+        
+        try:
+            self.library.session._Session__call_console(args)
+
+        except RuntimeError as e:
+                print(e)
+
+    def __add_dependencies(self, d):
+
+        args = ["--add", "--dependency",
+                "--lib=%s" % self.library.location,
+                "--sid=%d" % self.sid]
+        
+        if d.contains(","):
+            args += ["--dids=%s" % d]
+        else:
+            args += ["--did=%s" % d]
                 
         try:
             self.library.session._Session__call_console(args)
-            self.__dependencies = self.__init_dependencies()
             
         except RuntimeError as e:
             print(e)
