@@ -58,7 +58,6 @@ class Library(object):
 
         self.__name = os.path.basename(self.__location)
         self.__info = None
-        self.__packages = None
         self.__owner = None
         self.__date_modified = None
         self.__readonly = None
@@ -134,17 +133,20 @@ class Library(object):
         self.__init_conda()
     
     @property
-    def package(self):
+    def packages(self):
         """
-        Retrieves the package this Library is using.
+        Retrieves the package(s) this Library is using.
 
         Returns
         -------
-        String
-            Package name.
+        pd.DataFrame
+            DataFrame containing the package name(s) and versions.
 
         """
-        return self.__package
+        args = ["--list", "--packages", "--lib=%s" % self.location, "--csv"]
+        pkgs = self.session._Session__call_console(args, decode=True, csv=True)
+        pkgs =  pd.read_csv(io.StringIO(pkgs))
+        return pkgs
     
     @property
     def info(self):
@@ -244,6 +246,50 @@ class Library(object):
 
         """
         return self.__date_modified
+
+    def add_packages(self, packages):
+        """
+        Adds one or more SyncroSim packages to this Library.
+
+        Returns
+        -------
+        None.
+
+        """
+        installed_pkgs = self.session._Session__packages(installed = True)
+        library_pkgs = self.packages
+
+        for pkg in packages:
+            if pkg in installed_pkgs:
+                if pkg not in library_pkgs:
+                    args = ["--add", "--package", "--lib=%s" % self.location,
+                            "--pkg=%s" % pkg]
+                    self.session._Session__call_console(args)
+                    print(f"Package <{pkg}> added")
+                if pkg in library_pkgs:
+                    print(f"{pkg} has already been added to the Library")
+            else:
+                print(f"{pkg} is not among the available installed packages")
+
+    def remove_packages(self, packages):
+        """
+        Removes one or more SyncroSim packages from this Library.
+
+        Returns
+        -------
+        None.
+
+        """
+        library_pkgs = self.packages
+
+        for pkg in packages:
+            if pkg in library_pkgs:
+                args = ["--remove", "--package", "--lib=%s" % self.location,
+                        "--pkg=%s" % pkg, "--force"]
+                self.session._Session__call_console(args)
+                print(f"Package <{pkg}> removed")
+            else:
+                print(f"{pkg} does not exist in the Library")
     
     def projects(self, name=None, pid=None, summary=True, overwrite=False):
         """
@@ -791,7 +837,6 @@ class Library(object):
         
         # Set index and retrieve all properties
         lib_info = lib_info.set_index("Property")
-        self.__package = lib_info.loc["Package Name:"].item()
         self.__owner = lib_info.loc["Owner:"].item()
         self.__readonly = lib_info.loc["Read Only:"].item()
         self.__date_modified = lib_info.loc["Last Modified:"].item()
