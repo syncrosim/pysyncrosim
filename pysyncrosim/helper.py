@@ -185,9 +185,8 @@ def _configure_template_args(session, packages, template):
                 break
 
         if not template_set:
-            raise ValueError(
-                package_list = ", ".join(packages)
-                f"Template {template} does not exist among package {package_list}")
+            package_list = ",".join(map(str, packages))
+            raise ValueError(f"Template {template} does not exist among package {package_list}")
         
     return new_args
 
