@@ -16,7 +16,6 @@ Welcome to ``pysyncrosim``'s documentation!
 
    install
    quickstart
-   spyder_usage
    module_summary
    support
 
