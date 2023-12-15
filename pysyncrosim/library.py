@@ -57,7 +57,6 @@ class Library(object):
             self.__init_conda()
 
         self.__name = os.path.basename(self.__location)
-        self.__addons = self.__init_addons()
         self.__info = None
         self.__package = None
         self.__owner = None
@@ -146,19 +145,6 @@ class Library(object):
 
         """
         return self.__package
-    
-    @property
-    def addons(self):
-        """
-        Retrieves the addon(s) this Library is using.
-
-        Returns
-        -------
-        String
-            Addon name(s).
-
-        """
-        return self.__addons
     
     @property
     def info(self):
@@ -767,93 +753,6 @@ class Library(object):
             args += ["--output"]
         
         self.session._Session__call_console(args)
-        
-    def enable_addons(self, name):
-        """
-        Enable addon package(s) of a SyncroSim Library.
-
-        Parameters
-        ----------
-        name : String or List
-            Name of addon(s).
-
-        Raises
-        ------
-        ValueError
-            addon does not exist in available addons for this Library.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        # Type checks and convert to list
-        if not isinstance(name, list):
-            if not isinstance(name, str):
-                raise TypeError("name must be a String or List of Strings")
-            else:
-                name = [name]
-        elif all(isinstance(x, str) for x in name) is False:
-            raise TypeError("all elements in name must be Strings")
-            
-            
-        for a in name:
-            args = ["--create", "--addon", "--lib=%s" % self.location,
-                    "--name=%s" % a]
-            try:
-                self.session._Session__call_console(args)
-                
-            # Convert SyncroSim console error to print output
-            except RuntimeError as e:
-                print(e)
-                return
-         
-        # Reset addons
-        self.__addons = self.__init_addons()
-    
-    def disable_addons(self, name):
-        """
-        Disable addon package(s) of a SyncroSim Library.
-
-        Parameters
-        ----------
-        name : String
-            Name of addon package(s).
-
-        Raises
-        ------
-        ValueError
-            addon does not exist in available addons for this Library.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        # Type checks and convert to list
-        if not isinstance(name, list):
-            if not isinstance(name, str):
-                raise TypeError("name must be a String or List of Strings")
-            else:
-                name = [name]
-        elif all(isinstance(x, str) for x in name) is False:
-            raise TypeError("all elements in name must be Strings")
-            
-        for a in name:
-            args = ["--delete", "--addon", "--force",
-                    "--lib=%s" % self.location, "--name=%s" % a]
-            try:
-                self.session._Session__call_console(args)
-                
-            # Convert SyncroSim console error to print output
-            except RuntimeError as e:
-                print(e)
-                return
-            
-        # Reset addons
-        self.__addons = self.__init_addons()
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
@@ -885,11 +784,6 @@ class Library(object):
                 print(result_message)
                 self.__use_conda = False
                 self.__init_conda()
-
-    def __init_addons(self):   
-        # Retrieves addons information
-        args = ["--list", "--addons", "--lib=%s" % self.location]
-        return self.__console_to_csv(args)
     
     def __init_info(self):
         # Retrieves Library info
