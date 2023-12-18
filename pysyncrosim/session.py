@@ -9,9 +9,7 @@ class Session(object):
     """
     A class to represent a SyncroSim Session.
     
-    """
-    __pkgs = None
-    
+    """    
     def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None):
         """
         Initializes a pysyncrosim Session instance.
