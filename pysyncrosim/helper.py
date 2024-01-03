@@ -108,7 +108,7 @@ def _validate_library_inputs(name, session, packages, template,
     
     # Check if packages currently installed
     if packages is not None:
-        installed = session._Session__pkgs
+        installed = session.packages()
         if isinstance(packages, str):
             if packages not in installed["Name"].values:
                 raise ValueError(f'The package {packages} is not installed')
@@ -138,7 +138,7 @@ def _check_library_update(session, loc, forceUpdate):
 
     try:
         
-        args = ["--list", "--addons", "--lib=%s" % loc]
+        args = ["--list", "--packages", "--lib=%s" % loc]
         session._Session__call_console(args)
         return
         
@@ -169,10 +169,11 @@ def _configure_template_args(session, packages, template):
             template = os.path.splitext(template)[0]
 
         template_set = False
+        packages = session._Session__validate_packages(packages)
         
         # Check if template exists in each package
         for pkg in packages:
-            temp_args = ["--list", "--templates", "--package=%s" % pkg]
+            temp_args = ["--list", "--templates", "--pkg=%s" % pkg]
             pkg_templates = session._Session__call_console(temp_args,
                                                         decode=True,
                                                         csv=True)

@@ -465,7 +465,7 @@ class Project(object):
         self.library._Library__init_projects()
         p = self.library._Library__get_project(name=name)
         
-        return ps.Project(p["ProjectID"].values[0],
+        return ps.Project(p["ProjectId"].values[0],
                           p["Name"].values[0], self.library)
     
     def create_project_folder(self, folder_name):
@@ -518,7 +518,7 @@ class Project(object):
         # Set projects
         self.library.projects()
         proj_info = self.library._Library__projects
-        proj_info = proj_info[proj_info["ProjectID"] == self.pid]
+        proj_info = proj_info[proj_info["ProjectId"] == self.pid]
         self.__owner = proj_info["Owner"].item()
         self.__date_modified = proj_info["DateLastModified"].item()
         self.__readonly = proj_info["IsReadOnly"].item()

@@ -30,7 +30,7 @@ class Scenario(object):
             self.__sid = int(e.scenario_id.item())
             temp_df = self.__library.scenarios()
             self.__name = temp_df[
-                temp_df["ScenarioID"] == self.__sid]["Name"].item()
+                temp_df["ScenarioId"] == self.__sid]["Name"].item()
             # revisit these!!
             self.__env = e.transfer_directory.item()
             self.__temp = e.temp_directory
@@ -292,7 +292,10 @@ class Scenario(object):
         did_list = []
         for d in dependencies:
             # Check types
-            if isinstance(d, ps.Scenario):
+            if d is None:
+                continue
+
+            elif isinstance(d, ps.Scenario):
                 d_name = d.name
                 d = d.sid
                 
@@ -302,12 +305,12 @@ class Scenario(object):
                 d = self.library._Library__scenarios[
                     self.library._Library__scenarios.Name==d]               
                 self.__validate_dependencies(d, name_or_id=d_name)
-                d = d["ScenarioID"].item()
+                d = d["ScenarioId"].item()
                 
             elif isinstance(d, int) or isinstance(d, np.int64):
                 # check if scenarios exists
                 deps = self.library._Library__scenarios[
-                       self.library._Library__scenarios["ScenarioID"]==d
+                       self.library._Library__scenarios["ScenarioId"]==d
                     ]
                 self.__validate_dependencies(deps, name_or_id=d)
                 d_name = deps.Name.item()
@@ -699,7 +702,7 @@ class Scenario(object):
         if len(s) > 1:
             s = s[-1:]
         
-        return ps.Scenario(s["ScenarioID"].values[0],
+        return ps.Scenario(s["ScenarioId"].values[0],
                            s["Name"].values[0], self.project, self.library)
     
     def ignore_dependencies(self, value=None):
@@ -725,7 +728,7 @@ class Scenario(object):
             scn_info = self.library._Library__scenarios
             return scn_info[
                 scn_info[
-                    "ScenarioID"] == self.sid]["IgnoreDependencies"].item()
+                    "ScenarioId"] == self.sid]["IgnoreDependencies"].item()
         else:
             self.__validate_ignore_dependencies(value)
             args = ["--setprop", "--lib=%s" % self.library.location,
@@ -757,7 +760,7 @@ class Scenario(object):
         
         scn_info = self.library._Library__scenarios
         merge_dep_status =  scn_info[scn_info[
-                "ScenarioID"] == self.sid]["MergeDependencies"].item()
+                "ScenarioId"] == self.sid]["MergeDependencies"].item()
         
         if value is None:
             return merge_dep_status
@@ -825,7 +828,7 @@ class Scenario(object):
         
         # Retrieve Results Scenario ID
         # Also resets scenarios and results info
-        result_id = self.results()["ScenarioID"].values[-1]
+        result_id = self.results()["ScenarioId"].values[-1]
         
         # Return Results Scenario
         result_scn = self.library.scenarios(project=self.project,
@@ -947,11 +950,11 @@ class Scenario(object):
         # Set Scenario information
         scn_info = self.library.scenarios(project=self.project.pid,
                                           optional=True)
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
         self.__owner = scn_info["Owner"].item()
         self.__date_modified = scn_info["DateLastModified"].item()
         self.__readonly = scn_info["IsReadOnly"].item()
-        self.__project_id = scn_info["ProjectID"].item()
+        self.__project_id = scn_info["ProjectId"].item()
         self.__info = scn_info.set_axis(
             ["Value"], axis=0
             ).T.rename_axis("Property").reset_index()
@@ -965,15 +968,15 @@ class Scenario(object):
         
         # Find out if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
         return scn_info["IsResult"].values[0]
     
     def __init_parent_id(self):
         
         # Find out parent ID if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
-        parent_id = scn_info["ParentID"].values[0]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
+        parent_id = scn_info["ParentId"].values[0]
         if type(parent_id) == float:
             return int(parent_id)
         else:
@@ -1000,7 +1003,7 @@ class Scenario(object):
             raise TypeError("value must be a String")
 
         scenario_list = self.library._Library__scenarios
-        scn = scenario_list["ScenarioID"].values[0]
+        scn = scenario_list["ScenarioId"].values[0]
         scn_obj = self.library.scenarios(
             project=self.project.pid, sid=scn)
         scn_datasheets = scn_obj.datasheets()
@@ -1030,7 +1033,7 @@ class Scenario(object):
                 "--lib=%s" % self.library.location,
                 "--sid=%d" % self.sid]
         
-        if d.contains(","):
+        if "," in d:
             args += ["--dids=%s" % d]
         else:
             args += ["--did=%s" % d]

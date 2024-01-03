@@ -493,3 +493,14 @@ class Session(object):
                 raise RuntimeError(result.stderr.decode('utf-8'))
             else:
                 self.__conda_filepath = filepath
+
+    def __validate_packages(self, packages):
+
+        if isinstance(packages, str):
+            packages = [packages]
+        elif not isinstance(packages, list):
+            raise TypeError("packages must be a String or List of Strings")
+        elif not all(isinstance(item, str) for item in packages):
+            raise TypeError("packages must be a String or List of Strings")
+        
+        return packages
