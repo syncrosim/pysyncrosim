@@ -931,10 +931,20 @@ class Library(object):
             
     def __check_datasheet_name(self, name):
         # Appends package name to Datasheet name
-        if name.startswith(self.package) is False:
-            if name.startswith("core") is False:
-                name = self.package + "_" + name
-        return name
+        enabled_addons = self.addons[self.addons.Enabled == "Yes"]
+        enabled_addons = enabled_addons["Name"].tolist()
+
+        for addon_name in enabled_addons:
+            if name.startswith(addon_name):
+                return name
+            
+        if name.startswith(self.package):
+            return name
+        
+        if name.startswith("core"):
+            return name
+        
+        return self.package + "_" + name
             
     def __get_project(self, name=None, pid=None):
         # Retrieves Project info from the name or ID

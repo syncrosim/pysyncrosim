@@ -52,7 +52,7 @@ class Session(object):
         self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "2.3.10"
+        ssim_required_version = "2.4.44"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
