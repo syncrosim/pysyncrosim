@@ -628,9 +628,7 @@ class Library(object):
             raise TypeError("scope must be a String")
           
         # Add package name to Datasheet name if not included
-        if name.startswith(self.package) is False:
-            if name.startswith("core") is False:
-                name = self.package + "_" + name
+        name = self.__check_datasheet_name(name)
 
         # Convert boolean values to "Yes"/"No"
         for col in data:
