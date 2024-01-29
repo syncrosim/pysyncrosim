@@ -190,41 +190,6 @@ class Folder(object):
         date_modified = info_subset["DateLastModified"].values[0]
         return date_modified
 
-    @property
-    def published(self):
-        """
-        Gets or sets whether the Folder is tagged for publication.
-
-        Returns
-        -------
-        String
-            "yes" if the Folder is tagged for publication and "no" otherwise.
-        """
-        info = self.__get_folder_data()
-        info_subset = info[info["ID"] == self.folder_id]
-        published = info_subset["Is Lite"].values[0]
-        return published
-    
-    @published.setter
-    def published(self, value):
-
-        if isinstance(value, str):
-            value = value.lower()
-        if value is True:
-            value = "yes"
-        elif value is False:
-            value = "no"
-        elif value == "yes":
-            pass
-        elif value == "no":
-            pass
-        else:
-            raise TypeError("value must be a Logical")
-
-        args = ["--setprop", "--lib=%s" % self.__library.location,
-                "--islite=%s" % value, "--fid=%d" % self.folder_id]
-        self.__library.session._Session__call_console(args)
-
     def __validate_inputs(self, create):
         if not isinstance(create, bool):
             raise ValueError("create must be a boolean value.")
