@@ -1,4 +1,3 @@
-from osgeo import gdal
 import rasterio
 import os
 
