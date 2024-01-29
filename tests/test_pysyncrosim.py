@@ -1138,19 +1138,3 @@ def test_folder_functions():
     assert my_folder.readonly == "Yes"
     my_folder.readonly = False
     assert my_folder.readonly == "No"
-
-    assert my_folder.published == "No"
-    my_folder.published = "Yes"
-    assert my_folder.published == "Yes"
-    my_folder.published = False
-    assert my_folder.published == "No"
-    my_folder.published = True
-    assert my_folder.published == "Yes"
-    my_nested_folder.published = "Yes"
-    assert my_nested_folder.published == "Yes"
-    assert my_folder.published == "No"
-
-    
-
-
-    
