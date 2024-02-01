@@ -30,7 +30,6 @@
       ~Folder.owner
       ~Folder.parent_id
       ~Folder.project_id
-      ~Folder.published
       ~Folder.readonly
    
    
