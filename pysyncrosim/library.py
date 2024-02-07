@@ -20,7 +20,7 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location=None, session=None, use_conda=None):
+    def __init__(self, location=None, session=None, use_conda=None, packages=None):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -30,6 +30,13 @@ class Library(object):
             Filepath to Library location on disk.
         session : Session
             pysyncrosim Session instance.
+        use_conda : Logical, optional
+            If True, then uses Conda environment for this Library. If False, 
+            then does not use Conda environment. If None, then uses the 
+            Conda environment specified in the SyncroSim Library. The default 
+            is None.
+        packages : String or List of Strings, optional
+            List of package names to add to the Library. The default is None.
 
         Returns
         -------
@@ -64,6 +71,10 @@ class Library(object):
         # All above attributes get created by below function
         self.__init_info()
         self.__description = self.__init_description()
+
+        # Initialize packages
+        if packages is not None:
+            self.add_packages(packages)
         
         # Initialize projects and scenarios
         self.scenarios()
@@ -250,6 +261,11 @@ class Library(object):
     def add_packages(self, packages):
         """
         Adds one or more SyncroSim packages to this Library.
+
+        Parameters
+        ----------
+        packages : String or List of Strings
+            Name of package or list of package names to add to the Library.
 
         Returns
         -------

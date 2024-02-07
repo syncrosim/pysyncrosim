@@ -79,7 +79,7 @@ def library(name, session=None, packages=None, template=None,
 
     _check_library_update(session, loc, forceUpdate)
         
-    return ps.Library(location=loc, session=session, use_conda=use_conda)
+    return ps.Library(location=loc, session=session, use_conda=use_conda, packages=packages)
 
 def _validate_library_inputs(name, session, packages, template, 
                              forceUpdate, overwrite, use_conda):
