@@ -133,7 +133,7 @@ def progress_bar(report_type="step", iteration=None, timestep=None,
     else:
         raise ValueError("Invalid report_type")
 
-def update_run_log(*message, sep=""):
+def update_run_log(*message, sep="", type="status"):
     """
     Updates the run log for a SyncroSim simulation.
 
@@ -145,6 +145,9 @@ def update_run_log(*message, sep=""):
     sep : String, optional
         String to use if concatenating multiple message arguments. The default
         is an empty String.
+    type : String
+        Type of message to send to the run log. The default is "status", but
+        can also be "warning" or "info".
 
     Raises
     ------
@@ -181,6 +184,15 @@ def update_run_log(*message, sep=""):
 
     # Annotate messages
     annotated_message = ["ssim-task-log=" + m + "\r\n" for m in split_message]
+
+    # Set type
+    if type not in ["status", "warning", "info"]:
+        raise ValueError("Invalid type")
+    
+    if type == "info":
+        annotated_message[0] = annotated_message[0].replace("ssim-task-log", "ssim-task-info")
+    elif type == "warning":
+        annotated_message[0] = annotated_message[0].replace("ssim-task-log", "ssim-task-warning")
 
     # Send to SyncroSim
     for m in annotated_message:
