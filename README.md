@@ -10,16 +10,16 @@ Before beginning the installation of `pysyncrosim`, make sure you have the lates
 
 ### Dependencies
 
-`pysyncrosim` was tested and developed using **Python 3.8** and **SyncroSim 2.3.10**. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
+`pysyncrosim` was tested and developed using **Python 3.12** and **SyncroSim 2.4.44**. Because `pysyncrosim` uses `rasterio` for integrating spatial data, it also requires a C library dependency: GDAL >=2.3.
 
 ```
-python>=3.8
+python=3.12
 
-pandas=1.3.2
+pandas=2.1.3
 
-numpy=1.21.2
+numpy=1.26.0
 
-rasterio>=1.2.6
+rasterio=1.3.9
 ```
 
 ### Using `conda`
@@ -30,10 +30,10 @@ Follow these steps to get started with `conda` and use `conda` to install `pysyn
 
 2. To use `conda`, open the command prompt that was installed with the Miniconda installer. To find this prompt, type "anaconda prompt" in the **Windows Search Bar**. You should see an option appear called **Anaconda Prompt (miniconda3)**. Select this option to open a command line window. All code in the next steps will be typed in this window. 
 
-3. You can either install `pysyncrosim` and its dependencies into your base environment, or set up a new `conda` environment (recommended). Run the code below to set up and activate a new `conda` environment called "myenv" that uses Python 3.8.
+3. You can either install `pysyncrosim` and its dependencies into your base environment, or set up a new `conda` environment (recommended). Run the code below to set up and activate a new `conda` environment called "myenv" that uses Python 3.12.
 ```
 # Create new conda environment
-conda create -n myenv python=3.8
+conda create -n myenv python=3.12
 
 # Activate environment
 conda activate myenv
@@ -71,36 +71,12 @@ pip install pysyncrosim
 
 ### Getting Started
 
-For a basic usage example with the [helloworldSpatial](https://apexrms.github.io/helloworldEnhanced/) package, see the [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif) in the **examples** folder. To download the spatial_demo.py file, view the file on GitHub and select **Raw**. From the raw view, right-click and select **Save As...**. To run the spatial demo, you will also need to install the `matplotlib` Python package. You can install this package using the following code.
+For a basic usage example with the [helloworldSpatialPy](https://apexrms.github.io/helloworldEnhanced/) package, see the [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif) in the **examples** folder. To download the spatial_demo.py file, view the file on GitHub and select **Raw**. From the raw view, right-click and select **Save As...**. To run the spatial demo, you will also need to install the `matplotlib` Python package. You can install this package using the following code.
 
 ```
 # Install matplotlib
 conda install matplotlib
 ```
-
-### Running pysyncrosim in Spyder
-
-If using `conda`, the `spyder` IDE is easy to install and straightforward to use.
-
-1. First, install `spyder` either in your base environment or in your `conda` environment using the following code.
-```
-# Install spyder
-conda install spyder
-```
-
-2. Open the IDE by typing `spyder` in the command prompt.
-```
-# Open spyder
-spyder
-```
-
-*Note: you may get a pop-up saying you have a missing dependency, `rtree`. You can safely ignore this warning.*
-
-3. Within the IDE, change the working directory to the directory containing your `pysyncrosim` scripts (e.g. [spatial_demo.py](https://github.com/syncrosim/pysyncrosim/blob/main/examples/spatial_demo.py) and [input-raster.tif](https://github.com/syncrosim/pysyncrosim/blob/main/examples/input-raster.tif))
-
-![Using pysyncrosim in Spyder](https://github.com/syncrosim/pysyncrosim/raw/main/docs/img/spyder.PNG)
-
-4. Open and run your `pysyncrosim` scripts from the left-hand window. You can run scripts line-by-line in `spyder` by selecting the line(s) you want to run and pressing F9.
 
 ### SyncroSim Package Development
 
