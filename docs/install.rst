@@ -9,15 +9,15 @@ Before beginning the installation of ``pysyncrosim``, make sure you have the lat
 Dependencies
 ------------
 
-``pysyncrosim`` was tested and developed using **Python 3.10** and **SyncroSim 2.4.42**. Because ``pysyncrosim`` uses ``rasterio`` for integrating spatial data, it also requires a C library dependency: ``GDAL >=2.3``.
+``pysyncrosim`` was tested and developed using **Python 3.12** and **SyncroSim 2.4.44**. Because ``pysyncrosim`` uses ``rasterio`` for integrating spatial data, it also requires a C library dependency: ``GDAL >=2.3``.
 
-* python>=3.10
+* python=3.12
 
-* pandas=1.3.2
+* pandas=2.1.3
 
-* numpy=1.21.2
+* numpy=1.26.0
 
-* rasterio>=1.2.6
+* rasterio=1.3.9
 
 Using conda
 -----------

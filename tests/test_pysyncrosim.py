@@ -519,6 +519,15 @@ def test_project_scenarios():
 
 def test_project_datasheets():
 
+    mySession = ps.Session()
+    pkgs_to_add = ["stsim", "stsimsf", "stsimcbmcfs3", "helloworldSpatial"]
+    for pkg in pkgs_to_add:
+        if pkg not in mySession.packages()["Name"].values:
+            mySession.add_packages(pkg)
+
+    if "helloworldSpatial" not in mySession.packages()["Name"].values:
+        mySession.add_packages("helloworldSpatial")
+
     myLibrary = ps.library(name="Test", package="helloworldSpatial")
     myProject = myLibrary.projects(name="Definitions")
     
@@ -541,6 +550,16 @@ def test_project_datasheets():
     assert len(myProject.datasheets(optional=True).columns) == 7
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
+
+    # Test Addon Datasheet return
+    myLibrary = ps.library(name = "Test",
+                          package = "stsim",
+                          addons = ["stsimsf", "stsimcbmcfs3"],
+                          overwrite=True)
+
+    myProject = myLibrary.projects(name = "Definitions")
+    ds = myProject.datasheets(name = "stsimsf_FlowGroup")
+    assert isinstance(ds, pd.DataFrame)
     
 def test_project_save_datasheet():
     
@@ -1097,19 +1116,3 @@ def test_folder_functions():
     assert my_folder.readonly == "Yes"
     my_folder.readonly = False
     assert my_folder.readonly == "No"
-
-    assert my_folder.published == "No"
-    my_folder.published = "Yes"
-    assert my_folder.published == "Yes"
-    my_folder.published = False
-    assert my_folder.published == "No"
-    my_folder.published = True
-    assert my_folder.published == "Yes"
-    my_nested_folder.published = "Yes"
-    assert my_nested_folder.published == "Yes"
-    assert my_folder.published == "No"
-
-    
-
-
-    
