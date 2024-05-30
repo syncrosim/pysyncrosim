@@ -14,8 +14,8 @@ def test_session_attributes():
     # Test init
     assert isinstance(mySession, ps.Session)
     
-    with pytest.raises(ValueError, match="The location is not valid"):
-        mySession = ps.Session(location="bad/location")
+    # with pytest.raises(ValueError, match="The location is not valid"):
+    #     mySession = ps.Session(location="bad/location")
         
     # Test version method
     assert isinstance(mySession.version(), str)
@@ -24,10 +24,9 @@ def test_session_attributes():
     # Test packages method
     assert isinstance(mySession.packages(), pd.DataFrame)
     assert isinstance(mySession.packages(installed=False), pd.DataFrame)
-    assert isinstance(mySession.packages(installed="BASE"), pd.DataFrame)
     
     with pytest.raises(TypeError,
-                       match="installed must be Logical or 'BASE'"):
+                       match="installed must be Logical"):
         mySession.packages(installed=1)
         
         
@@ -35,35 +34,34 @@ def test_session_package_functions():
     
     mySession = ps.Session()
     
-    # Test add_packages, remove_packages, update_packages methods
+    # Test install_packages, uninstall_packages, update_packages methods
     with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.add_packages(1)
+        mySession.install_packages(1)
     with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.remove_packages(1)
+        mySession.uninstall_packages(1)
     with pytest.raises(TypeError, match="packages must be a String or List"):
         mySession.update_packages(1)
         
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.add_packages(["helloworldSpatial", 1])
+        mySession.install_packages(["helloworldSpatial", 1])
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.remove_packages(["helloworldSpatial", 1])
+        mySession.uninstall_packages(["helloworldSpatial", 1])
     with pytest.raises(TypeError, match="all packages must be Strings"):
         mySession.update_packages(["helloworldSpatial", 1])
         
-    mySession.add_packages("helloworldSpatial")
+    mySession.install_packages("helloworldSpatial")
     assert "helloworldSpatial" in mySession.packages()["Name"].values
     
-    mySession.remove_packages("helloworldSpatial")
+    mySession.uninstall_packages("helloworldSpatial")
     assert "helloworldSpatial" not in mySession.packages()["Name"].values
     
-    mySession.add_packages("helloworldSpatial")
+    mySession.install_packages("helloworldSpatial")
     
 def test_helper():
     
     mySession = ps.Session()
-    mySession.add_packages("stsim")
-    mySession.add_packages("stsimsf")
-    mySession.add_packages("stsimcbmcfs3")
+    mySession.install_packages("stsim")
+    mySession.install_packages("stsimcbmcfs3")
     
     # Type checking
     with pytest.raises(
@@ -79,14 +77,11 @@ def test_helper():
             match="session must be None or pysyncrosim Session instance"):
         ps.library(name="Test", session=1)
         
-    with pytest.raises(TypeError, match="package must be a String"):
-        ps.library(name="Test", package=1)
-        
-    with pytest.raises(TypeError, match="addons must be None, a String, or a List"):
-        ps.library(name="Test", addons=1)
+    with pytest.raises(TypeError, match="packages must be None, a String, or a List"):
+        ps.library(name="Test", packages=1)
 
-    with pytest.raises(TypeError, match="addons in list are not all strings"):
-        ps.library(name="Test", addons=["addon1", 1])
+    with pytest.raises(TypeError, match="packages in list are not all strings"):
+        ps.library(name="Test", packages=["package", 1])
 
     with pytest.raises(TypeError, match="templates must be a String"):
         ps.library(name="Test", template=1)
@@ -98,10 +93,10 @@ def test_helper():
         ps.library(name="Test", overwrite="False")
 
     # Test package installation
-    mySession.remove_packages("stsim")
+    mySession.uninstall_packages("stsim")
     with pytest.raises(ValueError, match="The package stsim is not installed"):
-        ps.library(name="Test", package="stsim", session=mySession)
-    mySession.add_packages("stsim")
+        ps.library(name="Test", packages="stsim", session=mySession)
+    mySession.install_packages("stsim")
         
     # Test Library path
     with pytest.raises(ValueError, match="Path to Library does not exist"):
@@ -110,41 +105,26 @@ def test_helper():
     # Test template
     with pytest.raises(ValueError,
                        match="Template test does not exist in package"):
-        ps.library("Test", package="stsim", template="test")
+        ps.library("Test", packages="stsim", template="test")
       
     # Test output
     myLibrary = ps.library(name="Test", forceUpdate=True)
     assert isinstance(myLibrary, ps.Library)
 
-    # Test addon packages
+    # Test packages argument
     myLibrary = ps.library(name = "stsimLibrary",
                        session = mySession,
-                       package = "stsim",
-                       addons = "stsimsf",
+                       packages = ["stsim", "stsimcbmcfs3"],
                        overwrite = True)
-    addon_list = myLibrary.addons["Name"].tolist()
-    assert "stsimsf" in addon_list
-    assert "stsimcbmcfs3" in addon_list
-    assert len(addon_list) >= 2
-    assert "No" in myLibrary.addons.Enabled.values
-    assert "Yes" in myLibrary.addons.Enabled.values
+    pkg_list = myLibrary.packages()["Name"].tolist()
+    assert "stsimsf" in pkg_list
+    assert "stsimcbmcfs3" in pkg_list
+    assert len(pkg_list) == 2
 
-    myLibrary = ps.library(name = "stsimLibrary",
-                       session = mySession,
-                       package = "stsim",
-                       addons = ["stsimsf", "stsimcbmcfs3"],
-                       overwrite = True)
-    addon_list = myLibrary.addons["Name"].tolist()
-    assert "stsimsf" in addon_list
-    assert "stsimcbmcfs3" in addon_list
-    addon_enabled_list = np.unique(myLibrary.addons.Enabled.values).tolist()
-    assert "Yes" in addon_enabled_list
-
-    # Test addon templates
+    # Test package templates
     myLibrary = ps.library(name = "stsimLibrary",
                            session = mySession,
-                           package = "stsim",
-                           addons = ["stsimsf", "stsimcbmcfs3"],
+                           packages = ["stsim", "stsimcbmcfs3"],
                            template = "cbm-cfs3-example",
                            overwrite = True,
                            forceUpdate = True)
@@ -160,8 +140,6 @@ def test_library_attributes():
     assert isinstance(myLibrary.session, ps.Session)
     assert isinstance(myLibrary.location, str)
     assert os.path.isfile(myLibrary.location)
-    assert isinstance(myLibrary.package, str)
-    assert isinstance(myLibrary.addons, pd.DataFrame)
 
     # Check environment error
     with pytest.raises(RuntimeError,

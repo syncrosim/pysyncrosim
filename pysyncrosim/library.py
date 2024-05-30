@@ -20,7 +20,7 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location=None, session=None, use_conda=None):
+    def __init__(self, location=None, session=None, use_conda=None, packages=None):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -30,6 +30,13 @@ class Library(object):
             Filepath to Library location on disk.
         session : Session
             pysyncrosim Session instance.
+        use_conda : Logical, optional
+            If True, then uses Conda environment for this Library. If False, 
+            then does not use Conda environment. If None, then uses the 
+            Conda environment specified in the SyncroSim Library. The default 
+            is None.
+        packages : String or List of Strings, optional
+            List of package names to add to the Library. The default is None.
 
         Returns
         -------
@@ -57,15 +64,17 @@ class Library(object):
             self.__init_conda()
 
         self.__name = os.path.basename(self.__location)
-        self.__addons = self.__init_addons()
         self.__info = None
-        self.__package = None
         self.__owner = None
         self.__date_modified = None
         self.__readonly = None
         # All above attributes get created by below function
         self.__init_info()
         self.__description = self.__init_description()
+
+        # Initialize packages
+        if packages is not None:
+            self.add_packages(packages)
         
         # Initialize projects and scenarios
         self.scenarios()
@@ -135,30 +144,20 @@ class Library(object):
         self.__init_conda()
     
     @property
-    def package(self):
+    def packages(self):
         """
-        Retrieves the package this Library is using.
+        Retrieves the package(s) this Library is using.
 
         Returns
         -------
-        String
-            Package name.
+        pd.DataFrame
+            DataFrame containing the package name(s) and versions.
 
         """
-        return self.__package
-    
-    @property
-    def addons(self):
-        """
-        Retrieves the addon(s) this Library is using.
-
-        Returns
-        -------
-        String
-            Addon name(s).
-
-        """
-        return self.__addons
+        args = ["--list", "--packages", "--lib=%s" % self.location, "--csv"]
+        pkgs = self.session._Session__call_console(args, decode=True, csv=True)
+        pkgs =  pd.read_csv(io.StringIO(pkgs))
+        return pkgs
     
     @property
     def info(self):
@@ -258,6 +257,57 @@ class Library(object):
 
         """
         return self.__date_modified
+
+    def add_packages(self, packages):
+        """
+        Adds one or more SyncroSim packages to this Library.
+
+        Parameters
+        ----------
+        packages : String or List of Strings
+            Name of package or list of package names to add to the Library.
+
+        Returns
+        -------
+        None.
+
+        """
+        installed_pkgs = self.session.packages(installed = True)
+        library_pkgs = self.packages
+        packages = self.session._Session__validate_packages(packages)
+
+        for pkg in packages:
+            if pkg in installed_pkgs.Name.values:
+                if pkg not in library_pkgs.Name.values:
+                    args = ["--add", "--package", "--lib=%s" % self.location,
+                            "--pkg=%s" % pkg]
+                    self.session._Session__call_console(args)
+                    print(f"Package <{pkg}> added")
+                else:
+                    print(f"{pkg} has already been added to the Library")
+            else:
+                print(f"{pkg} is not among the available installed packages")
+
+    def remove_packages(self, packages):
+        """
+        Removes one or more SyncroSim packages from this Library.
+
+        Returns
+        -------
+        None.
+
+        """
+        library_pkgs = self.packages
+        packages = self.session._Session__validate_packages(packages)
+
+        for pkg in packages:
+            if pkg in library_pkgs.Name.values:
+                args = ["--remove", "--package", "--lib=%s" % self.location,
+                        "--pkg=%s" % pkg, "--force"]
+                self.session._Session__call_console(args)
+                print(f"Package <{pkg}> removed")
+            else:
+                print(f"{pkg} does not exist in the Library")
     
     def projects(self, name=None, pid=None, summary=True, overwrite=False):
         """
@@ -627,8 +677,8 @@ class Library(object):
         if not isinstance(scope, str):
             raise TypeError("scope must be a String")
           
-        # Add package name to Datasheet name if not included
-        name = self.__check_datasheet_name(name)
+        # Check if datasheet name is valid
+        self.__check_datasheet_name(name)
 
         # Convert boolean values to "Yes"/"No"
         for col in data:
@@ -765,93 +815,6 @@ class Library(object):
             args += ["--output"]
         
         self.session._Session__call_console(args)
-        
-    def enable_addons(self, name):
-        """
-        Enable addon package(s) of a SyncroSim Library.
-
-        Parameters
-        ----------
-        name : String or List
-            Name of addon(s).
-
-        Raises
-        ------
-        ValueError
-            addon does not exist in available addons for this Library.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        # Type checks and convert to list
-        if not isinstance(name, list):
-            if not isinstance(name, str):
-                raise TypeError("name must be a String or List of Strings")
-            else:
-                name = [name]
-        elif all(isinstance(x, str) for x in name) is False:
-            raise TypeError("all elements in name must be Strings")
-            
-            
-        for a in name:
-            args = ["--create", "--addon", "--lib=%s" % self.location,
-                    "--name=%s" % a]
-            try:
-                self.session._Session__call_console(args)
-                
-            # Convert SyncroSim console error to print output
-            except RuntimeError as e:
-                print(e)
-                return
-         
-        # Reset addons
-        self.__addons = self.__init_addons()
-    
-    def disable_addons(self, name):
-        """
-        Disable addon package(s) of a SyncroSim Library.
-
-        Parameters
-        ----------
-        name : String
-            Name of addon package(s).
-
-        Raises
-        ------
-        ValueError
-            addon does not exist in available addons for this Library.
-
-        Returns
-        -------
-        None.
-
-        """
-        
-        # Type checks and convert to list
-        if not isinstance(name, list):
-            if not isinstance(name, str):
-                raise TypeError("name must be a String or List of Strings")
-            else:
-                name = [name]
-        elif all(isinstance(x, str) for x in name) is False:
-            raise TypeError("all elements in name must be Strings")
-            
-        for a in name:
-            args = ["--delete", "--addon", "--force",
-                    "--lib=%s" % self.location, "--name=%s" % a]
-            try:
-                self.session._Session__call_console(args)
-                
-            # Convert SyncroSim console error to print output
-            except RuntimeError as e:
-                print(e)
-                return
-            
-        # Reset addons
-        self.__addons = self.__init_addons()
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
@@ -883,11 +846,6 @@ class Library(object):
                 print(result_message)
                 self.__use_conda = False
                 self.__init_conda()
-
-    def __init_addons(self):   
-        # Retrieves addons information
-        args = ["--list", "--addons", "--lib=%s" % self.location]
-        return self.__console_to_csv(args)
     
     def __init_info(self):
         # Retrieves Library info
@@ -897,7 +855,6 @@ class Library(object):
         
         # Set index and retrieve all properties
         lib_info = lib_info.set_index("Property")
-        self.__package = lib_info.loc["Package Name:"].item()
         self.__owner = lib_info.loc["Owner:"].item()
         self.__readonly = lib_info.loc["Read Only:"].item()
         self.__date_modified = lib_info.loc["Last Modified:"].item()
@@ -911,6 +868,7 @@ class Library(object):
         # Retrieves a list of Projects
         args = ["--list", "--projects", "--lib=%s" % self.__location]
         self.__projects = self.__console_to_csv(args)
+        self.__projects.rename(columns={"Id": "ProjectId"}, inplace=True)
             
     def __init_scenarios(self, pid=None):
         # Retrieves a list of Scenarios
@@ -918,6 +876,7 @@ class Library(object):
         if pid is not None:
             args += ["--pid=%d" % pid]
         self.__scenarios = self.__console_to_csv(args)
+        self.__scenarios.rename(columns={"Id": "ScenarioId"}, inplace=True)
             
     def __init_datasheets(self, scope, summary, name=None, args=None):
         # Retrieves a list of Datasheets
@@ -929,20 +888,11 @@ class Library(object):
             
     def __check_datasheet_name(self, name):
         # Appends package name to Datasheet name
-        enabled_addons = self.addons[self.addons.Enabled == "Yes"]
-        enabled_addons = enabled_addons["Name"].tolist()
 
-        for addon_name in enabled_addons:
-            if name.startswith(addon_name):
-                return name
-            
-        if name.startswith(self.package):
-            return name
-        
-        if name.startswith("core"):
-            return name
-        
-        return self.package + "_" + name
+        if "_" not in name:
+            raise ValueError("datasheet name must be prefixed with package name")
+
+        return name
             
     def __get_project(self, name=None, pid=None):
         # Retrieves Project info from the name or ID
@@ -951,7 +901,7 @@ class Library(object):
         if name is not None:
             return self.__projects[self.__projects["Name"] == name]
         else:
-            return self.__projects[self.__projects["ProjectID"] == pid]
+            return self.__projects[self.__projects["ProjectId"] == pid]
         
     def __refresh_projects(self):
         # Call SyncroSim DB to refresh project list
@@ -964,11 +914,11 @@ class Library(object):
             return None
         if name is not None and sid is not None:
             return self.__scenarios[
-                (self.__scenarios["Name"] == name) & (self.__scenarios["ScenarioID"] == sid)]
+                (self.__scenarios["Name"] == name) & (self.__scenarios["ScenarioId"] == sid)]
         if name is not None:
             return self.__scenarios[self.__scenarios["Name"] == name]
         else:
-            return self.__scenarios[self.__scenarios["ScenarioID"] == sid]
+            return self.__scenarios[self.__scenarios["ScenarioId"] == sid]
         
     def __refresh_scenarios(self):
         # Call SyncroSim DB to refresh scenario list
@@ -1063,15 +1013,15 @@ class Library(object):
         
         # If Scenario specified before project, then project should be created
         # if (self.__scenarios is not None and not self.__scenarios.empty):
-        #     if pid == self.__scenarios["ProjectID"].item():
+        #     if pid == self.__scenarios["ProjectId"].item():
         #         return
         
         if self.__projects is None or self.__projects.empty:
             raise ValueError("pid specified, but no Projects created yet")
-        elif pid not in self.__projects["ProjectID"].values:
+        elif pid not in self.__projects["ProjectId"].values:
             raise ValueError(f"Project ID {pid} does not exist")
         elif name is not None and name != self.__projects[
-                self.__projects["ProjectID"] == pid]["Name"].values[0]:
+                self.__projects["ProjectId"] == pid]["Name"].values[0]:
             raise ValueError(
                 f"Project ID {pid} does not match Project name {name}")
             
@@ -1089,7 +1039,7 @@ class Library(object):
         if name is not None:
             return self.__projects[self.__projects.Name == name]
         if pid is not None:
-            return self.__projects[self.__projects.ProjectID == pid]
+            return self.__projects[self.__projects.ProjectId == pid]
         else:
             return self.__projects
         
@@ -1101,7 +1051,7 @@ class Library(object):
         
         for i in range(0, len(self.__projects)):
             
-            proj = ps.Project(self.__projects["ProjectID"].loc[i],
+            proj = ps.Project(self.__projects["ProjectId"].loc[i],
                               self.__projects["Name"].loc[i],
                               self)
             
@@ -1121,7 +1071,7 @@ class Library(object):
         p = self.__get_project(name, pid=None)
         
         # Convert np.int64 to native int
-        pid = p["ProjectID"].values[0].tolist()
+        pid = p["ProjectId"].values[0].tolist()
         
         new_project = ps.Project(pid, p["Name"].values[0], self)
         
@@ -1130,23 +1080,23 @@ class Library(object):
     def __open_existing_project(self, project):
     
         # Convert np.int64 to native int
-        pid = project["ProjectID"].values[0].tolist()
+        pid = project["ProjectId"].values[0].tolist()
          
         return ps.Project(pid, project["Name"].values[0], self)
     
     def __find_project_from_scenario(self, sid, name):
             
         if sid is not None and self.__get_scenario(sid=sid).empty is False:
-            pid = self.__get_scenario(sid=sid)["ProjectID"].item()
+            pid = self.__get_scenario(sid=sid)["ProjectId"].item()
             project = self.projects(pid=pid)
         elif name is not None and len(self.__get_scenario(name=name)) == 1:
-            pid = self.__get_scenario(name=name)["ProjectID"].item()
+            pid = self.__get_scenario(name=name)["ProjectId"].item()
             project = self.projects(pid=pid)
         elif self.__projects is None or self.__projects.empty:
             project = self.projects(name = "Definitions")
             pid = project.pid
         elif len(self.__projects) == 1:
-            pid = self.__projects.ProjectID.item()
+            pid = self.__projects.ProjectId.item()
             project = self.projects(pid=pid)     
         else:
             raise ValueError("More than one Project in Library." + 
@@ -1161,7 +1111,7 @@ class Library(object):
         elif isinstance(project, str):
             # may need to refresh project here
             pid = self.__projects[
-                self.__projects.Name == project].ProjectID.item()
+                self.__projects.Name == project].ProjectId.item()
         elif isinstance(project, ps.Project):
             pid = project.pid
         elif project is None:
@@ -1171,15 +1121,15 @@ class Library(object):
                                  " Please specify a Project.")
             elif len(self.__projects) == 0:
                 self.__create_new_project("Definitions")
-            pid = self.__projects["ProjectID"].item()
+            pid = self.__projects["ProjectId"].item()
             
         return pid
     
     def __extract_scenario_summary(self, optional, results, name, sid):
     
         if optional is False:
-            ds =  self.__scenarios[['ScenarioID',
-                                    'ProjectID',
+            ds =  self.__scenarios[['ScenarioId',
+                                    'ProjectId',
                                     'Name',
                                     'IsResult']]
         else:
@@ -1192,7 +1142,7 @@ class Library(object):
             return ds[ds.Name == name]
         
         if sid is not None:
-            return ds[ds["ScenarioID"] == sid]
+            return ds[ds["ScenarioId"] == sid]
         
         return ds
     
@@ -1208,7 +1158,7 @@ class Library(object):
         
         for i in range(0, len(s_summary)):
             
-            scn = ps.Scenario(s_summary["ScenarioID"].loc[i],
+            scn = ps.Scenario(s_summary["ScenarioId"].loc[i],
                               s_summary["Name"].loc[i],
                               project, self)
             
@@ -1232,18 +1182,18 @@ class Library(object):
         if not isinstance(project, ps.Project):
             project = self.projects(pid=pid)
         
-        return ps.Scenario(s["ScenarioID"].values[0],
+        return ps.Scenario(s["ScenarioId"].values[0],
                            s["Name"].values[0], project, self)
     
     def __open_existing_scenario(self, scenarios, project):
                     
         # Retrieve the name of a Scenario using only the sid
-        pid = scenarios["ProjectID"].values[0].tolist()
+        pid = scenarios["ProjectId"].values[0].tolist()
     
         if not isinstance(project, ps.Project):
             project = self.projects(pid=pid)
     
-        sid = scenarios["ScenarioID"].values[0].tolist()
+        sid = scenarios["ScenarioId"].values[0].tolist()
         
         return ps.Scenario(sid, scenarios["Name"].values[0], project, self)
     
@@ -1677,7 +1627,7 @@ class Library(object):
             
             if len(self.projects()) == 1:
                 project = self.projects(
-                    pid=self.__projects.ProjectID.item())
+                    pid=self.__projects.ProjectId.item())
                 
             else:
                 raise ValueError(

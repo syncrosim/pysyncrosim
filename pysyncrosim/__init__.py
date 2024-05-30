@@ -4,8 +4,7 @@ from pysyncrosim.project import Project
 from pysyncrosim.scenario import Scenario
 from pysyncrosim.raster import Raster
 from pysyncrosim.folder import Folder
-from pysyncrosim.environment import runtime_input_folder
-from pysyncrosim.environment import runtime_output_folder
+from pysyncrosim.environment import runtime_data_folder
 from pysyncrosim.environment import runtime_temp_folder
 from pysyncrosim.environment import progress_bar
 from pysyncrosim.helper import library

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import io
 
-def library(name, session=None, package=None, addons=None, template=None,
+def library(name, session=None, packages=None, template=None,
             forceUpdate=False, overwrite=False, use_conda=None):
     """
     Creates a new SyncroSim Library and opens it as a Library
@@ -17,10 +17,9 @@ def library(name, session=None, package=None, addons=None, template=None,
         Connects the Python session to the SyncroSim executable. If None, then
         creates a Session class instance using the default installation path
         to the SyncroSim executable. The default is None.
-    package : String, optional
-        The package type. if None selected, then "stsim" will be used.
-    addons : String or List of Strings, optional
-        One or more addon packages. The default is None.
+    packages : String, optional
+        The SyncroSim packages to be added to the Library. If None, then the
+        Library will be created without any packages. The default is None.
     template : String, optional
         Creates Library with specified template. The default is None.
     forceUpdate : Logical, optional
@@ -40,31 +39,19 @@ def library(name, session=None, package=None, addons=None, template=None,
         SyncroSim Library class instance.
 
     """
-    _validate_library_inputs(name, session, addons, package, template,
+    _validate_library_inputs(name, session, packages, template,
                              forceUpdate, overwrite, use_conda)
     
     if session is None:
         session = ps.Session()
 
-    if addons is not None and not isinstance(addons, list):
-        addons = [addons]
-
     name, loc = _configure_library_name(name)
 
-    if os.path.exists(loc) and overwrite is False and package is None:
+    if os.path.exists(loc) and overwrite is False and packages is None:
         _check_library_update(session, loc, forceUpdate)
         return ps.Library(location=loc, session=session)
-
-    # Test that package specified is installed
-    if package is None:
-        package = "stsim"
-        
-    installed = session._Session__pkgs
-    if package not in installed["Name"].values:
-        raise ValueError(f'The package {package} is not installed')
     
-    args = ["--create", "--library", "--package=%s" % package,
-            "--name=\"%s\"" % loc]
+    args = ["--create", "--library", "--name=\"%s\"" % loc]
     
     if overwrite is True:      
         args += ["--force"]
@@ -72,23 +59,11 @@ def library(name, session=None, package=None, addons=None, template=None,
     if forceUpdate is True:
         args += ["--update"]
 
-    args += _configure_template_args(session, package, addons, template)
+    args += _configure_template_args(session, packages, template)
         
     try:
     
         session._Session__call_console(args)
-        
-        if addons is not None and template is None:
-            # Check if addons exists
-            for addon in addons:
-                if addon not in installed["Name"].values:
-                    raise ValueError(
-                        f'The addon package {addons} is not installed')
-            
-                args = ["--create", "--addon", "--lib=%s" % loc,
-                        "--name=%s" % addon]
-
-                session._Session__call_console(args)
             
     except ValueError as ve:
         
@@ -104,24 +79,24 @@ def library(name, session=None, package=None, addons=None, template=None,
 
     _check_library_update(session, loc, forceUpdate)
         
-    return ps.Library(location=loc, session=session, use_conda=use_conda)
+    return ps.Library(location=loc, session=session, use_conda=use_conda, packages=packages)
 
-def _validate_library_inputs(name, session, addons, package, template, 
+def _validate_library_inputs(name, session, packages, template, 
                              forceUpdate, overwrite, use_conda):
     """
     Validates input types for the create_library function
     """
+    # Type checks
     if not isinstance(name, str):
         raise TypeError("name must be a String")
     if session is not None and not isinstance(session, ps.Session):
         raise TypeError("session must be None or pysyncrosim Session instance")
-    if package is not None and not isinstance(package, str):
-        raise TypeError("package must be a String")
-    if addons is not None and not isinstance(addons, str):
-        if not isinstance(addons, list):
-            raise TypeError("addons must be None, a String, or a List")
-        if not all(isinstance(addon, str) for addon in addons):
-            raise TypeError("addons in list are not all strings")
+    if packages is not None and not isinstance(packages, str):
+        if not isinstance(packages, list):
+            raise TypeError("packages must be None, a String, or a List")
+        if isinstance(packages, list):
+            if not all(isinstance(package, str) for package in packages):
+                raise TypeError("packages in list are not all strings")
     if template is not None and not isinstance(template, str):
         raise TypeError("templates must be a String")
     if not isinstance(forceUpdate, bool):
@@ -130,6 +105,17 @@ def _validate_library_inputs(name, session, addons, package, template,
         raise TypeError("overwrite must be a Logical")
     if use_conda is not None and not isinstance(use_conda, bool):
         raise TypeError("use_conda must be None or a Logical")
+    
+    # Check if packages currently installed
+    if packages is not None:
+        installed = session.packages()
+        if isinstance(packages, str):
+            if packages not in installed["Name"].values:
+                raise ValueError(f'The package {packages} is not installed')
+        elif isinstance(packages, list):
+            for package in packages:
+                if package not in installed["Name"].values:
+                    raise ValueError(f'The package {package} is not installed')
     
 def _configure_library_name(name):
         
@@ -152,7 +138,7 @@ def _check_library_update(session, loc, forceUpdate):
 
     try:
         
-        args = ["--list", "--addons", "--lib=%s" % loc]
+        args = ["--list", "--packages", "--lib=%s" % loc]
         session._Session__call_console(args)
         return
         
@@ -173,7 +159,7 @@ def _check_library_update(session, loc, forceUpdate):
             elif answer == "N":
                 raise Exception("Updates not applied and Library not loaded.")
             
-def _configure_template_args(session, package, addons, template):
+def _configure_template_args(session, packages, template):
     
     new_args = []
 
@@ -181,45 +167,27 @@ def _configure_template_args(session, package, addons, template):
         
         if template.endswith(".ssim") is True:
             template = os.path.splitext(template)[0]
+
+        template_set = False
+        packages = session._Session__validate_packages(packages)
         
-        # Check if template exists in base package
-        base_temp_args = ["--list", "--templates", "--package=%s" % package]
-        base_temps = session._Session__call_console(base_temp_args,
-                                                    decode=True,
-                                                    csv=True)
-        base_temps = pd.read_csv(io.StringIO(base_temps))
-        base_temp = package + "_" + template
-        
-        if addons is not None:
-            addon_temp_list = []
+        # Check if template exists in each package
+        for pkg in packages:
+            temp_args = ["--list", "--templates", "--pkg=%s" % pkg]
+            pkg_templates = session._Session__call_console(temp_args,
+                                                        decode=True,
+                                                        csv=True)
+            pkg_templates = pd.read_csv(io.StringIO(pkg_templates))
+            template_name = pkg + "_" + template
+            
+            if template_name in pkg_templates["Name"].values:
+                new_args += ["--template=\"%s\"" % template_name]
+                template_set = True
+                break
 
-            for addon in addons:
-                addon_temp_args = ["--list", "--templates", "--package=%s" % addon]
-
-                try:
-                    addon_temps = session._Session__call_console(addon_temp_args,
-                        decode=True, csv=True)
-                except RuntimeError as re:
-                    if f"No templates available for package '{addon}'" in re.args[0]:
-                        continue
-
-                if len(addon_temp_list) == 0:
-                    addon_temps_all = pd.read_csv(io.StringIO(addon_temps))
-                else:
-                    addon_temps = pd.read_csv(io.StringIO(addon_temps))
-                    addon_temps_all = pd.concat([addon_temps_all, addon_temps])
-
-                addon_temp_list.append(addon + "_" + template)
-        
-        if base_temp in base_temps["Name"].values:
-            new_args += ["--template=\"%s\"" % base_temp]
-        elif addons is not None:
-            for addon_temp in addon_temp_list:
-                if addon_temp in addon_temps_all["Name"].values:
-                    new_args += ["--template=\"%s\"" % addon_temp]
-        else:
-            raise ValueError(
-                f"Template {template} does not exist in package {package}")
+        if not template_set:
+            package_list = ",".join(map(str, packages))
+            raise ValueError(f"Template {template} does not exist among package {package_list}")
         
     return new_args
 

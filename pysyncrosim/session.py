@@ -9,9 +9,7 @@ class Session(object):
     """
     A class to represent a SyncroSim Session.
     
-    """
-    __pkgs = None
-    
+    """    
     def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None):
         """
         Initializes a pysyncrosim Session instance.
@@ -49,10 +47,9 @@ class Session(object):
         self.__print_cmd = print_cmd
         self.__conda_filepath = conda_filepath
         self.__is_windows = os.name == 'nt'
-        self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "2.4.44"
+        ssim_required_version = "3.0.0"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -167,9 +164,8 @@ class Session(object):
         Parameters
         ----------
         installed : Logical or String, optional
-            If False, then shows all available packages. If "BASE", only shows
-            installed base packages. If True, then shows installed 
-            addons in addition to base packages. The default is True.
+            If False, then shows all available packages. If True, then shows
+            all installed packages. The default is True.
         list_templates : String, optional
             The name a SyncroSim package. If provided, then will return a
             DataFrame of all templates in the package. The default is None.
@@ -181,21 +177,10 @@ class Session(object):
             installed base packages.
 
         """
-        if not isinstance(installed, bool) and installed != "BASE":
-            raise TypeError("installed must be Logical or 'BASE'")
+        if not isinstance(installed, bool):
+            raise TypeError("installed must be Logical'")
         if not isinstance(list_templates, str) and list_templates is not None:
             raise TypeError("list_templates must be a String")
-        
-        if installed is True or installed == "BASE":
-            args = ["--list", "--basepkgs"]
-            self.__pkgs = self.__call_console(args, decode=True, csv=True)
-            self.__pkgs = pd.read_csv(io.StringIO(self.__pkgs))
-            
-        if installed is True:    
-            args = ["--list", "--addons"]
-            addons = self.__call_console(args, decode=True, csv=True)
-            addons = pd.read_csv(io.StringIO(addons))
-            self.__pkgs = pd.concat([self.__pkgs, addons]).reset_index(drop=True)
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
@@ -206,18 +191,23 @@ class Session(object):
             finally:
                 self.console_exe = self.__init_console(console=True)
 
+        if installed is True:
+            args = ["--list", "--packages"]
+            pkgs = self.__call_console(args, decode=True, csv=True)
+            pkgs = pd.read_csv(io.StringIO(pkgs))
+
         if list_templates is not None:
-            if list_templates not in self.__pkgs["Name"].values:
+            if list_templates not in pkgs["Name"].values:
                 raise ValueError(f"SyncroSim Package {list_templates} is not installed")
             args = ["--list", "--templates", f"--package={list_templates}"]
             templates = self.__call_console(args, decode=True, csv=True)
             return pd.read_csv(io.StringIO(templates))
 
-        return self.__pkgs        
+        return pkgs       
     
-    def add_packages(self, packages):
+    def install_packages(self, packages):
         """
-        Installs a package.
+        Installs one or more SyncroSim packages.
         
         Parameters
         ----------
@@ -265,10 +255,6 @@ class Session(object):
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            if len(pkgs_installed) == 0:
-                return
-            else:
-                self.__pkgs = self.packages()
                 
         except RuntimeError as e:
             print(e)
@@ -285,9 +271,9 @@ class Session(object):
             if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
                 self.console_exe = self.__init_console(console=True)
     
-    def remove_packages(self, packages):
+    def uninstall_packages(self, packages):
         """
-        Uninstalls a package.
+        Uninstalls one or more SyncroSim packages.
 
         Parameters
         ----------
@@ -507,3 +493,14 @@ class Session(object):
                 raise RuntimeError(result.stderr.decode('utf-8'))
             else:
                 self.__conda_filepath = filepath
+
+    def __validate_packages(self, packages):
+
+        if isinstance(packages, str):
+            packages = [packages]
+        elif not isinstance(packages, list):
+            raise TypeError("packages must be a String or List of Strings")
+        elif not all(isinstance(item, str) for item in packages):
+            raise TypeError("packages must be a String or List of Strings")
+        
+        return packages
