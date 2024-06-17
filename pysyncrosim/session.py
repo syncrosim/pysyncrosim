@@ -386,7 +386,13 @@ class Session(object):
 
     def __retrieve_conda_filepath(self):        
         result = self.__call_console(["--conda", "--config"])
-        self.__conda_filepath = result.stdout.decode('utf-8').strip().split(": ")[1]
+        
+        if result.returncode != 0:
+            cleaned_result = result.stderr.decode('utf-8').strip()
+            if cleaned_result.contains("No conda configuration yet"):
+                self.__conda_filepath = None
+            else:
+                self.__conda_filepath = cleaned_result.split(": ")[1]
             
     def __set_conda_filepath(self, filepath):
         

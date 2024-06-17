@@ -32,9 +32,9 @@ def test_session_attributes():
         mySession.packages(installed=1)
 
     # Test conda_filepath
-    assert isinstance(mySession.conda_filepath(), str)
-        
-        
+    conda_fp = mySession.conda_filepath
+    assert isinstance(conda_fp, str) or conda_fp is None  
+          
 def test_session_package_functions():
     
     mySession = ps.Session(session_path)
