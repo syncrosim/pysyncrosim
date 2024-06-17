@@ -7,15 +7,17 @@ import numpy as np
 import rasterio
 # import re
 
+session_path = "C:/gitprojects/ssimbin3"
+
 def test_session_attributes():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     
     # Test init
     assert isinstance(mySession, ps.Session)
     
-    # with pytest.raises(ValueError, match="The location is not valid"):
-    #     mySession = ps.Session(location="bad/location")
+    with pytest.raises(ValueError, match="The location is not valid"):
+        mySession = ps.Session(location="bad/location")
         
     # Test version method
     assert isinstance(mySession.version(), str)
@@ -28,38 +30,53 @@ def test_session_attributes():
     with pytest.raises(TypeError,
                        match="installed must be Logical"):
         mySession.packages(installed=1)
+
+    # Test conda_filepath
+    assert isinstance(mySession.conda_filepath(), str)
         
         
 def test_session_package_functions():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     
-    # Test install_packages, uninstall_packages, update_packages methods
+    # Test install_packages, uninstall_packages methods
     with pytest.raises(TypeError, match="packages must be a String or List"):
         mySession.install_packages(1)
     with pytest.raises(TypeError, match="packages must be a String or List"):
         mySession.uninstall_packages(1)
-    with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.update_packages(1)
         
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.install_packages(["helloworldSpatial", 1])
+        mySession.install_packages(["helloworld", 1])
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.uninstall_packages(["helloworldSpatial", 1])
-    with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.update_packages(["helloworldSpatial", 1])
+        mySession.uninstall_packages(["helloworld", 1])
         
-    mySession.install_packages("helloworldSpatial")
-    assert "helloworldSpatial" in mySession.packages()["Name"].values
+    # Test with no version
+    mySession.install_packages("helloworld")
+    assert "helloworld" in mySession.packages()["Name"].values
     
-    mySession.uninstall_packages("helloworldSpatial")
-    assert "helloworldSpatial" not in mySession.packages()["Name"].values
+    mySession.uninstall_packages("helloworld")
+    assert "helloworld" not in mySession.packages()["Name"].values
     
-    mySession.install_packages("helloworldSpatial")
+    # Test with version - this requires v2.0.0 and v2.0.2 to be on package repo
+    mySession.install_packages("helloworld", version="2.0.0")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" in pkg_subset["Version"].values
+
+    # Should now have two versions of the package
+    mySession.install_packages("helloworld", version="2.0.1")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" in pkg_subset["Version"].values
+    assert "2.0.1" in pkg_subset["Version"].values
+
+    # Test uninstall with version
+    mySession.uninstall_packages("helloworld", version="2.0.0")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" not in pkg_subset["Version"].values
+    assert "2.0.1" in pkg_subset["Version"].values
     
 def test_helper():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     mySession.install_packages("stsim")
     mySession.install_packages("stsimcbmcfs3")
     
@@ -396,7 +413,7 @@ def test_library_save_datasheet():
     
 def test_library_run():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     mySession.add_packages("helloworldSpatial")
     myLibrary = ps.library(name="Test", package="helloworldSpatial",
                            template="example-library", overwrite=True,
@@ -519,7 +536,7 @@ def test_project_scenarios():
 
 def test_project_datasheets():
 
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     pkgs_to_add = ["stsim", "stsimsf", "stsimcbmcfs3", "helloworldSpatial"]
     for pkg in pkgs_to_add:
         if pkg not in mySession.packages()["Name"].values:
@@ -735,7 +752,7 @@ def test_scenario_datasheets():
 
 def test_scenario_save_datasheet():
 
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     mySession.add_packages("helloworld")
     myLibrary = ps.library(name="ds_test", package="helloworld",
                            overwrite=True,
