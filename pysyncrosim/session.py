@@ -277,7 +277,7 @@ class Session(object):
 
                 args = [f"--remove={pkg}", f"--version={ver}"]
                 self.__call_console(args)
-                pkgs_removed.append(f"{pkg} v{version}")
+                pkgs_removed.append(f"{pkg} v{ver}")
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)

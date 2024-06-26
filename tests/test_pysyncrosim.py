@@ -5,9 +5,11 @@ import pandas as pd
 import math
 import numpy as np
 import rasterio
-# import re
+import tempfile
 
+temp_path = tempfile.TemporaryDirectory()
 session_path = "C:/gitprojects/ssimbin3"
+test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
 
 def test_session_attributes():
     
@@ -34,7 +36,7 @@ def test_session_attributes():
     # Test conda_filepath
     conda_fp = mySession.conda_filepath
     assert isinstance(conda_fp, str) or conda_fp is None  
-          
+
 def test_session_package_functions():
     
     mySession = ps.Session(session_path)
@@ -78,7 +80,7 @@ def test_helper():
     
     mySession = ps.Session(session_path)
     mySession.install_packages("stsim")
-    mySession.install_packages("stsimcbmcfs3")
+    mySession.install_packages("stsimecodep")
     
     # Type checking
     with pytest.raises(
@@ -92,65 +94,47 @@ def test_helper():
     with pytest.raises(
             TypeError,
             match="session must be None or pysyncrosim Session instance"):
-        ps.library(name="Test", session=1)
+        ps.library(name=test_lib_name, session=1)
         
     with pytest.raises(TypeError, match="packages must be None, a String, or a List"):
-        ps.library(name="Test", packages=1)
+        ps.library(name=test_lib_name, packages=1, session=mySession)
 
     with pytest.raises(TypeError, match="packages in list are not all strings"):
-        ps.library(name="Test", packages=["package", 1])
-
-    with pytest.raises(TypeError, match="templates must be a String"):
-        ps.library(name="Test", template=1)
+        ps.library(name=test_lib_name, packages=["package", 1], session=mySession)
         
     with pytest.raises(TypeError, match="forceUpdate must be a Logical"):
-        ps.library(name="Test", forceUpdate="True")
+        ps.library(name=test_lib_name, forceUpdate="True", session=mySession)
         
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
-        ps.library(name="Test", overwrite="False")
+        ps.library(name=test_lib_name, overwrite="False", session=mySession)
 
     # Test package installation
     mySession.uninstall_packages("stsim")
     with pytest.raises(ValueError, match="The package stsim is not installed"):
-        ps.library(name="Test", packages="stsim", session=mySession)
+        ps.library(name=test_lib_name, packages="stsim", session=mySession)
     mySession.install_packages("stsim")
         
     # Test Library path
     with pytest.raises(ValueError, match="Path to Library does not exist"):
-        ps.library("path/to/library")
-        
-    # Test template
-    with pytest.raises(ValueError,
-                       match="Template test does not exist in package"):
-        ps.library("Test", packages="stsim", template="test")
+        ps.library("path/to/library", session=mySession)
       
     # Test output
-    myLibrary = ps.library(name="Test", forceUpdate=True)
+    myLibrary = ps.library(name=test_lib_name, forceUpdate=True, session=mySession)
     assert isinstance(myLibrary, ps.Library)
 
     # Test packages argument
-    myLibrary = ps.library(name = "stsimLibrary",
+    myLibrary = ps.library(name = test_lib_name,
                        session = mySession,
-                       packages = ["stsim", "stsimcbmcfs3"],
+                       packages = ["stsim", "stsimecodep"],
                        overwrite = True)
     pkg_list = myLibrary.packages()["Name"].tolist()
     assert "stsimsf" in pkg_list
-    assert "stsimcbmcfs3" in pkg_list
+    assert "stsimecodep" in pkg_list
     assert len(pkg_list) == 2
-
-    # Test package templates
-    myLibrary = ps.library(name = "stsimLibrary",
-                           session = mySession,
-                           packages = ["stsim", "stsimcbmcfs3"],
-                           template = "cbm-cfs3-example",
-                           overwrite = True,
-                           forceUpdate = True)
-    assert isinstance(myLibrary, ps.Library)
-    assert len(myLibrary.scenarios()) > 0
     
 def test_library_attributes():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     
     # Check attributes
     assert isinstance(myLibrary.name, str)
@@ -165,7 +149,7 @@ def test_library_attributes():
 
 def test_library_projects():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     
     # Test inputs
     with pytest.raises(TypeError, match="name must be a String"):
@@ -199,7 +183,7 @@ def test_library_projects():
         
 def test_library_scenarios():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     with pytest.raises(
@@ -255,7 +239,7 @@ def test_library_scenarios():
     
 def test_library_datasheets():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     
     # Test datasheets method inputs
     with pytest.raises(TypeError, match="name must be a String"):
@@ -300,7 +284,7 @@ def test_library_datasheets():
     
 def test_library_delete():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     # Test delete method
@@ -339,7 +323,7 @@ def test_library_delete():
     
 def test_library_save_datasheet():
     
-    myLibrary = ps.library(name="Test", overwrite=True, forceUpdate=True)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, forceUpdate=True, session=mySession)
     
     # Test save_datasheet method
     with pytest.raises(
@@ -414,10 +398,11 @@ def test_library_save_datasheet():
 def test_library_run():
     
     mySession = ps.Session(session_path)
-    mySession.add_packages("helloworldSpatial")
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           template="example-library", overwrite=True,
-                           forceUpdate=True)
+    mySession.add_packages("helloworldSpatial1")
+    myLibrary = ps.library(name=test_lib_name, 
+                           packages=["helloworldSpatial1", "helloworldSpatial2"],
+                           overwrite=True,
+                           forceUpdate=True, session=mySession)
     
     # Test run method
     with pytest.raises(
@@ -463,7 +448,8 @@ def test_library_run():
         
 def test_library_addons_functions():
     
-    myLibrary = ps.library(name="stsim_test", package="stsim", overwrite=True)
+    mySession = ps.session(session_path)
+    myLibrary = ps.library(name="stsim_test", package="stsim", overwrite=True, session=mySession)
     
     # Test enable_addons method
     with pytest.raises(TypeError,
@@ -493,8 +479,9 @@ def test_library_addons_functions():
     
 def test_project_attributes():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Check attributes
@@ -506,8 +493,9 @@ def test_project_attributes():
     
 def test_project_scenarios():  
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Test scenarios method
@@ -545,7 +533,7 @@ def test_project_datasheets():
     if "helloworldSpatial" not in mySession.packages()["Name"].values:
         mySession.add_packages("helloworldSpatial")
 
-    myLibrary = ps.library(name="Test", package="helloworldSpatial")
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial", session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Test Datasheets
@@ -567,21 +555,12 @@ def test_project_datasheets():
     assert len(myProject.datasheets(optional=True).columns) == 7
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
-
-    # Test Addon Datasheet return
-    myLibrary = ps.library(name = "Test",
-                          package = "stsim",
-                          addons = ["stsimsf", "stsimcbmcfs3"],
-                          overwrite=True)
-
-    myProject = myLibrary.projects(name = "Definitions")
-    ds = myProject.datasheets(name = "stsimsf_FlowGroup")
-    assert isinstance(ds, pd.DataFrame)
     
 def test_project_save_datasheet():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, forceUpdate=True)
+    mySession = ps.session(session_path)
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+                           overwrite=True, forceUpdate=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     myLibrary.scenarios(name="test")
     myLibrary.scenarios(name="test2")
@@ -634,7 +613,8 @@ def test_project_save_datasheet():
 
 def test_project_copy_delete():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial")
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial", session=mySession)
     myProject = myLibrary.projects(name="Definitions")
 
     # Test copy
@@ -660,11 +640,13 @@ def test_project_copy_delete():
         myNewProj.scenarios()
 
 def test_project_run():
-    myLibrary = ps.library(name = "stsimLibrary",
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name = "stsimLibrary", # DEV TODO: Use premade library
                            package = "stsim",
-                           template = "non-spatial-example",
                            overwrite=True,
-                           forceUpdate=True)
+                           forceUpdate=True,
+                           session=mySession)
 
     myProject = myLibrary.projects(pid=1)
     myProject.run([5,14])
@@ -695,8 +677,9 @@ def test_project_run():
 
 def test_scenarios_attributes():
 
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+                           overwrite=True, session=mySession)
     myScenario = myLibrary.scenarios("Test Scenario")
     
     # Check attributes
@@ -713,9 +696,12 @@ def test_scenarios_attributes():
     
 def test_scenario_datasheets():
     
-    myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library",
-                           forceUpdate=True)
+    mySession = ps.Session(session_path)
+    # DEV TODO: use pre-made library
+    myLibrary = ps.library(name="ds_test", 
+                           packages=["helloworldSpatial1", "helloworldSpatial2"],
+                           overwrite=True,
+                           forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(sid=1)
     
     # Test datasheets
@@ -756,7 +742,7 @@ def test_scenario_save_datasheet():
     mySession.add_packages("helloworld")
     myLibrary = ps.library(name="ds_test", package="helloworld",
                            overwrite=True,
-                           forceUpdate=True)
+                           forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(name="test")    
 
     # Test save_datasheet
@@ -792,10 +778,11 @@ def test_scenario_save_datasheet():
     
 def test_scenario_run_and_results():
     
-    myLibrary = ps.library(name="Test", overwrite=True,
-                           package="helloworldSpatial",
-                           template="example-library",
-                           forceUpdate=True)
+    mySession = ps.Session(session_path)
+    #DEV TODO: use pre-made library
+    myLibrary = ps.library(name=test_lib_name, overwrite=True,
+                           packages=["helloworldSpatial1", "helloworldSpatial2"],
+                           forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(sid=1)
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2
@@ -960,9 +947,12 @@ def test_scenario_run_and_results():
     
 def test_scenario_copy_dep_delete():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, template="example-library",
-                           forceUpdate=True)
+    mySession = ps.Session(session_path)
+    # DEV TODO: use pre-made library
+    myLibrary = ps.library(name=test_lib_name,
+                           package=["helloworldSpatial1", "helloworldSpatial2"],
+                           overwrite=True,
+                           forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(name="My Scenario")
     runcontrol = myScenario.datasheets(name="RunControl")
     runcontrol["MaximumIteration"] = 2
@@ -1057,11 +1047,12 @@ def test_scenario_copy_dep_delete():
 
 def test_folder_functions():
 
+    mySession = ps.Session(session_path)
+    # DEV TODO: use pre-made library
     myLibrary = ps.library(name = "stsimLibrary",
                         package = "stsim",
-                        template = "non-spatial-example",
                         overwrite=True,
-                        forceUpdate=True)
+                        forceUpdate=True, session=mySession)
 
     myProject = myLibrary.projects(pid=1)
 

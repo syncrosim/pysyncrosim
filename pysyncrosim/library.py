@@ -258,7 +258,7 @@ class Library(object):
         """
         return self.__date_modified
 
-    def add_packages(self, packages):
+    def add_packages(self, packages, versions=None):
         """
         Adds one or more SyncroSim packages to this Library.
 
@@ -266,6 +266,10 @@ class Library(object):
         ----------
         packages : String or List of Strings
             Name of package or list of package names to add to the Library.
+        versions : String or List of Strings, optional
+            Version of package or list of package versions to add to the 
+            Library. If None (default) then uses the latest installed version 
+            of the package.
 
         Returns
         -------
@@ -274,19 +278,36 @@ class Library(object):
         """
         installed_pkgs = self.session.packages(installed = True)
         library_pkgs = self.packages
-        packages = self.session._Session__validate_packages(packages)
 
-        for pkg in packages:
-            if pkg in installed_pkgs.Name.values:
-                if pkg not in library_pkgs.Name.values:
-                    args = ["--add", "--package", "--lib=%s" % self.location,
-                            "--pkg=%s" % pkg]
-                    self.session._Session__call_console(args)
-                    print(f"Package <{pkg}> added")
-                else:
-                    print(f"{pkg} has already been added to the Library")
-            else:
+        self.session._Session__validate_packages(packages, versions)
+
+        if versions is None:
+            installed_pkgs = installed_pkgs[installed_pkgs.Name.isin(packages)]
+            versions = []
+            for pkg in packages:
+                versions.append(installed_pkgs[installed_pkgs.Name == pkg].Version.item())
+
+
+        for pkg, ver in zip(packages, versions):
+
+            pkg_rows = installed_pkgs[installed_pkgs.Name == pkg]
+            if len(pkg_rows) == 0:
                 print(f"{pkg} is not among the available installed packages")
+                continue
+
+            pkg_row = pkg_rows[pkg_rows.Version == ver]
+
+            if len(pkg_row) == 0:
+                print(f"{pkg} version {ver} is not among the available installed packages")
+                continue
+
+            pkg_name = pkg_row.Name.item()
+            pkg_ver = pkg_row.Version.item()
+
+            args = ["--add", "--package", "--lib=%s" % self.location,
+                    "--pkg=%s" % pkg_name, "--ver=%s" % pkg_ver]
+            self.session._Session__call_console(args)
+            print(f"Package <{pkg} v{ver}> added")
 
     def remove_packages(self, packages):
         """

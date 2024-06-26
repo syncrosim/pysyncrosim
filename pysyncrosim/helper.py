@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import io
 
-def library(name, session=None, packages=None, template=None,
+def library(name, session=None, packages=None,
             forceUpdate=False, overwrite=False, use_conda=None):
     """
     Creates a new SyncroSim Library and opens it as a Library
@@ -20,8 +20,6 @@ def library(name, session=None, packages=None, template=None,
     packages : String, optional
         The SyncroSim packages to be added to the Library. If None, then the
         Library will be created without any packages. The default is None.
-    template : String, optional
-        Creates Library with specified template. The default is None.
     forceUpdate : Logical, optional
         If False, then user is prompted to approve required updates. The 
         default is False.
@@ -39,7 +37,7 @@ def library(name, session=None, packages=None, template=None,
         SyncroSim Library class instance.
 
     """
-    _validate_library_inputs(name, session, packages, template,
+    _validate_library_inputs(name, session, packages,
                              forceUpdate, overwrite, use_conda)
     
     if session is None:
@@ -58,8 +56,6 @@ def library(name, session=None, packages=None, template=None,
 
     if forceUpdate is True:
         args += ["--update"]
-
-    args += _configure_template_args(session, packages, template)
         
     try:
     
@@ -81,7 +77,7 @@ def library(name, session=None, packages=None, template=None,
         
     return ps.Library(location=loc, session=session, use_conda=use_conda, packages=packages)
 
-def _validate_library_inputs(name, session, packages, template, 
+def _validate_library_inputs(name, session, packages, 
                              forceUpdate, overwrite, use_conda):
     """
     Validates input types for the create_library function
@@ -97,8 +93,6 @@ def _validate_library_inputs(name, session, packages, template,
         if isinstance(packages, list):
             if not all(isinstance(package, str) for package in packages):
                 raise TypeError("packages in list are not all strings")
-    if template is not None and not isinstance(template, str):
-        raise TypeError("templates must be a String")
     if not isinstance(forceUpdate, bool):
         raise TypeError("forceUpdate must be a Logical")
     if not isinstance(overwrite, bool):
@@ -159,37 +153,6 @@ def _check_library_update(session, loc, forceUpdate):
             elif answer == "N":
                 raise Exception("Updates not applied and Library not loaded.")
             
-def _configure_template_args(session, packages, template):
-    
-    new_args = []
-
-    if template is not None: 
-        
-        if template.endswith(".ssim") is True:
-            template = os.path.splitext(template)[0]
-
-        template_set = False
-        packages = session._Session__validate_packages(packages)
-        
-        # Check if template exists in each package
-        for pkg in packages:
-            temp_args = ["--list", "--templates", "--pkg=%s" % pkg]
-            pkg_templates = session._Session__call_console(temp_args,
-                                                        decode=True,
-                                                        csv=True)
-            pkg_templates = pd.read_csv(io.StringIO(pkg_templates))
-            template_name = pkg + "_" + template
-            
-            if template_name in pkg_templates["Name"].values:
-                new_args += ["--template=\"%s\"" % template_name]
-                template_set = True
-                break
-
-        if not template_set:
-            package_list = ",".join(map(str, packages))
-            raise ValueError(f"Template {template} does not exist among package {package_list}")
-        
-    return new_args
 
 def _delete_library(name, session=None, force=False):
     """
