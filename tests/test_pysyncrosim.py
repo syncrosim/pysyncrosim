@@ -127,10 +127,11 @@ def test_helper():
                        session = mySession,
                        packages = ["stsim", "stsimecodep"],
                        overwrite = True)
-    pkg_list = myLibrary.packages()["Name"].tolist()
-    assert "stsimsf" in pkg_list
+    pkg_list = myLibrary.packages["Name"].tolist()
+    assert "core" in pkg_list
+    assert "stsim" in pkg_list
     assert "stsimecodep" in pkg_list
-    assert len(pkg_list) == 2
+    assert len(pkg_list) == 3
     
 def test_library_attributes():
     
