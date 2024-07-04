@@ -279,6 +279,9 @@ class Library(object):
         installed_pkgs = self.session.packages(installed = True)
         library_pkgs = self.packages
 
+        if not isinstance(packages, list):
+            packages = [packages]
+
         self.session._Session__validate_packages(packages, versions)
 
         if versions is None:
@@ -1410,9 +1413,9 @@ class Library(object):
         optional_cols = optional_cols.replace({"No": False, 
                                                "Yes": True})
         
-        if optional_cols["Data Inherited"].sum() > 0:
-            add_cols = ["Name", "Data", "Data Inherited",
-                        "Data Source"]
+        if optional_cols["DataInherited"].sum() > 0:
+            add_cols = ["Name", "Data", "DataInherited",
+                        "DataSource"]
         else:
             add_cols = ["Name", "Data"]
         

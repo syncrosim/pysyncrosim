@@ -673,7 +673,7 @@ def test_project_run():
 def test_scenarios_attributes():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+    myLibrary = ps.library(name=test_lib_name, packages="helloworld",
                            overwrite=True, session=mySession)
     myScenario = myLibrary.scenarios("Test Scenario")
     
@@ -692,12 +692,11 @@ def test_scenarios_attributes():
 def test_scenario_datasheets():
     
     mySession = ps.Session(session_path)
-    # DEV TODO: use pre-made library
-    myLibrary = ps.library(name="ds_test", 
-                           packages=["helloworldSpatial1", "helloworldSpatial2"],
+    myLibrary = ps.library(name=test_lib_name, 
+                           packages=["stsim"],
                            overwrite=True,
-                           forceUpdate=True, session=mySession)
-    myScenario = myLibrary.scenarios(sid=1)
+                           session=mySession)
+    myScenario = myLibrary.scenarios("test")
     
     # Test datasheets
     with pytest.raises(TypeError, match="name must be a String"):
@@ -715,29 +714,36 @@ def test_scenario_datasheets():
     assert isinstance(myScenario.datasheets(), pd.DataFrame)
     assert isinstance(myScenario.datasheets(summary=False), list)
     assert len(myScenario.datasheets().columns) == 3
-    assert len(myScenario.datasheets(optional=True).columns) == 8
+    assert len(myScenario.datasheets(optional=True).columns) == 7
+
+    runcontrol = myScenario.datasheets(name="stsim_RunControl")
+    runcontrol = pd.DataFrame({"MaximumTimestep": [2], 
+                               "MaximumIteration": [2]})
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
+
     assert isinstance(myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration", 
         filter_value="1"), pd.DataFrame)
     assert len(myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration",
         filter_value="1") == 1)
     assert myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration",
         filter_value="2").empty    
-    assert myScenario.datasheets(name="InputDatasheet").empty is False
-    assert myScenario.datasheets(name="InputDatasheet", empty=True).empty
+    assert myScenario.datasheets(name="stsim_RunControl").empty is False
+    assert myScenario.datasheets(name="stsim_RunControl", empty=True).empty
 
 def test_scenario_save_datasheet():
 
     mySession = ps.Session(session_path)
-    mySession.add_packages("helloworld")
-    myLibrary = ps.library(name="ds_test", package="helloworld",
+    mySession.install_packages("helloworld")
+    myLibrary = ps.library(name=test_lib_name, 
+                           packages="helloworld",
                            overwrite=True,
-                           forceUpdate=True, session=mySession)
+                           session=mySession)
     myScenario = myLibrary.scenarios(name="test")    
 
     # Test save_datasheet
@@ -757,11 +763,11 @@ def test_scenario_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myScenario.save_datasheet(name="test", data=1)
 
-    myDataFrame = pd.DataFrame({'x': [1.0], 'a': [2]})
+    myDataFrame = pd.DataFrame({'x': [1.5], 'a': [2]})
     myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame)
     assert myScenario.datasheets(name="helloworld_InputDatasheet").equals(myDataFrame)
 
-    myDataFrame2 = pd.DataFrame({'x': [2.0], 'a': [2]})
+    myDataFrame2 = pd.DataFrame({'x': [2.5], 'a': [2]})
     myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame2, append=True)
     assert len(myScenario.datasheets(name="helloworld_InputDatasheet")) == 2
 
@@ -779,10 +785,10 @@ def test_scenario_run_and_results():
                            packages=["helloworldSpatial1", "helloworldSpatial2"],
                            forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(sid=1)
-    runcontrol = myScenario.datasheets(name="RunControl")
+    runcontrol = myScenario.datasheets(name="stsim_RunControl")
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
-    myScenario.save_datasheet("RunControl", runcontrol)
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test run
     with pytest.raises(TypeError, match="jobs must be an Integer"):
@@ -949,10 +955,10 @@ def test_scenario_copy_dep_delete():
                            overwrite=True,
                            forceUpdate=True, session=mySession)
     myScenario = myLibrary.scenarios(name="My Scenario")
-    runcontrol = myScenario.datasheets(name="RunControl")
+    runcontrol = myScenario.datasheets(name="stsim_RunControl")
     runcontrol["MaximumIteration"] = 2
     runcontrol["MaximumTimestep"] = 2
-    myScenario.save_datasheet("RunControl", runcontrol)
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test copy
     with pytest.raises(TypeError, match="name must be a String"):
@@ -960,15 +966,15 @@ def test_scenario_copy_dep_delete():
         
     myNewScn = myScenario.copy()
     assert myNewScn.name == "My Scenario - Copy"
-    assert myNewScn.datasheets(name="RunControl").empty is False
+    assert myNewScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewScn.datasheets(
-        name="RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 2
     
     myNewerScn = myScenario.copy(name="My Scenario 2")
     assert myNewerScn.name == "My Scenario 2"
-    assert myNewerScn.datasheets(name="RunControl").empty is False
+    assert myNewerScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewerScn.datasheets(
-        name="RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 2
     
     # Test dependencies
     with pytest.raises(
@@ -1018,10 +1024,10 @@ def test_scenario_copy_dep_delete():
     
     assert math.isnan(myNewScn.ignore_dependencies())
     
-    myNewScn.ignore_dependencies(value="RunControl")
+    myNewScn.ignore_dependencies(value="stsim_RunControl")
     myNewScn.ignore_dependencies()
     
-    assert myNewScn.ignore_dependencies() == "RunControl"
+    assert myNewScn.ignore_dependencies() == "stsim_RunControl"
     
     myNewScn.ignore_dependencies(value="InputDatasheet,OutputDatasheet")
     assert myNewScn.ignore_dependencies() == "InputDatasheet,OutputDatasheet"
