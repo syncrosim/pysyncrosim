@@ -798,7 +798,8 @@ class Scenario(object):
         copy_external_inputs : Logical, optional
             If False, then a copy of external input files (e.g. GeoTIFF files)
             is not created for each job. Otherwise, a copy of external inputs 
-            is created for each job. Applies only when jobs > 1. The default is
+            is created for each job. Applies only when jobs > 1. The number of 
+            jobs is set using the 'core_Multiprocessing' datasheet. The default is
             False.
 
         Returns

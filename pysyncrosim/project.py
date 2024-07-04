@@ -344,7 +344,7 @@ class Project(object):
         
         self.library.save_datasheet(name, data, append, force, "Project", self.pid)
         
-    def run(self, scenarios=None, jobs=1, copy_external_inputs=False):
+    def run(self, scenarios=None, copy_external_inputs=False):
         """
         Runs a list of Scenario objects.
 
@@ -353,12 +353,11 @@ class Project(object):
         scenarios : Scenario, String, Int, or List
             List of Scenrios, SyncroSim Scenario instance, name of Scenario,
             or Scenario ID.
-        jobs : Int, optional
-            Number of multiprocessors to use. The default is 1.
         copy_external_inputs : Logical, optional
             If False, then a copy of external input files (e.g. GeoTIFF files)
             is not created for each job. Otherwise, a copy of external inputs 
-            is created for each job. Applies only when jobs > 1. The default is
+            is created for each job. Applies only when jobs > 1. The number of 
+            jobs is set using the 'core_Multiprocessing' datasheet. The default is
             False.
 
         Returns
@@ -376,8 +375,6 @@ class Project(object):
                             scenarios, list):
             raise TypeError(
                 "scenarios must be Scenario instance, String, Integer, or List")
-        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
-            raise TypeError("jobs must be an Integer")
         
         # Collect output in a dictionary
         result_list = []
@@ -399,14 +396,14 @@ class Project(object):
 
             scn_id_str = self.__create_scenario_id_string(scenarios)
 
-        args = ["--run", "--lib=%s" % self.library.location, "--jobs=%d" % jobs]
+        args = ["--run", "--lib=%s" % self.library.location]
         
         if len(scenarios) > 1:
             args += ["--sids=%s" % scn_id_str]
         else:
             args += ["--sid=%s" % scn_id_str]
 
-        if jobs > 1 and copy_external_inputs is True:
+        if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
 
         print(f"Running Scenario(s)")  

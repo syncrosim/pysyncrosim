@@ -758,7 +758,7 @@ class Library(object):
                 if fpath is not None:
                     shutil.rmtree(os.path.dirname(fpath), ignore_errors=True)
             
-    def run(self, scenarios=None, project=None, jobs=1,
+    def run(self, scenarios=None, project=None,
             copy_external_inputs=False):
         """
         Runs a list of Scenario objects.
@@ -770,12 +770,11 @@ class Library(object):
             or Scenario ID.
         project : Project, optional
             SyncroSim Project instance, name of Project, or Project ID.
-        jobs : Int, optional
-            Number of multiprocessors to use. The default is 1.
         copy_external_inputs : Logical, optional
             If False, then a copy of external input files (e.g. GeoTIFF files)
             is not created for each job. Otherwise, a copy of external inputs 
-            is created for each job. Applies only when jobs > 1. The default is
+            is created for each job. Applies only when jobs > 1. The number of 
+            jobs is set using the 'core_Multiprocessing' datasheet. The default is
             False.
 
         Returns
@@ -785,7 +784,7 @@ class Library(object):
 
         """
 
-        self.__validate_run_inputs(scenarios, project, jobs,
+        self.__validate_run_inputs(scenarios, project,
                                    copy_external_inputs)
         
         scenario_list = self.__generate_scenarios_list_to_run(scenarios,
@@ -793,7 +792,7 @@ class Library(object):
 
         # Collect output from all runs
         result_list = [scn.run(
-            jobs=jobs, copy_external_inputs=copy_external_inputs
+            copy_external_inputs=copy_external_inputs
             ) for scn in scenario_list]
             
         if len(result_list) == 1:
@@ -1300,7 +1299,7 @@ class Library(object):
         if not isinstance(return_hidden, bool):
             raise TypeError("return_hidden must be a Logical")
             
-    def __validate_run_inputs(self, scenarios, project, jobs,
+    def __validate_run_inputs(self, scenarios, project,
                                copy_external_inputs):
     
         if scenarios is not None and not isinstance(
@@ -1317,8 +1316,6 @@ class Library(object):
                     project, np.int64) and not isinstance(project, str):
             raise TypeError(
                 "project must be Project instance, String, or Integer")
-        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
-            raise TypeError("jobs must be an Integer")
         if not isinstance(copy_external_inputs, bool):
             raise TypeError("copy_external_inputs must be a Logical")
             
