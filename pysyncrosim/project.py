@@ -406,7 +406,7 @@ class Project(object):
         if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
 
-        print(f"Running Scenario(s)")  
+        print(f"Running scenario(s)")  
         result = self.library.session._Session__call_console(args)
 
         if result.returncode == 0:
@@ -418,11 +418,11 @@ class Project(object):
         # Reset and retrieve Scenario results
         for scn in scenarios:
             if isinstance(scn, int) or isinstance(scn, np.int64):
-                scn = self.scenarios(scn)
+                scn = self.scenarios(sid=scn)
             elif isinstance(scn, str):
-                scn = self.scenarios(scn)
+                scn = self.scenarios(name=scn)
             scn._Scenario__results = None
-            result_id = scn.results()["ScenarioID"].values[-1]
+            result_id = scn.results()["ScenarioId"].values[-1]
             result_list.append(self.scenarios(sid=result_id))
             
         if len(result_list) == 1:
@@ -452,7 +452,7 @@ class Project(object):
         if name is None:
             name = self.name + " - Copy"
         
-        args = ["--copy", "--project", "--slib=%s" % self.library.name,
+        args = ["--copy", "--project", "--slib=%s" % self.library.location,
                 "--pid=%d" % self.pid, "--name=%s" % name, "--copychildren"]
         
         self.library.session._Session__call_console(args)

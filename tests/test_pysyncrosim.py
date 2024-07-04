@@ -430,7 +430,7 @@ def test_library_run():
     inputs["a"] = 2
     myLibrary.save_datasheet(
         "helloworld_InputDatasheet", inputs, 
-        False, False, "Scenario", 1)
+        False, False, "Scenario", test_scenario.sid)
     
     myLibrary.run()
     assert len(myLibrary.scenarios()) == 2
@@ -453,7 +453,7 @@ def test_library_run():
 def test_project_attributes():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
@@ -467,7 +467,7 @@ def test_project_attributes():
 def test_project_scenarios():  
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
@@ -490,7 +490,7 @@ def test_project_scenarios():
     assert isinstance(myProject.scenarios(summary=False), list)
     assert myProject.scenarios().empty
     assert len(myProject.scenarios().columns) == 4
-    assert len(myProject.scenarios(optional=True).columns) == 11    
+    assert len(myProject.scenarios(optional=True).columns) == 10    
     assert isinstance(myProject.scenarios(name="test"), ps.Scenario)
     assert len(myProject.scenarios()) == 1
     assert isinstance(myProject.scenarios(sid=1), ps.Scenario)    
@@ -498,15 +498,13 @@ def test_project_scenarios():
 def test_project_datasheets():
 
     mySession = ps.Session(session_path)
-    pkgs_to_add = ["stsim", "stsimsf", "stsimcbmcfs3", "helloworldSpatial"]
+    pkgs_to_add = ["stsim", "stsimecodep", "dgsim", "helloworld"]
     for pkg in pkgs_to_add:
         if pkg not in mySession.packages()["Name"].values:
-            mySession.add_packages(pkg)
+            mySession.install_packages(pkg)
 
-    if "helloworldSpatial" not in mySession.packages()["Name"].values:
-        mySession.add_packages("helloworldSpatial")
-
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial", session=mySession)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"], 
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Test Datasheets
@@ -525,15 +523,16 @@ def test_project_datasheets():
     assert isinstance(myProject.datasheets(), pd.DataFrame)
     assert isinstance(myProject.datasheets(summary=False), list)
     assert len(myProject.datasheets().columns) == 3
-    assert len(myProject.datasheets(optional=True).columns) == 7
+    assert len(myProject.datasheets(optional=True).columns) == 6
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
     
 def test_project_save_datasheet():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial",
-                           overwrite=True, forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
+                           overwrite=True, forceUpdate=True, 
+                           session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     myLibrary.scenarios(name="test")
     myLibrary.scenarios(name="test2")
@@ -556,51 +555,61 @@ def test_project_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myProject.save_datasheet(name="test", data=1)
         
-    assert myProject.datasheets(name="core_AutoGenTag").empty
-    test_datasheet = pd.DataFrame({"Name": ["test"], "AutoGenTagKey": ["key"],
-                                  "AutoGenTagValue": [1]})
-    myProject.save_datasheet(name="core_AutoGenTag", data=test_datasheet)
-    assert myProject.datasheets(name="core_AutoGenTag").empty is False
+    assert myProject.datasheets(name="core_DistributionType").empty
+    test_datasheet = pd.DataFrame({"Name": ["Test"], 
+                                   "Description": ["Test Distribution Type"],
+                                   "IsInternal": [False]})
+    myProject.save_datasheet(name="core_DistributionType", data=test_datasheet)
+    assert myProject.datasheets(name="core_DistributionType").empty is False
+    assert myProject.datasheets(name = "core_DistributionType").equals(test_datasheet)
 
-    myProjDF = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF)
-    assert myProject.datasheets(name = "core_RunSchedulerScenario").equals(myProjDF)
+    myProjDF2 = pd.DataFrame({"Name": ["Test2"], 
+                              "Description": ["Test Distribution Type2"],
+                              "IsInternal": [False]})
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False, force=True)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 1
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [2], "Order": [2]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False, force=True)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 1
+    myProjDF2 = pd.DataFrame({"Name": ["Test3"], 
+                              "Description": ["Test Distribution Type3"],
+                              "IsInternal": [False]})    
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=True, force=True)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=True, force=True)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+    myProjDF2 = pd.DataFrame({"Name": ["Test4"], 
+                              "Description": ["Test Distribution Type4"],
+                              "IsInternal": [False]})    
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [3], "Order": [3]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame())
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame())
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
-
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame(), force=True)
-    assert myProject.datasheets(name = "core_RunSchedulerScenario").empty
+    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame(), force=True)
+    assert myProject.datasheets(name = "core_DistributionType").empty
 
 def test_project_copy_delete():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, package="helloworldSpatial", session=mySession)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"], 
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
 
     # Test copy
     with pytest.raises(TypeError, match="name must be a String"):
         myProject.copy(name=1)
+
+    test_datasheet = pd.DataFrame({"Name": ["Test"], 
+                                   "Description": ["Test Distribution Type"],
+                                   "IsInternal": [False]})
+    myProject.save_datasheet(name="core_DistributionType", data=test_datasheet)
         
     myNewProj = myProject.copy()
     assert myNewProj.name == "Definitions - Copy"
-    assert myNewProj.datasheets(name="core_AutoGenTag").empty is False
+    assert myNewProj.datasheets(name="core_DistributionType").empty is False
     
     myNewerProj = myProject.copy(name="Definitions 2")
     assert myNewerProj.name == "Definitions 2"
-    assert myNewerProj.datasheets(name="core_AutoGenTag").empty is False
+    assert myNewerProj.datasheets(name="core_DistributionType").empty is False
     
     # Test delete    
     with pytest.raises(
@@ -615,18 +624,31 @@ def test_project_copy_delete():
 def test_project_run():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name = "stsimLibrary", # DEV TODO: Use premade library
-                           package = "stsim",
+    myLibrary = ps.library(name = test_lib_name,
+                           packages = ["helloworld"],
                            overwrite=True,
-                           forceUpdate=True,
                            session=mySession)
 
-    myProject = myLibrary.projects(pid=1)
-    myProject.run([5,14])
+    myProject = myLibrary.projects("Definitions")
+
+    # Create test scenarios
+    test_scenario = myProject.scenarios(name="test scenario")
+    inputs = test_scenario.datasheets("helloworld_InputDatasheet")
+    inputs["x"] = 2
+    inputs["a"] = 2
+    test_scenario.save_datasheet("helloworld_InputDatasheet", inputs)
+
+    test_scenario2 = myProject.scenarios(name="test scenario2")
+    inputs = test_scenario2.datasheets("helloworld_InputDatasheet")
+    inputs["x"] = 3
+    inputs["a"] = 3
+    test_scenario2.save_datasheet("helloworld_InputDatasheet", inputs)
+
+    myProject.run([test_scenario.sid])
     scenarios = myProject.scenarios()
     result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
-    assert len(result_scenarios) == 2
+        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
+    assert len(result_scenarios) == 1
 
     for result_scn in result_scenarios:
         myProject.delete(scenario=result_scn, force=True)
@@ -635,17 +657,17 @@ def test_project_run():
     myProject.run()
     scenarios = myProject.scenarios()
     result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
+        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
     assert len(result_scenarios) == 2
 
     for result_scn in result_scenarios:
         myProject.delete(scenario=result_scn, force=True)
     assert len(myProject.scenarios()) == 2
 
-    myProject.run(5)
+    myProject.run(test_scenario2.sid)
     scenarios = myProject.scenarios()
     result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
+        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
     assert len(result_scenarios) == 1 
 
 def test_scenarios_attributes():
@@ -779,7 +801,7 @@ def test_scenario_run_and_results():
         
     assert isinstance(myScenario.results(), pd.DataFrame)
     assert (myScenario.results()["IsResult"] == "Yes").all()
-    res_sid = myLibrary.scenarios().iloc[1]["ScenarioID"].item()
+    res_sid = myLibrary.scenarios().iloc[1]["ScenarioId"].item()
     assert isinstance(myScenario.results(sid=res_sid), ps.Scenario) 
     
     # Test run_log
@@ -1068,7 +1090,7 @@ def test_folder_functions():
     assert my_nested_folder.parent_id is not None
 
     # Move scenario into a folder
-    scn_id = myProject.scenarios()["ScenarioID"][0]
+    scn_id = myProject.scenarios()["ScenarioId"][0]
     myScenario = myProject.scenarios(sid=scn_id)
     assert myScenario.folder_id is None
     myScenario.folder_id = fid
