@@ -1187,6 +1187,7 @@ class Library(object):
     
         s_summary = self.__scenarios
         s_summary = s_summary[s_summary["IsResult"] == "No"]
+        s_summary.reset_index(inplace=True)
         
         if not isinstance(project, ps.Project):
             project = self.projects(pid=pid) 
@@ -1644,7 +1645,7 @@ class Library(object):
             if not isinstance(scenarios, list):
                 scenarios = [scenarios]
                 
-            if isinstance(scenarios[0], int):
+            if isinstance(scenarios[0], int) or isinstance(scenarios[0], np.int64):
                 scenario_list = [
                     self.scenarios(sid=scn) for scn in scenarios]
             elif isinstance(scenarios[0], str):
@@ -1669,7 +1670,7 @@ class Library(object):
                     "Must specify project when > 1 Project in the Library")
         
         # Convert project to Project instance
-        if isinstance(project, int):
+        if isinstance(project, int) or isinstance(project, np.int64):
             project = self.projects(pid=project)
             
         if isinstance(project, str):

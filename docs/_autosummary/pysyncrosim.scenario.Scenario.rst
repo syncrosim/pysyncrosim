@@ -18,7 +18,6 @@
       ~Scenario.datasheet_rasters
       ~Scenario.datasheets
       ~Scenario.delete
-      ~Scenario.dependencies
       ~Scenario.folders
       ~Scenario.ignore_dependencies
       ~Scenario.merge_dependencies
@@ -36,6 +35,7 @@
    .. autosummary::
    
       ~Scenario.date_modified
+      ~Scenario.dependencies
       ~Scenario.description
       ~Scenario.folder_id
       ~Scenario.info

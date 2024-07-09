@@ -110,9 +110,10 @@ def test_helper():
         ps.library(name=test_lib_name, overwrite="False", session=mySession)
 
     # Test package installation
-    mySession.uninstall_packages("stsim")
-    with pytest.raises(ValueError, match="The package stsim is not installed"):
-        ps.library(name=test_lib_name, packages="stsim", session=mySession)
+    mySession.install_packages("demosales")
+    mySession.uninstall_packages("demosales")
+    with pytest.raises(ValueError, match="The package demosales is not installed"):
+        ps.library(name=test_lib_name, packages="demosales", session=mySession)
     mySession.install_packages("stsim")
         
     # Test Library path
@@ -405,11 +406,13 @@ def test_library_save_datasheet():
 def test_library_run():
     
     mySession = ps.Session(session_path)
-    mySession.install_packages("helloworld")
-    myLibrary = ps.library(name=test_lib_name, 
-                           packages=["helloworld"],
-                           overwrite=True,
-                           forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession)
+    all_scns = myLibrary.scenarios()
+    num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
+    num_scns = len(all_scns)
+    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    proj_id = myLibrary.projects().iloc[0].ProjectId
     
     # Test run method
     with pytest.raises(
@@ -420,36 +423,30 @@ def test_library_run():
     with pytest.raises(
             TypeError,
             match="project must be Project instance, String, or Integer"):
-        myLibrary.run(project=[1])
-    
-    test_scenario = myLibrary.scenarios(name="test scenario")
-    inputs = myLibrary.datasheets(
-        "helloworld_InputDatasheet", False, False,
-        False, "Scenario", None, None, False, False,
-        False, test_scenario.sid)
-    inputs["x"] = 2
-    inputs["a"] = 2
-    myLibrary.save_datasheet(
-        "helloworld_InputDatasheet", inputs, 
-        False, False, "Scenario", test_scenario.sid)
+        myLibrary.run(project=[proj_id])
     
     myLibrary.run()
-    assert len(myLibrary.scenarios()) == 2
-    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
+    num_scns += num_parent_scns
+    assert len(myLibrary.scenarios()) == num_scns
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
-    myLibrary.run(project=1)
-    assert len(myLibrary.scenarios()) == 3
-    assert myLibrary.scenarios().iloc[2]["IsResult"] == "Yes"
+    myLibrary.run(project=proj_id)
+    num_scns += num_parent_scns
+    assert len(myLibrary.scenarios()) == num_scns
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
-    myLibrary.run(project=1, scenarios=1)
-    assert len(myLibrary.scenarios()) == 4     
-    assert myLibrary.scenarios().iloc[3]["IsResult"] == "Yes"
+    myLibrary.run(project=proj_id, scenarios=scn_id)
+    num_scns += 1
+    assert len(myLibrary.scenarios()) == num_scns     
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
     myLibrary.projects(name="New Project")
     with pytest.raises(
             ValueError,
             match="Must specify project when > 1 Project in the Library"):
         myLibrary.run()
+
+    myLibrary.delete(project="New Project", force=True)
     
 def test_project_attributes():
     
@@ -625,51 +622,35 @@ def test_project_copy_delete():
 def test_project_run():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name = test_lib_name,
-                           packages = ["helloworld"],
-                           overwrite=True,
+    myLibrary = ps.library(name=existing_lib_name, 
                            session=mySession)
+    myProject = myLibrary.projects(name="Definitions")
+    all_scns = myProject.scenarios()
+    num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
+    num_scns = len(all_scns)
+    scn_id = myProject.scenarios().iloc[1].ScenarioId
 
-    myProject = myLibrary.projects("Definitions")
-
-    # Create test scenarios
-    test_scenario = myProject.scenarios(name="test scenario")
-    inputs = test_scenario.datasheets("helloworld_InputDatasheet")
-    inputs["x"] = 2
-    inputs["a"] = 2
-    test_scenario.save_datasheet("helloworld_InputDatasheet", inputs)
-
-    test_scenario2 = myProject.scenarios(name="test scenario2")
-    inputs = test_scenario2.datasheets("helloworld_InputDatasheet")
-    inputs["x"] = 3
-    inputs["a"] = 3
-    test_scenario2.save_datasheet("helloworld_InputDatasheet", inputs)
-
-    myProject.run([test_scenario.sid])
-    scenarios = myProject.scenarios()
-    result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
-    assert len(result_scenarios) == 1
-
-    for result_scn in result_scenarios:
-        myProject.delete(scenario=result_scn, force=True)
-    assert len(myProject.scenarios()) == 2
+    myProject.run([scn_id])
+    num_scns += 1
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
 
     myProject.run()
+    num_scns += num_parent_scns
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
+
+    myProject.run(scn_id)
+    num_scns += 1
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
+
     scenarios = myProject.scenarios()
     result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
-    assert len(result_scenarios) == 2
-
+    scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
     for result_scn in result_scenarios:
         myProject.delete(scenario=result_scn, force=True)
     assert len(myProject.scenarios()) == 2
-
-    myProject.run(test_scenario2.sid)
-    scenarios = myProject.scenarios()
-    result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
-    assert len(result_scenarios) == 1 
 
 def test_scenarios_attributes():
 

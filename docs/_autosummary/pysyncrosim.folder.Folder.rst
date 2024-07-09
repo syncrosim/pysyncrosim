@@ -24,7 +24,6 @@
    .. autosummary::
    
       ~Folder.date_modified
-      ~Folder.description
       ~Folder.folder_id
       ~Folder.name
       ~Folder.owner
