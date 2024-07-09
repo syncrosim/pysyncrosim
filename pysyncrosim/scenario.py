@@ -902,7 +902,9 @@ class Scenario(object):
     def __retrieve_scenario_folder_id(self):
 
         lib_structure = self.library._Library__get_library_structure()   
-        scn_ind = lib_structure.index[lib_structure['id'] == str(self.sid)].tolist()[0]
+        scn_ind = lib_structure.index[
+            ((lib_structure['id'] == str(self.sid)) & (lib_structure["item"] == "Scenario"))
+            ].tolist()[0]
         scn_level = lib_structure.iloc[scn_ind]['level']
         folder_id = None
         for i in reversed(range(scn_ind)):

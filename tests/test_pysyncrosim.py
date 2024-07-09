@@ -1041,10 +1041,10 @@ def test_scenario_copy_dep_delete():
 def test_folder_functions():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=existing_lib_name, 
+    myLibrary = ps.library(name=test_lib_name, 
+                           overwrite=True, 
                            session=mySession)
-
-    myProject = myLibrary.projects(pid=1)
+    myProject = myLibrary.projects("Definitions")
 
     df = myLibrary.folders()
     assert df.empty is True
@@ -1085,7 +1085,8 @@ def test_folder_functions():
     assert my_nested_folder.parent_id is not None
 
     # Move scenario into a folder
-    scn_id = myProject.scenarios()["ScenarioId"][0]
+    my_scenario = myProject.scenarios(name = "test")
+    scn_id = my_scenario.sid
     myScenario = myProject.scenarios(sid=scn_id)
     assert myScenario.folder_id is None
     myScenario.folder_id = fid
@@ -1095,7 +1096,7 @@ def test_folder_functions():
     myProject2 = myLibrary.projects(name = "New Project")
     my_folder2 = myProject2.folders(folder = "test3")
     df = myLibrary.folders()
-    assert len(df["Project ID"].unique()) == 2
+    assert len(df["ProjectId"].unique()) == 2
     assert my_folder2.project_id == myProject2.pid
 
     # Test project-subsetted folder data
@@ -1104,9 +1105,9 @@ def test_folder_functions():
     assert proj1_df.empty is False
     assert proj2_df.empty is False
     assert proj1_df.equals(proj2_df) is False
-    assert proj1_df["ID"].unique().tolist() != proj2_df["ID"].unique().tolist()
-    assert proj1_df["Project ID"].unique().item() == myProject.pid
-    assert proj2_df["Project ID"].unique().item() == myProject2.pid
+    assert proj1_df["Id"].unique().tolist() != proj2_df["Id"].unique().tolist()
+    assert proj1_df["ProjectId"].unique().item() == myProject.pid
+    assert proj2_df["ProjectId"].unique().item() == myProject2.pid
 
     # Test readonly and publish attributes
     assert my_folder.readonly == "No"
