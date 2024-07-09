@@ -462,6 +462,9 @@ class Scenario(object):
         d = self.datasheets(name = datasheet, filter_column = filter_column,
                             filter_value = filter_value, show_full_paths = False)
         
+        if d.empty:
+            raise ValueError(f"Datasheet {datasheet} does not contain data.")
+        
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",
                 "--sheet=%s" % datasheet, "--csv", 
@@ -556,7 +559,7 @@ class Scenario(object):
         # Find folder with raster data - search in input, temp, and output
         if self.__env is None:
             
-            for folder in [".input", ".temp", ".output"]:
+            for folder in [".data", ".temp"]:
                 
                 if folder != ".temp":
                     lib_dir = self.__find_output_fpath(
@@ -580,7 +583,7 @@ class Scenario(object):
         else:
             e = _environment()
 
-            for folder in [".input", ".temp", ".output"]:
+            for folder in [".data", ".temp"]:
                 
                 if folder != ".temp":
                     lib_dir = self.__find_output_fpath(
@@ -1030,6 +1033,9 @@ class Scenario(object):
 
     def __add_dependencies(self, d):
 
+        if d == '':
+            return
+        
         args = ["--add", "--dependency",
                 "--lib=%s" % self.library.location,
                 "--sid=%d" % self.sid]
@@ -1046,11 +1052,6 @@ class Scenario(object):
             print(e)
     
     def __find_output_fpath(self, f_base_path, datasheet):
-                
-        # If package is not included in name, add it
-        if datasheet.startswith(self.library.package) is False:
-            if datasheet.startswith("core") is False:
-                datasheet = self.library.package + "_" + datasheet
 
         fpath = os.path.join(f_base_path, f"Scenario-{self.sid}", datasheet)
         

@@ -10,6 +10,7 @@ import tempfile
 temp_path = tempfile.TemporaryDirectory()
 session_path = "C:/gitprojects/ssimbin3"
 test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
+existing_lib_name = os.path.join("C:/gitprojects/pysyncrosim/tests", "spatial-example.ssim")
 
 def test_session_attributes():
     
@@ -780,34 +781,33 @@ def test_scenario_save_datasheet():
 def test_scenario_run_and_results():
     
     mySession = ps.Session(session_path)
-    #DEV TODO: use pre-made library
-    myLibrary = ps.library(name=test_lib_name, overwrite=True,
-                           packages=["helloworldSpatial1", "helloworldSpatial2"],
-                           forceUpdate=True, session=mySession)
-    myScenario = myLibrary.scenarios(sid=1)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession)
+    all_scns = myLibrary.scenarios()
+    num_scns = len(all_scns)
+    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    myScenario = myLibrary.scenarios(sid=scn_id)
     runcontrol = myScenario.datasheets(name="stsim_RunControl")
     runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
+    runcontrol["MinimumTimestep"] = 2000
+    runcontrol["MaximumTimestep"] = 2020
     myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test run
-    with pytest.raises(TypeError, match="jobs must be an Integer"):
-        myScenario.run(jobs="1")
-        
-    myScenario.run(jobs=2)
-    assert len(myLibrary.scenarios()) == 2 
-    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
+    myScenario.run()    
+    assert len(myLibrary.scenarios()) == num_scns + 1 
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
     # Test results
     with pytest.raises(TypeError, match="Scenario ID must be an Integer"):
         myScenario.results(sid="5")
         
     with pytest.raises(ValueError, match="not a Results Scenario"):
-        myScenario.results(sid=1)
+        myScenario.results(sid=scn_id)
         
     assert isinstance(myScenario.results(), pd.DataFrame)
     assert (myScenario.results()["IsResult"] == "Yes").all()
-    res_sid = myLibrary.scenarios().iloc[1]["ScenarioId"].item()
+    res_sid = myLibrary.scenarios().iloc[-1]["ScenarioId"].item()
     assert isinstance(myScenario.results(sid=res_sid), ps.Scenario) 
     
     # Test run_log
@@ -820,86 +820,82 @@ def test_scenario_run_and_results():
         myResultsScenario.datasheet_rasters(datasheet=1, column="test")
         
     with pytest.raises(TypeError, match="column must be a String"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column=1)
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column=1)
         
     with pytest.raises(TypeError, match="iteration must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
                                            iteration="test")
         
     with pytest.raises(TypeError, match="timestep must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
                                            timestep="test")
         
-    with pytest.raises(ValueError,
-                       match="Scenario must be a Results Scenario"):
-        myScenario.datasheet_rasters(datasheet="test", column="test")
-        
     with pytest.raises(RuntimeError,
-                       match="The data sheet does not exist"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test")
+                       match="The datasheet does not belong to this library: stsim_test"):
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test")
         
     with pytest.raises(ValueError,
                        match="No raster columns found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="OutputDatasheet")
+        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputStratum")
     
     with pytest.raises(
             ValueError,
             match="Column test not found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
                                            column="test")
         
     with pytest.raises(
             ValueError, 
             match="Specified iteration above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          iteration=3) 
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          iteration=1000) 
        
     with pytest.raises(ValueError, match="iteration cannot be below 1"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
                                           iteration=0)
        
     with pytest.raises(ValueError,
                        match="Some iteration values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          iteration=[1, 2, 3])  
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          iteration=[1, 2, 1000])  
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          timestep=3) 
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          timestep=9999) 
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep below range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
                                           timestep=0) 
        
     with pytest.raises(ValueError,
                        match="Some timestep values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          timestep=[1, 2, 3])  
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          timestep=[1999, 2002, 2003])  
        
     with pytest.raises(
             ValueError, 
             match = "Must specify a filter_value to filter the filter_column"):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
-            filter_column="IntermediateDatasheetID") 
+            filter_column="OutputSpatialStateId") 
         
     with pytest.raises(
             ValueError, 
             match = "filter column test not in Datasheet"
             ):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
             filter_column="test",
             filter_value="test") 
@@ -908,32 +904,32 @@ def test_scenario_run_and_results():
             RuntimeError, 
             match="Cannot find a value for: test"):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
-            filter_column="IntermediateDatasheetID",
+            filter_column="OutputSpatialStateId",
             filter_value="test") 
       
     raster1 = myResultsScenario.datasheet_rasters(
-        datasheet="IntermediateDatasheet", column="OutputRasterFile",
-        iteration=1, timestep=1)
+        datasheet="stsim_OutputSpatialState", column="Filename",
+        iteration=1, timestep=2001)
     assert isinstance(raster1, ps.Raster)
     
     raster2 = myResultsScenario.datasheet_rasters(
-        datasheet="IntermediateDatasheet", column="OutputRasterFile")
-    assert len(raster2) == 4
+        datasheet="stsim_OutputSpatialState", column="Filename")
+    assert len(raster2) > 1
     assert all([isinstance(x, ps.Raster) for x in raster2])
     
     raster3 = myResultsScenario.datasheet_rasters(
-        datasheet = "IntermediateDatasheet", 
+        datasheet = "stsim_OutputSpatialState", 
         column = None,
-        filter_column="IntermediateDatasheetID",
-        filter_value=2)
-    assert isinstance(raster3, ps.Raster)
+        filter_column="Timestep",
+        filter_value=2001)
+    assert isinstance(raster3[0], ps.Raster)
     
     # Test raster class attributes
     assert os.path.isfile(raster1.source)
     assert isinstance(raster1.name, str)
-    assert raster1.name.endswith(".it1.ts1")
+    assert raster1.name.endswith(".it1.ts2001")
     assert isinstance(raster1.dimensions, dict)
     assert all([
         x in raster1.dimensions.keys() for x in [
@@ -949,15 +945,13 @@ def test_scenario_run_and_results():
 def test_scenario_copy_dep_delete():
     
     mySession = ps.Session(session_path)
-    # DEV TODO: use pre-made library
-    myLibrary = ps.library(name=test_lib_name,
-                           package=["helloworldSpatial1", "helloworldSpatial2"],
-                           overwrite=True,
-                           forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession)
     myScenario = myLibrary.scenarios(name="My Scenario")
-    runcontrol = myScenario.datasheets(name="stsim_RunControl")
-    runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
+    runcontrol = pd.DataFrame({
+        "MinimumTimestep": [2000],
+        "MaximumTimestep": [2015], 
+        "MaximumIteration": [5]})
     myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test copy
@@ -968,55 +962,49 @@ def test_scenario_copy_dep_delete():
     assert myNewScn.name == "My Scenario - Copy"
     assert myNewScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewScn.datasheets(
-        name="stsim_RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 5
     
     myNewerScn = myScenario.copy(name="My Scenario 2")
     assert myNewerScn.name == "My Scenario 2"
     assert myNewerScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewerScn.datasheets(
-        name="stsim_RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 5
     
     # Test dependencies
     with pytest.raises(
             TypeError,
             match="dependency must be a Scenario, String, Integer, or List"):
-        myNewScn.dependencies(dependency=1.5)
-        
-    with pytest.raises(
-            TypeError,
-            match="remove must be a Logical"):
-        myNewScn.dependencies(dependency=myNewerScn.sid, remove="True")
+        myNewScn.dependencies = 1.5
     
-    assert myNewScn.dependencies().empty is True
-    myNewScn.dependencies(dependency=myNewerScn)
-    assert myNewScn.dependencies().empty is False
-    assert myNewScn.dependencies().Name.item() == "My Scenario 2"
+    assert myNewScn.dependencies.empty is True
+    myNewScn.dependencies = myNewerScn
+    assert myNewScn.dependencies.empty is False
+    assert myNewScn.dependencies.Name.item() == "My Scenario 2"
     
-    myNewScn.dependencies(dependency=myNewerScn.sid, remove=True, force=True)
-    assert myNewScn.dependencies().empty is True
+    myNewScn.dependencies = None
+    assert myNewScn.dependencies.empty is True
     
-    myNewScn.dependencies(dependency=myNewerScn.name)
-    assert myNewScn.dependencies().empty is False
+    myNewScn.dependencies = myNewerScn.name
+    assert myNewScn.dependencies.empty is False
 
-    myNewScn.dependencies(dependency=myNewerScn.name) # should not throw error
+    myNewScn.dependencies = myNewerScn.name # should not throw error
 
     with pytest.raises(
             ValueError,
             match="Scenario dependency My Scenario 3 does not exist"):
-        myNewScn.dependencies(dependency=[myNewerScn.name, "My Scenario 3"])
+        myNewScn.dependencies = [myNewerScn.name, "My Scenario 3"]
     
     sameNameScn = myScenario.copy(name="My Scenario 2")
     with pytest.raises(
             ValueError,
             match="dependency name not unique, use ID or Scenario"):
-        myNewScn.dependencies(dependency=sameNameScn.name)
+        myNewScn.dependencies = sameNameScn.name
 
-    myNewScn.dependencies(dependency=[myNewerScn, sameNameScn])
-    assert len(myNewScn.dependencies()) == 2
+    myNewScn.dependencies = [myNewerScn, sameNameScn]
+    assert len(myNewScn.dependencies) == 2
 
-    myNewScn.dependencies(dependency=[myNewerScn.sid, sameNameScn.sid],
-        remove=True, force=True)
-    assert myNewScn.dependencies().empty is True
+    myNewScn.dependencies = None
+    assert myNewScn.dependencies.empty is True
         
     # Test ignore_dependencies
     with pytest.raises(TypeError, match="value must be a String"):
@@ -1029,8 +1017,8 @@ def test_scenario_copy_dep_delete():
     
     assert myNewScn.ignore_dependencies() == "stsim_RunControl"
     
-    myNewScn.ignore_dependencies(value="InputDatasheet,OutputDatasheet")
-    assert myNewScn.ignore_dependencies() == "InputDatasheet,OutputDatasheet"
+    myNewScn.ignore_dependencies(value="stsim_RunControl,stsim_DeterministicTransition")
+    assert myNewScn.ignore_dependencies() == "stsim_RunControl,stsim_DeterministicTransition"
     
     # Test merge_dependencies
     with pytest.raises(TypeError, match="value must be a Logical"):
@@ -1045,15 +1033,16 @@ def test_scenario_copy_dep_delete():
     with pytest.raises(RuntimeError, match="The scenario does not exist"):
         myNewScn.delete(force=True)
         myNewScn.run()
+    
+    # Delete other scenarios
+    sameNameScn.delete(force=True)
+    myNewerScn.delete(force=True)
 
 def test_folder_functions():
 
     mySession = ps.Session(session_path)
-    # DEV TODO: use pre-made library
-    myLibrary = ps.library(name = "stsimLibrary",
-                        package = "stsim",
-                        overwrite=True,
-                        forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession)
 
     myProject = myLibrary.projects(pid=1)
 

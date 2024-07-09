@@ -279,6 +279,9 @@ class Library(object):
         installed_pkgs = self.session.packages(installed = True)
         library_pkgs = self.packages
 
+        if installed_pkgs.empty:
+            raise AttributeError("No packages are installed in this Library")
+
         if not isinstance(packages, list):
             packages = [packages]
 
@@ -288,8 +291,7 @@ class Library(object):
             installed_pkgs = installed_pkgs[installed_pkgs.Name.isin(packages)]
             versions = []
             for pkg in packages:
-                versions.append(installed_pkgs[installed_pkgs.Name == pkg].Version.item())
-
+                versions.append(installed_pkgs[installed_pkgs.Name == pkg].Version.tolist()[-1])
 
         for pkg, ver in zip(packages, versions):
 
@@ -307,8 +309,20 @@ class Library(object):
             pkg_name = pkg_row.Name.item()
             pkg_ver = pkg_row.Version.item()
 
+            pkg_already_added = library_pkgs[library_pkgs.Name == pkg_name]
+            if not pkg_already_added.empty:
+                if pkg_already_added[pkg_already_added.Version == pkg_ver].empty:
+                    # Remove old package version in use by library
+                    args = ["--remove", "--package", "--lib=%s" % self.location,
+                            "--pkg=%s" % pkg_name]
+                    self.session._Session__call_console(args)
+                else:
+                    print(f"{pkg_name} v{pkg_ver} has already been added to the Library.")
+                    return
+
             args = ["--add", "--package", "--lib=%s" % self.location,
                     "--pkg=%s" % pkg_name, "--version=%s" % pkg_ver]
+
             self.session._Session__call_console(args)
             print(f"Package <{pkg} v{ver}> added")
 
