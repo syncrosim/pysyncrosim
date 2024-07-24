@@ -330,16 +330,17 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                return "C:/Program Files/SyncroSim"
-            else:
-                return e.program_directory.item()
-        else:
-            self.__location = os.path.expanduser(location)
+                location = "C:/Program Files/SyncroSim3"
 
-        if not os.path.isdir(self.__location):
+            else:
+                location = e.program_directory.item()
+        else:
+            location = os.path.expanduser(location)
+
+        if not os.path.isdir(location):
             raise ValueError("The location is not valid")
         else :
-            return self.__location
+            return location
                         
     def __init_console(self, console=None, pkgman=None):
         
