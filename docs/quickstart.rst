@@ -55,6 +55,7 @@ Then, in a new Python script, import ``pysyncrosim`` and the Python DataFrame ma
 
 .. code-block:: pycon
 
+    >>> from osgeo import gdal
     >>> import pysyncrosim as ps
     >>> import pandas as pd
     
@@ -68,7 +69,7 @@ The next step in setting up the Python environment for the ``pysyncrosim`` workf
    >>> my_session = ps.Session()
    
    # Load Session using path to SyncroSim Installation
-   >>> my_session = ps.Session(location = "path/to/install_folder")
+   >>> my_session = ps.Session(location = "path\\to\\install_folder")
    
 You can check to see which version of SyncroSim your Python script is connected to by running the :meth:`~pysyncrosim.session.Session.version()` method.
  
@@ -76,7 +77,7 @@ You can check to see which version of SyncroSim your Python script is connected 
    
    # Check SyncroSim version
    >>> my_session.version() 
-   'Version is: 2.5.7'
+   'Version is: 3.0.4'
    
 Installing SyncroSim Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,30 +102,13 @@ Currently we do not have any packages installed! To see which packages are avail
     1       burnP3PlusCell2Fire
     2      burnP3PlusPrometheus
     3                 demosales
-    4                  designer
-    5                     dgsim
-    6                       epi
-    7        epiModelVocVaccine
-    8                helloworld
-    9           helloworldConda
-    10       helloworldPipeline
-    11        helloworldSpatial
-    12      helloworldSpatialPy
-    13           helloworldTime
-    14         helloworldTimePy
-    15    helloworldUncertainty
-    16        landfirevegmodels
-    17                    lucas
-    18                  netlogo
-    19                omniscape
-    20          omniscapeImpact
-    21                stconnect
-    22                    stsim
-    23          stsimBurnP3Plus
-    24             stsimcbmcfs3
-    25              stsimecodep
-    26                  stsimsf
-    27                    wisdm
+    4                     dgsim
+    5                helloworld
+    6          helloworldTimePy
+    7                 omniscape
+    8                     stsim
+    9               stsimecodep
+    10                    wisdm
     Name: Name, dtype: object
     
 Install ``helloworldTimePy`` using the :meth:`~pysyncrosim.session.Session.add_packages()` method from the Session class. This method takes a Package name as input and then queries the SyncroSim Package server for the specified Package.
@@ -132,7 +116,7 @@ Install ``helloworldTimePy`` using the :meth:`~pysyncrosim.session.Session.add_p
 .. code-block:: pycon
            
    # Install helloworldTimePy Package
-   >>> my_session.add_packages("helloworldTimePy")
+   >>> my_session.install_packages("helloworldTimePy")
    ['helloworldTimePy'] installed successfully
    
 To install a package from a *.ssimpkg* file on your local computer rather than installing directly from the server, you can use the Session :meth:`~pysyncrosim.session.Session.add_packages()` method with the ``packages`` argument set to the filepath to the local Package.
@@ -140,7 +124,7 @@ To install a package from a *.ssimpkg* file on your local computer rather than i
 .. code-block:: pycon
 
     # Install helloworldTimePy Package locally
-    >>> my_session.add_packages("path/to/helloworldTimePy.ssimpkg")
+    >>> my_session.install_packages("path/to/helloworldTimePy.ssimpkg")
 
 Now ``helloworldTimePy`` should be included in the Package list.
 
@@ -153,12 +137,9 @@ Now ``helloworldTimePy`` should be included in the Package list.
 You can also update or remove a SyncroSim Package from your Session using the :meth:`~pysyncrosim.session.Session.update_packages()` method or the :meth:`~pysyncrosim.session.Session.remove_packages()` method.
 
 .. code-block:: pycon
-
-   # Update installed packages
-   >>> my_session.update_packages("myPackage")
    
-   # Remove installed packages 
-   >>> my_session.remove_packages("myPackage")
+   # Uninstall installed packages 
+   >>> my_session.uninstall_packages("myPackage")
    
 Create a Modeling Workflow
 --------------------------
@@ -185,24 +166,22 @@ A SyncroSim `Library`_ is a file (with *.ssim* extension) that stores all of you
     # Create a new Library
     >>> my_library = ps.library(name = "helloworldLibrary",
     >>>                        session = my_session, 
-    >>>                        package = "helloworldTimePy")
+    >>>                        packages = "helloworldTimePy")
+    Package <helloworldTimePy v2.0.0> added
     
     # Check Library information
     >>> my_library.info   
-                        Property                                              Value  
-    0                      Name:                                  helloworldLibrary
-    1                     Owner:                                                NaN
-    2             Last Modified:                              2024-02-09 at 9:34 AM  
-    3                      Size:                                204 KB  (208,896 B)
-    4                 Read Only:                                                 No
-    5              Package Name:                                   helloworldTimePy
-    6       Package Description:  Example demonstrating how to use timesteps wit...
-    7   Current Package Version:                                              1.0.0
-    8   Minimum Package Version:                                              1.0.0
-    9      External input files:                       helloworldLibrary.ssim.input
-    10    External output files:                      helloworldLibrary.ssim.output
-    11          Temporary files:                        helloworldLibrary.ssim.temp
-    12             Backup files:                      helloworldLibrary.ssim.backup
+           Property                                              Value
+0             Name:                                  helloworldLibrary
+1            Owner:                                                NaN
+2        Read Only:                                                 No
+3    Last Modified:                              2024-08-28 at 4:17 PM
+4             Size:                                216 KB  (221,184 B)
+5       Data files:                        helloworldLibrary.ssim.data
+6    Publish files:                     helloworldLibrary.ssim.publish
+7  Temporary files:                        helloworldLibrary.ssim.temp
+8     Backup files:                      helloworldLibrary.ssim.backup
+9        Use Conda:                                                 No
     
 We can also use the :func:`~pysyncrosim.helper.library()` function to open an existing Library. For instance, now that we have created a Library called "helloworldLibrary.ssim", we would simply specify that we want to open this Library using the ``name`` argument.    
 
@@ -226,12 +205,13 @@ Each SyncroSim Library contains one or more SyncroSim `Projects`_, each represen
     
     # Check Project information
     >>> my_project.info
-               Property                   Value
-    0         ProjectID                       1
-    1              Name             Definitions
-    2             Owner                     NaN
-    3  DateLastModified   2024-02-09 at 9:37 AM
-    4        IsReadOnly                      No
+               Property                  Value
+    0         ProjectId                      1
+    1              Name            Definitions
+    2             Owner                    NaN
+    3        IsReadOnly                     No
+    4          IsActive                    Yes
+    5  DateLastModified  2024-08-28 at 4:17 PM
     
 Create a New Scenario
 ^^^^^^^^^^^^^^^^^^^^^
@@ -253,18 +233,17 @@ Each Scenario can be identified by its unique ``scenario_id``. The :meth:`~pysyn
     
     # Check Scenario information
     >>> my_scenario.info
-                  Property                  Value
-    0           ScenarioID                      1
-    1            ProjectID                      1
-    2                 Name      My First Scenario
-    3             IsResult                     No
-    4             ParentID                    NaN
-    5                Owner                    NaN
-    6     DateLastModified  2024-02-09 at 9:38 AM
-    7           IsReadOnly                     No
-    8    MergeDependencies                     No
-    9   IgnoreDependencies                    NaN
-    10         AutoGenTags                    NaN
+                 Property                  Value
+    0          ScenarioId                      1
+    1           ProjectId                      1
+    2            ParentId                    NaN
+    3                Name      My First Scenario
+    4               Owner                    NaN
+    5   MergeDependencies                     No
+    6  IgnoreDependencies                    NaN
+    7            IsResult                     No
+    8          IsReadOnly                     No
+    9    DateLastModified  2024-08-28 at 4:17 PM
     
 View Model Inputs
 ^^^^^^^^^^^^^^^^^
@@ -279,18 +258,16 @@ Each SyncroSim Library contains multiple SyncroSim `Datasheets`_. A SyncroSim Da
 
     # View a summary of all Datasheets associated with the Scenario
     >>> my_scenario.datasheets()
-                Package                              Name                Display Name
-    0              core              core_AutoGenTagValue  Auto Generation Tag Values
-    1              core                     core_Pipeline                    Pipeline
-    2         corestime       corestime_DistributionValue               Distributions
-    3         corestime                corestime_External                    External
-    4         corestime   corestime_ExternalVariableValue          External Variables
-    5         corestime         corestime_Multiprocessing     Spatial Multiprocessing
-    6  helloworldTimePy   helloworldTimePy_InputDatasheet              InputDatasheet
-    7  helloworldTimePy  helloworldTimePy_OutputDatasheet             OutputDatasheet
-    8  helloworldTimePy       helloworldTimePy_RunControl                 Run Control
+                Package                              Name              DisplayName
+    0              core            core_DistributionValue            Distributions
+    1              core        core_ExternalVariableValue       External Variables
+    2              core                     core_Pipeline                 Pipeline
+    3              core       core_SpatialMultiprocessing  Spatial Multiprocessing
+    4  helloworldTimePy   helloworldTimePy_InputDatasheet                   Inputs
+    5  helloworldTimePy  helloworldTimePy_OutputDatasheet          OutputDatasheet
+    6  helloworldTimePy       helloworldTimePy_RunControl              Run Control
     
-Above, we can see that some Datasheets belong to the ``core`` or ``corestime`` Packages. These are Datasheets that come bundled with the SyncroSim software and are not specific to the ``helloworldTimePy`` Package.
+Above, we can see that some Datasheets belong to the ``core`` Packages. These are Datasheets that come bundled with the SyncroSim software and are not specific to the ``helloworldTimePy`` Package.
 
 If we want to see more information about each Datasheet, such as the scope of the Datasheet or if it only accepts a single row of data, we can set the ``optional`` argument to ``True``.    
 
@@ -298,29 +275,25 @@ If we want to see more information about each Datasheet, such as the scope of th
     
     # View detailed summary of all Datasheets associated with a Scenario
     >>> my_scenario.datasheets(optional=True)
-        Scope           Package                              Name  \
-    0  Scenario              core              core_AutoGenTagValue
-    1  Scenario              core                     core_Pipeline
-    2  Scenario         corestime       corestime_DistributionValue
-    3  Scenario         corestime                corestime_External
-    4  Scenario         corestime   corestime_ExternalVariableValue
-    5  Scenario         corestime         corestime_Multiprocessing
-    6  Scenario  helloworldTimePy   helloworldTimePy_InputDatasheet
-    7  Scenario  helloworldTimePy  helloworldTimePy_OutputDatasheet
-    8  Scenario  helloworldTimePy       helloworldTimePy_RunControl  
+          Scope           Package                              Name  \
+    0  Scenario              core            core_DistributionValue
+    1  Scenario              core        core_ExternalVariableValue
+    2  Scenario              core                     core_Pipeline
+    3  Scenario              core       core_SpatialMultiprocessing
+    4  Scenario  helloworldTimePy   helloworldTimePy_InputDatasheet
+    5  Scenario  helloworldTimePy  helloworldTimePy_OutputDatasheet
+    6  Scenario  helloworldTimePy       helloworldTimePy_RunControl
+
+                   DisplayName IsSingle  DisplayMember   Data
+    0            Distributions       No            NaN  False
+    1       External Variables       No            NaN  False
+    2                 Pipeline       No            NaN  False
+    3  Spatial Multiprocessing      Yes            NaN  False
+    4                   Inputs      Yes            NaN  False
+    5          OutputDatasheet       No            NaN  False
+    6              Run Control      Yes            NaN  False
     
-                    Display Name Is Single Is Output  Display Member   Data
-    0  Auto Generation Tag Values        No        No             NaN  False
-    1                    Pipeline        No        No             NaN  False
-    2               Distributions        No        No             NaN  False
-    3                    External       Yes        No             NaN  False
-    4          External Variables        No        No             NaN  False
-    5     Spatial Multiprocessing       Yes        No             NaN  False
-    6              InputDatasheet       Yes        No             NaN  False
-    7             OutputDatasheet        No        No             NaN  False
-    8                 Run Control       Yes        No             NaN  False
-    
-From this output we can see the the ``RunControl`` Datasheet and ``InputDatasheet`` only accept a single row of data (i.e. ``Is Single = Yes``). This is something to consider when we configure our model inputs.
+From this output we can see that the ``Run Control`` Datasheet and ``Inputs`` only accept a single row of data (i.e. ``Is Single = Yes``). This is something to consider when we configure our model inputs.
 
 To view a specific Datasheet rather than just a DataFrame of available Datasheets, set the ``name`` parameter in the :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method to the name of the Datasheet you want to view. The general syntax of the name is: "<name of package>_<name of Datasheet>". From the list of Datasheets above, we can see that there are three Datasheets specific to the ``helloworldTimePy`` package.
 
@@ -336,7 +309,64 @@ Here, we are viewing the contents of a SyncroSim Datasheet as a Python ``pandas`
 
 Configure Model Inputs
 ^^^^^^^^^^^^^^^^^^^^^^
-Currently our input Scenario Datasheets are empty! We need to add some values to our input Datasheet (``InputDatasheet``) and run control Datasheet (``RunControl``) so we can run our model.
+Currently our input Scenario Datasheets are empty! We need to add some values to our pipeline Datasheet (``Pipeline``), input Datasheet (``InputDatasheet``), and run control Datasheet (``RunControl``) so we can run our model.
+
+
+
+
+First, assign the contents of the pipeline Datasheet to a new ``pandas`` Dataframe using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method, then check the columns that need input values.
+
+.. code-block:: pycon
+    # Load core_Pipeline Datasheet to a new pandas DataFrame
+    >>> core_pipeline_datasheet = my_scenario.datasheets(name = "core_Pipeline")
+
+    # Check the columns of the pipeline Datasheet
+    >>> core_pipeline_datasheet.info()
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 0 entries
+    Data columns (total 2 columns):
+     #   Column       Non-Null Count  Dtype
+    ---  ------       --------------  -----
+     0   StageNameId  0 non-null      object
+     1   RunOrder     0 non-null      object
+    dtypes: object(2)
+    memory usage: 132.0+ bytes
+
+The pipeline Datasheet requires two values:
+
+* *StageNameId* : the ID of the pipeline stage.
+* *RunOrder* : the numerical order in which stages will be run.
+
+Now we will update the pipeline DataFrame. This can be done in many ways, such as creating a new ``pandas`` DataFrame with matching column names, or concatenating another DataFrame to ``core_pipeline_datasheet``.
+
+For this example, we will concatenate values to ``core_pipeline_datasheet`` using another ``pandas`` DataFrame and the ``pandas`` ``concat()`` function.
+
+.. code-block:: pycon
+
+    # Create pipeline DataFrame
+    >>> myPipeline = pd.DataFrame({"StageNameId":["8"], "RunOrder": [1]})
+
+    # Append pipeline data to core_pipeline_datasheet
+    >>> core_pipeline_datasheet = pd.concat([core_pipeline_datasheet, myPipeline],
+                                    ignore_index=True)
+
+    # Check values
+    >>> core_pipeline_datasheet
+        StageNameId RunOrder
+    0           8        1
+
+Saving Modifications to Datasheets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Now that we have a complete DataFrame of pipeline stages, we will save this DataFrame to a SyncroSim Datasheet using the Scenario :meth:`~pysyncrosim.scenario.Scenario.save_datasheet()` method. The :meth:`~pysyncrosim.scenario.Scenario.save_datasheet()` method exists for the Library, Project, and Scenario classes, so the class method chosen depends on the scope of the Datasheet.
+
+.. code-block:: pycon
+
+    >>> my_scenario.save_datasheet(name = "core_Pipeline",
+    >>>                            data = core_pipeline_datasheet)
+    core_Pipeline saved successfully
+
+
+
 
 First, assign the contents of the input Datasheet to a new ``pandas`` DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method, then check the columns that need input values.
 
@@ -407,13 +437,15 @@ There is one other Datasheet that we need to configure for our model to run. The
     # Check the columns of the RunControl DataFrame
     >>> run_settings.info()
     <class 'pandas.core.frame.DataFrame'>
-    Index: 0 entries
-    Data columns (total 2 columns):
-     #   Column           Non-Null Count  Dtype 
-    ---  ------           --------------  ----- 
-     0   MinimumTimestep  0 non-null      object
-     1   MaximumTimestep  0 non-null      object
-    dtypes: object(2)
+    RangeIndex: 0 entries
+    Data columns (total 4 columns):
+    #   Column            Non-Null Count  Dtype
+    ---  ------            --------------  -----
+    0   MinimumTimestep   0 non-null      object
+    1   MaximumTimestep   0 non-null      object
+    2   MinimumIteration  0 non-null      object
+    3   MaximumIteration  0 non-null      object
+    dtypes: object(4)
     memory usage: 132.0+ bytes
     
     # Create RunControl DataFrame
@@ -424,8 +456,8 @@ There is one other Datasheet that we need to configure for our model to run. The
     
     # Check values
     >>> run_settings
-      MinimumTimestep MaximumTimestep
-    0               1              10
+      MinimumTimestep MaximumTimestep MinimumIteration MaximumIteration
+    0               1              10              NaN              NaN
     
     # Save RunControl pandas DataFrame to a SyncroSim Datasheet
     >>> my_scenario.save_datasheet(name = "helloworldTimePy_RunControl",
@@ -504,12 +536,12 @@ The next step is to view the output Datasheets added to the Result Scenario when
     
     # View results table
     >>> my_output_df.head()
-       Iteration  Timestep     y
-    0        NaN         1  13.0
-    1        NaN         2  16.0
-    2        NaN         3  19.0
-    3        NaN         4  22.0
-    4        NaN         5  25.0
+       Timestep   y
+    0         1  13
+    1         2  16
+    2         3  19
+    3         4  22
+    4         5  25
     
 Working with Multiple Scenarios
 -------------------------------
@@ -519,18 +551,17 @@ You may want to test multiple alternative Scenarios that have slightly different
 
     # Check which Scenarios you currently have in your Library
     >>> my_library.scenarios().Name
-    0                                My First Scenario
-    1    My First Scenario ([1] @ 09-Feb-2024 10:44 AM)
-    Name: Name, dtype: object
+    0                                 My First Scenario
+    1     My First Scenario ([1] @ 28-Aug-2024 4:17 PM)
     
     # Create a new Scenario as a copy of an existing Scenario
     >>> my_new_scenario = my_scenario.copy("My Second Scenario")
     
     # Make sure this new Scenario has been added to the Library
     >>> my_library.scenarios().Name
-    0                                My First Scenario
-    1    My First Scenario ([1] @ 09-Feb-2024 10:44 AM)
-    2                               My Second Scenario
+    0                                 My First Scenario
+    1     My First Scenario ([1] @ 28-Aug-2024 4:17 PM)
+    2                                My Second Scenario
     Name: Name, dtype: object
     
 To edit the new Scenario, let's first load the contents of the input Datasheet and assign it to a new ``pandas`` DataFrame using the Scenario :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method. We will set the ``empty`` argument to ``True`` so that instead of getting the values from the existing Scenario, we can start with an empty DataFrame again.
@@ -544,10 +575,10 @@ To edit the new Scenario, let's first load the contents of the input Datasheet a
     # Check that we have an empty DataFrame
     >>> new_input_df.info()
     <class 'pandas.core.frame.DataFrame'>
-    Index: 0 entries
+    RangeIndex: 0 entries
     Data columns (total 2 columns):
-     #   Column  Non-Null Count  Dtype 
-    ---  ------  --------------  ----- 
+     #   Column  Non-Null Count  Dtype
+    ---  ------  --------------  -----
      0   m       0 non-null      object
      1   b       0 non-null      object
     dtypes: object(2)
@@ -605,17 +636,17 @@ From running many Scenario at once we get a list of Result Scenarios. To view th
    # View results of second Scenario
    >>> my_results_scenario_all[1].datasheets(
    >>>      name = "helloworldTimePy_OutputDatasheet") 
-      Iteration  Timestep     y
-   0        NaN         1  14.0
-   1        NaN         2  18.0
-   2        NaN         3  22.0
-   3        NaN         4  26.0
-   4        NaN         5  30.0
-   5        NaN         6  34.0
-   6        NaN         7  38.0
-   7        NaN         8  42.0
-   8        NaN         9  46.0
-   9        NaN        10  50.0
+       Timestep   y
+    0         1  14
+    1         2  18
+    2         3  22
+    3         4  26
+    4         5  30
+    5         6  34
+    6         7  38
+    7         8  42
+    8         9  46
+    9        10  50
    
 Identifying the Parent Scenario of a Results Scenario
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -642,44 +673,41 @@ Retrieve information about your Library, Project, or Scenario using the :attr:`~
 
     # Retrieve Library information
     >>> my_library.info
-                        Property                                              Value  
-    0                      Name:                                  helloworldLibrary
-    1                     Owner:                                                NaN
-    2             Last Modified:                              2024-02-09 at 9:34 AM  
-    3                      Size:                                204 KB  (208,896 B)
-    4                 Read Only:                                                 No
-    5              Package Name:                                   helloworldTimePy
-    6       Package Description:  Example demonstrating how to use timesteps wit...
-    7   Current Package Version:                                              1.0.0
-    8   Minimum Package Version:                                              1.0.0
-    9      External input files:                       helloworldLibrary.ssim.input
-    10    External output files:                      helloworldLibrary.ssim.output
-    11          Temporary files:                        helloworldLibrary.ssim.temp
-    12             Backup files:                      helloworldLibrary.ssim.backup
+               Property                                              Value
+    0             Name:                                  helloworldLibrary
+    1            Owner:                                                NaN
+    2        Read Only:                                                 No
+    3    Last Modified:                              2024-08-28 at 4:17 PM
+    4             Size:                                216 KB  (221,184 B)
+    5       Data files:                        helloworldLibrary.ssim.data
+    6    Publish files:                     helloworldLibrary.ssim.publish
+    7  Temporary files:                        helloworldLibrary.ssim.temp
+    8     Backup files:                      helloworldLibrary.ssim.backup
+    9        Use Conda:                                                 No
         
     # Retrieve Project information
     >>> my_project.info
-               Property                   Value
-    0         ProjectID                       1
-    1              Name             Definitions
-    2             Owner                     NaN
-    3  DateLastModified   2024-02-09 at 9:37 AM
-    4        IsReadOnly                      No
+               Property                  Value
+    0         ProjectId                      1
+    1              Name            Definitions
+    2             Owner                    NaN
+    3        IsReadOnly                     No
+    4          IsActive                    Yes
+    5  DateLastModified  2024-08-28 at 4:17 PM
     
     # Retrieve Scenario information
     >>> my_scenario.info
-                  Property                  Value
-    0           ScenarioID                      1
-    1            ProjectID                      1
-    2                 Name      My First Scenario
-    3             IsResult                     No
-    4             ParentID                    NaN
-    5                Owner                    NaN
-    6     DateLastModified  2024-02-09 at 9:38 AM
-    7           IsReadOnly                     No
-    8    MergeDependencies                     No
-    9   IgnoreDependencies                    NaN
-    10         AutoGenTags                    NaN
+                 Property                  Value
+    0          ScenarioId                      1
+    1           ProjectId                      1
+    2            ParentId                    NaN
+    3                Name      My First Scenario
+    4               Owner                    NaN
+    5   MergeDependencies                     No
+    6  IgnoreDependencies                    NaN
+    7            IsResult                     No
+    8          IsReadOnly                     No
+    9    DateLastModified  2024-08-28 at 4:17 PM
     
 The following attributes can also be used to get useful information about a Library, Project, or Scenario instance:
 
@@ -702,19 +730,18 @@ Once you have finished running your models, you may want to backup the inputs an
 
     # Find all Library-scoped Datasheets
     >>> my_library.datasheets()
-          Package                       Name              Display Name
-    0        core                core_Backup                    Backup
-    1        core           core_CondaConfig       Conda Configuration
-    2        core            core_LNGPackage  Last Known Good Packages
-    3        core       core_Multiprocessing           Multiprocessing
-    4        core               core_Options                   Options
-    5        core  core_ProcessorGroupOption   Processor Group Options
-    6        core   core_ProcessorGroupValue    Processor Group Values
-    7        core              core_PyConfig      Python Configuration
-    8        core               core_RConfig           R Configuration
-    9        core              core_Settings                  Settings
-    10       core             core_SysFolder                   Folders
-    11  corestime          corestime_Options           Spatial Options
+       Package                       Name              DisplayName
+    0     core                core_Backup                   Backup
+    1     core              core_JlConfig                    Julia
+    2     core       core_Multiprocessing          Multiprocessing
+    3     core                core_Option                  Options
+    4     core  core_ProcessorGroupOption  Processor Group Options
+    5     core   core_ProcessorGroupValue   Processor Group Values
+    6     core              core_PyConfig                   Python
+    7     core               core_RConfig                        R
+    8     core               core_Setting                 Settings
+    9     core         core_SpatialOption          Spatial Options
+    10    core             core_SysFolder                  Folders
     
     # Get the current values for the Library's Backup Datasheet
     >>> my_df = my_library.datasheets(name = "core_Backup")
