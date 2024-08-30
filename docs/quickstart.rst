@@ -4,7 +4,7 @@ Quickstart
 
 	.. _SyncroSim software framework: https://syncrosim.com
 	
-To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosim`_. You will also need to install the `helloworldTimePy`_ SyncroSim Package.
+To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosim`_. You will also need to install the `helloworldTimePy`_ SyncroSim package.
 
 	.. _install SyncroSim: https://syncrosim.com/download/
 	.. _install pysyncrosim: https://pysyncrosim.readthedocs.io/en/latest/install.html
@@ -12,7 +12,7 @@ To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosi
 
 Overview of SyncroSim
 ---------------------
-`SyncroSim`_ is a software platform that helps you turn your data into forecasts. At the core of SyncroSim is an engine that automatically structures your existing data, regardless of its original format. SyncroSim transforms this structured data into forecasts by running it through a Pipeline of calculations (i.e. a suite of models). Finally, SyncroSim provides a rich interface to interact with your data and models, allowing you to explore and track the consequences of alternative “what-if” forecasting scenarios. Within this software framework is the ability to use and create SyncroSim packages.
+`SyncroSim`_ is a software platform that helps you turn your data into forecasts. At the core of SyncroSim is an engine that automatically structures your existing data, regardless of its original format. SyncroSim transforms this structured data into forecasts by running it through a pipeline of calculations (i.e. a suite of models). Finally, SyncroSim provides a rich interface to interact with your data and models, allowing you to explore and track the consequences of alternative “what-if” forecasting scenarios. Within this software framework is the ability to use and create SyncroSim packages.
 
 	.. _SyncroSim: https://syncrosim.com
 
@@ -26,7 +26,7 @@ Overview of ``pysyncrosim``
 
 ``pysyncrosim`` requires SyncroSim 2.3.10 or higher.
 
-SyncroSim Package: `helloworldTimePy`
+SyncroSim package: `helloworldTimePy`
 -----------------------------------
 `helloworldTimePy`_ was designed to be a simple package to show off some key functionalities of SyncroSim, including the ability to add timesteps to SyncroSim modeling workflows.
 
@@ -61,14 +61,14 @@ Then, in a new Python script, import ``pysyncrosim`` and the Python DataFrame ma
     
 Connecting Python to SyncroSim 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The next step in setting up the Python environment for the ``pysyncrosim`` workflow is to create a SyncroSim Session instance in Python that provides the connection to your installed copy of the SyncroSim software. A new Session is created using the :class:`~pysyncrosim.session.Session()` class. The Session can be initialized with a path to the folder on your computer where SyncroSim has been installed. If no arguments are specified when the Session class is initialized, then the default install folder is used (Windows only).
+The next step in setting up the Python environment for the ``pysyncrosim`` workflow is to create a SyncroSim session instance in Python that provides the connection to your installed copy of the SyncroSim software. A new session is created using the :class:`~pysyncrosim.session.Session()` class. The session can be initialized with a path to the folder on your computer where SyncroSim has been installed. If no arguments are specified when the session class is initialized, then the default install folder is used (Windows only).
 
 .. code-block:: pycon
 
-   # Load Session
+   # Load session
    >>> my_session = ps.Session()
    
-   # Load Session using path to SyncroSim Installation
+   # Load session using path to SyncroSim Installation
    >>> my_session = ps.Session(location = "path\\to\\install_folder")
    
 You can check to see which version of SyncroSim your Python script is connected to by running the :meth:`~pysyncrosim.session.Session.version()` method.
@@ -81,11 +81,11 @@ You can check to see which version of SyncroSim your Python script is connected 
    
 Installing SyncroSim Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Finally, check if the ``helloworldTimePy`` package is already installed. Use the :meth:`~pysyncrosim.session.Session.packages()` method to first get a list of all currently installed SyncroSim Packages.
+Finally, check if the ``helloworldTimePy`` package is already installed. Use the :meth:`~pysyncrosim.session.Session.packages()` method to first get a list of all currently installed SyncroSim packages.
    
 .. code-block:: pycon
    
-    # Check which SyncroSim Packages are installed
+    # Check which SyncroSim packages are installed
     >>> my_session.packages()
     Empty DataFrame
     Columns: [index, Name, Description, Version, Extends]
@@ -95,7 +95,7 @@ Currently we do not have any packages installed! To see which packages are avail
 
 .. code-block:: pycon
 
-    # Check out available SyncroSim Packages
+    # Check out available SyncroSim packages
     >>> available_packages = my_session.packages(installed=False)
     >>> available_packages['Name']
     0                burnP3Plus
@@ -111,22 +111,22 @@ Currently we do not have any packages installed! To see which packages are avail
     10                    wisdm
     Name: Name, dtype: object
     
-Install ``helloworldTimePy`` using the :meth:`~pysyncrosim.session.Session.install_packages()` method from the Session class. This method takes a Package name as input and then queries the SyncroSim Package server for the specified Package.
+Install ``helloworldTimePy`` using the :meth:`~pysyncrosim.session.Session.install_packages()` method from the session class. This method takes a package name as input and then queries the SyncroSim package server for the specified package.
 
 .. code-block:: pycon
            
-   # Install helloworldTimePy Package
+   # Install helloworldTimePy package
    >>> my_session.install_packages("helloworldTimePy")
    ['helloworldTimePy'] installed successfully
    
-To install a package from a *.ssimpkg* file on your local computer rather than installing directly from the server, you can use the Session :meth:`~pysyncrosim.session.Session.install_packages()` method with the ``packages`` argument set to the filepath to the local Package.
+To install a package from a *.ssimpkg* file on your local computer rather than installing directly from the server, you can use the session :meth:`~pysyncrosim.session.Session.install_packages()` method with the ``packages`` argument set to the filepath to the local package.
    
 .. code-block:: pycon
 
-    # Install helloworldTimePy Package locally
+    # Install helloworldTimePy package locally
     >>> my_session.install_packages("path/to/helloworldTimePy.ssimpkg")
 
-Now ``helloworldTimePy`` should be included in the Package list.
+Now ``helloworldTimePy`` should be included in the package list.
 
 .. code-block:: pycon
 
@@ -134,7 +134,7 @@ Now ``helloworldTimePy`` should be included in the Package list.
            index                Name                                       Description Version Extends 
         0      0    helloworldTimePy Example demonstrating how to use timesteps wit...   1.0.0     NaN 
         
-You can also remove a SyncroSim Package from your Session using the :meth:`~pysyncrosim.session.Session.uninstall_packages()` method.
+You can also remove a SyncroSim package from your session using the :meth:`~pysyncrosim.session.Session.uninstall_packages()` method.
 
 .. code-block:: pycon
    
@@ -157,7 +157,7 @@ These classes are hierarchical, such that a library can contain many projects, a
 
 Create a New Library
 ^^^^^^^^^^^^^^^^^^^^
-A SyncroSim `library`_ is a file (with *.ssim* extension) that stores all of your model inputs and outputs. The format of each SyncroSim library is unique to the SyncroSim Package with which it is associated. We create a new library class instance using :func:`~pysyncrosim.helper.library()` that is connected (through your Session) to a SyncroSim library file.
+A SyncroSim `library`_ is a file (with *.ssim* extension) that stores all of your model inputs and outputs. The format of each SyncroSim library is unique to the SyncroSim package with which it is associated. We create a new library class instance using :func:`~pysyncrosim.helper.library()` that is connected (through your session) to a SyncroSim library file.
 
     .. _Library: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
@@ -183,7 +183,7 @@ A SyncroSim `library`_ is a file (with *.ssim* extension) that stores all of you
 8     Backup files:                      helloworldLibrary.ssim.backup
 9        Use Conda:                                                 No
 
-We can also create a new empty library, and add packages to it using ``my_library.install_packages("helloworldTimePy")``.
+We can also create a new empty library, and add packages to it using :meth:`~pysyncrosim.library.Library.add_packages()`.
 
 .. code-block:: pycon
 
@@ -229,7 +229,7 @@ Finally, each SyncroSim project contains one or more `scenarios`_, each represen
 
     .. _Scenarios: https://docs.syncrosim.com/how_to_guides/library_overview.html
 
-Scenarios store the specific inputs and outputs associated with each Transformer in SyncroSim. SyncroSim models can be broken down into one or more of these Transformers. Each Transformer essentially runs a series of calculations on the input data to transform it into the output data. Scenarios can contain multiple Transformers connected by a series of Pipelines, such that the output of one Transformer becomes the input of the next.
+Scenarios store the specific inputs and outputs associated with each transformer in SyncroSim. SyncroSim models can be broken down into one or more of these transformers. Each transformer essentially runs a series of calculations on the input data to transform it into the output data. Scenarios can contain multiple transformers connected by a series of pipelines, such that the output of one transformer becomes the input of the next.
 
 Each scenario can be identified by its unique ``scenario_id``. The :meth:`~pysyncrosim.library.Library.scenarios()` method of class library or class project is used to both create and retrieve scenarios. Note that if using the library class to generate a new scenario, you must specify the project to which the new scenario belongs if there is more than one project in the library.
 
@@ -257,7 +257,7 @@ Each scenario can be identified by its unique ``scenario_id``. The :meth:`~pysyn
     
 View Model Inputs
 ^^^^^^^^^^^^^^^^^
-Each SyncroSim library contains multiple SyncroSim `datasheets`_. A SyncroSim datasheet is simply a table of data stored in the library, and they represent the input and output data for Transformers. Datasheets each have a *scope*: either `library`_, `project`_, or `scenario`_. datasheets with a library scope represent data that is specified only once for the entire library, such as the location of the backup folder. Datasheets with a project scope represent data that are shared over all scenarios within a project. Datasheets with a scenario scope represent data that must be specified for each generated scenario. We can view datasheets of varying scopes using the :meth:`~pysyncrosim.library.Library.datasheets()` method from the library, project, and scenario classes.
+Each SyncroSim library contains multiple SyncroSim `datasheets`_. A SyncroSim datasheet is simply a table of data stored in the library, and they represent the input and output data for transformers. Datasheets each have a *scope*: either `library`_, `project`_, or `scenario`_. datasheets with a library scope represent data that is specified only once for the entire library, such as the location of the backup folder. Datasheets with a project scope represent data that are shared over all scenarios within a project. Datasheets with a scenario scope represent data that must be specified for each generated scenario. We can view datasheets of varying scopes using the :meth:`~pysyncrosim.library.Library.datasheets()` method from the library, project, and scenario classes.
 
     .. _Datasheets: https://docs.syncrosim.com/how_to_guides/properties_overview.html
     .. _Library: https://docs.syncrosim.com/how_to_guides/library_overview.html
@@ -277,7 +277,7 @@ Each SyncroSim library contains multiple SyncroSim `datasheets`_. A SyncroSim da
     5  helloworldTimePy  helloworldTimePy_OutputDatasheet                  Outputs
     6  helloworldTimePy       helloworldTimePy_RunControl              Run Control
     
-Above, we can see that some datasheets belong to the ``core`` Packages. These are datasheets that come by default with every SyncroSim library and are not specific to the ``helloworldTimePy`` Package.
+Above, we can see that some datasheets belong to the ``core`` packages. These are datasheets that come by default with every SyncroSim library and are not specific to the ``helloworldTimePy`` package.
 
 If we want to see more information about each datasheet, such as the scope of the datasheet or if it only accepts a single row of data, we can set the ``optional`` argument to ``True``.    
 
@@ -518,7 +518,7 @@ View Results
 
 Results Scenarios
 ^^^^^^^^^^^^^^^^^
-A Results Scenario is generated when a scenario is run, and is an exact copy of the original scenario (i.e. it contains the original scenario’s values for all input datasheets). The Results Scenario is passed to the Transformer in order to generate model output, with the results of the Transformer’s calculations then being added to the Results Scenario as output Datsheets. In this way the Results Scenario contains both the output of the run and a snapshot record of all the model inputs.
+A Results Scenario is generated when a scenario is run, and is an exact copy of the original scenario (i.e. it contains the original scenario’s values for all input datasheets). The Results Scenario is passed to the transformer in order to generate model output, with the results of the transformer’s calculations then being added to the Results Scenario as output Datsheets. In this way the Results Scenario contains both the output of the run and a snapshot record of all the model inputs.
 
 Check out the current scenarios in your library using the library :meth:`~pysyncrosim.library.Library.scenarios()` method.
     
