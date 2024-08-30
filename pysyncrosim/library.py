@@ -845,11 +845,8 @@ class Library(object):
         ds = self.datasheets(name = "core_Backup")
         args = ["--lib=%s" % self.location, "--backup"]
         
-        if ds.IncludeInput[0] == "Yes":
-            args += ["--input"]
-            
-        if ds.IncludeOutput[0] == "Yes":
-            args += ["--output"]
+        if ds.IncludeData[0] == "Yes":
+            args += ["--extdata"]
         
         self.session._Session__call_console(args)
 
