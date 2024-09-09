@@ -19,7 +19,7 @@ def runtime_data_folder(scenario, datasheet_name):
 
     """
     _validate_environment()
-    parent_folder = _environment.data_directory.item()
+    parent_folder = _environment().data_directory.item()
     
     return _create_scenario_folder(scenario, parent_folder, datasheet_name)
 
