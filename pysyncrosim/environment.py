@@ -212,7 +212,7 @@ def _create_scenario_folder(scenario, parent_folder, datasheet_name):
     f = os.path.join(parent_folder, sidpart, datasheet_name)
     
     if not os.path.isdir(f):
-        os.mkdir(f)
+        os.makedirs(f)
         
     return f
 
