@@ -1,6 +1,6 @@
 Installation
 ============
-``pysyncrosim`` can be installed using either the ``conda`` or ``pip`` package managers. ``conda`` is a general package manager capable of installing packages from many sources, but ``pip`` is strictly a Python package manager. While the installation instructions below are based on a Windows 10 operating system, similar steps can be used to install pysyncrosim for Linux.
+``pysyncrosim`` can be installed using either the ``conda`` or ``pip`` package managers. ``conda`` is a general package manager capable of installing packages from many sources, but ``pip`` is strictly a Python package manager. While the installation instructions below are based on a Windows 11 operating system, similar steps can be used to install pysyncrosim for Linux.
 
 Before beginning the installation of ``pysyncrosim``, make sure you have the latest release of `SyncroSim`_ installed.
 
@@ -9,15 +9,15 @@ Before beginning the installation of ``pysyncrosim``, make sure you have the lat
 Dependencies
 ------------
 
-``pysyncrosim`` was tested and developed using **Python 3.12** and **SyncroSim 2.4.44**. Because ``pysyncrosim`` uses ``rasterio`` for integrating spatial data, it also requires a C library dependency: ``GDAL >=2.3``.
+``pysyncrosim`` was tested and developed using **Python 3.12.4** and **SyncroSim 3.0.4**. Because ``pysyncrosim`` uses ``rasterio`` for integrating spatial data, it also requires a C library dependency: ``GDAL >=3.7``.
 
-* python=3.12
+* python=3.12.4
 
-* pandas=2.1.3
+* pandas=2.2.2
 
-* numpy=1.26.0
+* numpy=2.1.0
 
-* rasterio=1.3.9
+* rasterio=1.3.10
 
 Using conda
 -----------
@@ -36,7 +36,7 @@ Follow these steps to get started with ``conda`` and use ``conda`` to install ``
 .. code-block:: console
 
 	# Create new conda environment
-	conda create -n myenv python=3.8
+	conda create -n myenv python=3.12.4
 
 	# Activate environment
 	conda activate myenv
