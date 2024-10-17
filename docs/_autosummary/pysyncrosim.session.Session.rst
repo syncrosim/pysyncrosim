@@ -14,11 +14,10 @@
    .. autosummary::
    
       ~Session.__init__
-      ~Session.add_packages
       ~Session.install_conda
+      ~Session.install_packages
       ~Session.packages
-      ~Session.remove_packages
-      ~Session.update_packages
+      ~Session.uninstall_packages
       ~Session.version
    
    

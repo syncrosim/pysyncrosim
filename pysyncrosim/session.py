@@ -9,9 +9,7 @@ class Session(object):
     """
     A class to represent a SyncroSim Session.
     
-    """
-    __pkgs = None
-    
+    """    
     def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None):
         """
         Initializes a pysyncrosim Session instance.
@@ -49,10 +47,9 @@ class Session(object):
         self.__print_cmd = print_cmd
         self.__conda_filepath = conda_filepath
         self.__is_windows = os.name == 'nt'
-        self.__pkgs = self.packages()
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "2.4.44"
+        ssim_required_version = "3.0.9"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -160,19 +157,15 @@ class Session(object):
         
         return v.rstrip()
     
-    def packages(self, installed=True, list_templates=None):
+    def packages(self, installed=True):
         """
         Retrieves DataFrame of installed packages.
         
         Parameters
         ----------
         installed : Logical or String, optional
-            If False, then shows all available packages. If "BASE", only shows
-            installed base packages. If True, then shows installed 
-            addons in addition to base packages. The default is True.
-        list_templates : String, optional
-            The name a SyncroSim package. If provided, then will return a
-            DataFrame of all templates in the package. The default is None.
+            If False, then shows all available packages. If True, then shows
+            all installed packages. The default is True.
 
         Returns
         -------
@@ -181,21 +174,8 @@ class Session(object):
             installed base packages.
 
         """
-        if not isinstance(installed, bool) and installed != "BASE":
-            raise TypeError("installed must be Logical or 'BASE'")
-        if not isinstance(list_templates, str) and list_templates is not None:
-            raise TypeError("list_templates must be a String")
-        
-        if installed is True or installed == "BASE":
-            args = ["--list", "--basepkgs"]
-            self.__pkgs = self.__call_console(args, decode=True, csv=True)
-            self.__pkgs = pd.read_csv(io.StringIO(self.__pkgs))
-            
-        if installed is True:    
-            args = ["--list", "--addons"]
-            addons = self.__call_console(args, decode=True, csv=True)
-            addons = pd.read_csv(io.StringIO(addons))
-            self.__pkgs = pd.concat([self.__pkgs, addons]).reset_index(drop=True)
+        if not isinstance(installed, bool):
+            raise TypeError("installed must be Logical'")
             
         if installed is False:
             self.console_exe = self.__init_console(pkgman=True)
@@ -206,40 +186,35 @@ class Session(object):
             finally:
                 self.console_exe = self.__init_console(console=True)
 
-        if list_templates is not None:
-            if list_templates not in self.__pkgs["Name"].values:
-                raise ValueError(f"SyncroSim Package {list_templates} is not installed")
-            args = ["--list", "--templates", f"--package={list_templates}"]
-            templates = self.__call_console(args, decode=True, csv=True)
-            return pd.read_csv(io.StringIO(templates))
+        if installed is True:
+            args = ["--list", "--packages"]
+            pkgs = self.__call_console(args, decode=True, csv=True)
+            pkgs = pd.read_csv(io.StringIO(pkgs))
 
-        return self.__pkgs        
+        return pkgs       
     
-    def add_packages(self, packages):
+    def install_packages(self, packages, version=None):
         """
-        Installs a package.
+        Installs one or more SyncroSim packages.
         
         Parameters
         ----------
         packages : List or String
             Name or list of names of packages to install. Can also be a 
             filepath (or list of filepaths) to a local package.
+        version : List or String, optional
+            Version or list of versions to install. If None, then will
+            install the latest version of the specified package(s).
 
         Returns
         -------
         None.
 
         """
-        # Unit tests for inputs
-        if not isinstance(packages, str):
-            if not isinstance(packages, list):
-                raise TypeError("packages must be a String or List")
-            elif all(isinstance(pkg, str) for pkg in packages) is False:
-                raise TypeError("all packages must be Strings")            
-        
-        # Add some checks to see whether package is installed
-        installed = self.packages()
-        installed = installed["Name"].values
+        self.__validate_packages(packages, version)    
+
+        # Set packages and corresponding versions
+        pkgs_to_install = self.__create_install_package_list(packages, version)
         
         # Set executable to package manager
         self.console_exe = self.__init_console(pkgman=True)
@@ -247,28 +222,16 @@ class Session(object):
         exception = True
         pkgs_installed = []
         try:
-        
-            if not isinstance(packages, list):
-                packages = [packages]
-                
-            for pkg in packages:
-                if pkg in installed:
-                    print(f'{pkg} already installed')
-                    continue
-                
+            for pkg, ver in pkgs_to_install:
                 if os.path.exists(pkg):
                     args = ["--finstall=%s" % pkg]
                 else:
-                    args = ["--install=%s" % pkg]
+                    args = [f"--install={pkg}", f"--version={ver}"]
                 self.__call_console(args)
-                pkgs_installed.append(pkg)
+                pkgs_installed.append(f"{pkg} v{ver}")
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
-            if len(pkgs_installed) == 0:
-                return
-            else:
-                self.__pkgs = self.packages()
                 
         except RuntimeError as e:
             print(e)
@@ -285,9 +248,9 @@ class Session(object):
             if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
                 self.console_exe = self.__init_console(console=True)
     
-    def remove_packages(self, packages):
+    def uninstall_packages(self, packages, version=None):
         """
-        Uninstalls a package.
+        Uninstalls one or more SyncroSim packages.
 
         Parameters
         ----------
@@ -299,16 +262,9 @@ class Session(object):
         None.
 
         """
-        # Unit tests for inputs
-        if not isinstance(packages, str):
-            if not isinstance(packages, list):
-                raise TypeError("packages must be a String or List")
-            elif all(isinstance(pkg, str) for pkg in packages) is False:
-                raise TypeError("all packages must be Strings")   
-        
-        # Add some checks to see whether package is installed
-        installed = self.packages()
-        installed = installed["Name"].values
+        self.__validate_packages(packages, version)
+
+        pkgs_to_uninstall = self.__create_uninstall_package_list(packages, version)
         
         # Set executable to package manager
         self.console_exe = self.__init_console(pkgman=True)
@@ -316,20 +272,16 @@ class Session(object):
         exception = True
         pkgs_removed = []
         try:
-        
-            if not isinstance(packages, list):
-                packages = [packages]
-                
-            for pkg in packages:
-                if pkg not in installed:
-                    print(f'{pkg} not installed')
-                    continue
-                args = ["--uninstall=%s" % pkg]
+            
+            for pkg, ver in pkgs_to_uninstall:
+
+                args = [f"--remove={pkg}", f"--version={ver}"]
                 self.__call_console(args)
-                pkgs_removed.append(pkg)
+                pkgs_removed.append(f"{pkg} v{ver}")
                 
             # Reset packages
             self.console_exe = self.__init_console(console=True)
+            
             if len(pkgs_removed) == 0:
                 return
             else:
@@ -349,70 +301,11 @@ class Session(object):
             # Set executable back to console
             if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
                 self.console_exe = self.__init_console(console=True)
-    
-    def update_packages(self, packages=None):
-        """
-        Updates a package to the newest version.
-        
-        Parameters
-        ----------
-        packages : List or String
-            Name or list of names of packages to update. If None, then
-            updates all packages. Default is None.
 
-        Returns
-        -------
-        None.
-
-        """
-        # Unit tests for inputs
-        if packages is not None:
-            if not isinstance(packages, str):
-                if not isinstance(packages, list):
-                    raise TypeError("packages must be a String or List")
-                elif all(isinstance(pkg, str) for pkg in packages) is False:
-                    raise TypeError("all packages must be Strings")   
-        
-        # Add some checks to see whether package is installed
-        pkg_df = self.packages()
-        installed = pkg_df["Name"].values
-        
-        self.console_exe = self.__init_console(pkgman=True)
-            
-        try:
-            
-            if packages is None:
-                args = ["--updateall"]
-                
-            elif not isinstance(packages, list):
-                packages = [packages]
-                
-            for pkg in packages:
-                if pkg not in installed:
-                    print(f'{pkg} not installed')
-                    continue
-                # Compare versions
-                v1 = pkg_df[pkg_df["Name"] == pkg].Version.item()
-                args = ["--updatepkg=%s" % pkg]
-                self.__call_console(args)
-                self.console_exe = self.__init_console(console=True)
-                # Also resets packages below
-                pkg_df2 = self.packages()
-                v2 = pkg_df2[pkg_df2["Name"] == pkg].Version.item()
-                if v1 == v2:
-                    print(f"{pkg} already up to date")
-                if v1 < v2:
-                    print(f"{pkg} updated from v{v1} to v{v2}")
-                self.console_exe = self.__init_console(pkgman=True)
-                
-        finally:
-        
-            # Set executable back to console
-            self.console_exe = self.__init_console(console=True)
 
     def install_conda(self):
         """
-        Installs the Miniconda to the default installation path
+        Installs Miniconda to the default installation path
         within the SyncroSim installation folder. If you already
         have conda installed in a non-default location, then you
         can point SyncroSim towards that installation using the 
@@ -437,16 +330,17 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                return "C:/Program Files/SyncroSim"
-            else:
-                return e.program_directory.item()
-        else:
-            self.__location = os.path.expanduser(location)
+                location = "C:/Program Files/SyncroSim Studio"
 
-        if not os.path.isdir(self.__location):
+            else:
+                location = e.program_directory.item()
+        else:
+            location = os.path.expanduser(location)
+
+        if not os.path.isdir(location):
             raise ValueError("The location is not valid")
         else :
-            return self.__location
+            return location
                         
     def __init_console(self, console=None, pkgman=None):
         
@@ -493,7 +387,13 @@ class Session(object):
 
     def __retrieve_conda_filepath(self):        
         result = self.__call_console(["--conda", "--config"])
-        self.__conda_filepath = result.stdout.decode('utf-8').strip().split(": ")[1]
+        
+        if result.returncode != 0:
+            cleaned_result = result.stderr.decode('utf-8').strip()
+            if cleaned_result.contains("No conda configuration yet"):
+                self.__conda_filepath = None
+            else:
+                self.__conda_filepath = cleaned_result.split(": ")[1]
             
     def __set_conda_filepath(self, filepath):
         
@@ -507,3 +407,94 @@ class Session(object):
                 raise RuntimeError(result.stderr.decode('utf-8'))
             else:
                 self.__conda_filepath = filepath
+
+    def __validate_packages(self, packages, version): 
+        # Unit tests for inputs
+        if not isinstance(packages, str):
+            if not isinstance(packages, list):
+                raise TypeError("packages must be a String or List")
+            elif all(isinstance(pkg, str) for pkg in packages) is False:
+                raise TypeError("all packages must be Strings")     
+        if version is not None:
+            if not isinstance(version, str):
+                if not isinstance(version, list):
+                    raise TypeError("version must be a String or List")
+                elif all(isinstance(ver, str) for ver in version) is False:
+                    raise TypeError("all versions must be Strings")   
+            
+    def __create_install_package_list(self, packages, version):
+
+        # Get list of installed packages and versions
+        installed = self.packages()
+        installed = pd.DataFrame({"Name": installed["Name"].values,
+                                  "Version": installed["Version"].values})
+
+        # Get available packages and versions
+        available = self.packages(installed=False)
+        available = pd.DataFrame({"Name": available["Name"].values,
+                                  "Version": available["Version"].values})
+
+        # Set packages and corresponding versions
+        if not isinstance(packages, list):
+            packages = [packages]
+        if version is not None:
+            if not isinstance(version, list):
+                version = [version]
+            if len(packages) != len(version):
+                raise ValueError("packages and version must have the same length")
+        else:
+            # Get latest version of package from available package list
+            version = []
+            for pkg in packages:
+                if pkg in available["Name"].values:
+                    avail_subset = available[available["Name"] == pkg]
+                    ver = avail_subset.Version.values[len(avail_subset)-1]
+                    version.append(ver)
+                elif os.path.exists(pkg):
+                    version.append(None)
+                else:
+                    raise ValueError(f"{pkg} not found in available packages")
+        
+        for pkg, ver in zip(packages, version):
+            if pkg in installed["Name"].values:
+                subset = installed[installed["Name"] == pkg]
+                if subset["Version"].values[0] == ver:
+                    print(f'{pkg} already installed')
+                    continue
+            else:
+                continue
+
+        return zip(packages, version)
+    
+    def __create_uninstall_package_list(self, packages, version):
+
+        # Get list of installed packages and versions
+        installed = self.packages()
+        installed = pd.DataFrame({"Name": installed["Name"].values, 
+                                 "Version": installed["Version"].values})
+
+        # Set packages and corresponding versions
+        if not isinstance(packages, list):
+            packages = [packages]
+        if version is not None:
+            if not isinstance(version, list):
+                version = [version]
+            if len(packages) != len(version):
+                raise ValueError("packages and version must have the same length")
+        else:
+            # If version is None, then remove all versions of the specified package
+            version = []
+            packages2 = []
+            for pkg in packages:
+                if pkg in installed["Name"].values:
+                    subset = installed[installed["Name"] == pkg]
+                    version.append(subset["Version"].values)
+                    packages2.append(subset["Name"].values)
+                else:
+                    raise ValueError(f"{pkg} not found in installed packages")
+
+            # Flatten lists  
+            packages = [p for p2 in packages2 for p in p2]
+            version = [v for v2 in version for v in v2]
+
+        return zip(packages, version)

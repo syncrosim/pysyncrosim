@@ -20,7 +20,7 @@ class Folder(object):
         self.__set_ssimobject_prop(ssimobject)
         self.__data = self.__get_folder_data()
         if self.__project is not None:
-            self.__data = self.__data[self.__data["Project ID"] == self.__project.pid]
+            self.__data = self.__data[self.__data["ProjectId"] == self.__project.pid]
         if isinstance(folder, str):
             if folder not in self.__data["Name"].values:
                 create = True
@@ -88,7 +88,7 @@ class Folder(object):
 
         """
         info = self.__get_folder_data()
-        info_subset = info[info["ID"] == self.folder_id]
+        info_subset = info[info["Id"] == self.folder_id]
         name = info_subset["Name"].values[0]
         return name
     
@@ -109,7 +109,7 @@ class Folder(object):
             Folder Owner
         """
         info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
+        info_subset = info[info["FolderId"] == self.folder_id]
         owner = info_subset["Owner"].values[0]
         return owner
     
@@ -130,8 +130,8 @@ class Folder(object):
             Folder read-only status
         """
         info = self.__get_folder_data()
-        info_subset = info[info["ID"] == self.folder_id]
-        readonly = info_subset["Read Only"].values[0]
+        info_subset = info[info["Id"] == self.folder_id]
+        readonly = info_subset["IsReadOnly"].values[0]
         return readonly
     
     @readonly.setter
@@ -154,28 +154,6 @@ class Folder(object):
         self.__library.session._Session__call_console(args)
 
     @property
-    def description(self):
-        """
-        Gets or sets the Folder description.
-
-        Returns
-        -------
-        String
-            Folder description.
-
-        """
-        info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
-        description = info_subset["Description"].values[0]
-        return description
-    
-    @description.setter
-    def description(self, value):
-        args = ["--setprop", "--lib=%s" % self.__library.location,
-                "--description=%s" % value, "--fid=%d" % self.folder_id]
-        self.__library.session._Session__call_console(args)
-
-    @property
     def date_modified(self):
         """
         Gets the date the Folder was last modified.
@@ -186,8 +164,8 @@ class Folder(object):
             Date the Folder was last modified.
         """
         info = self.__get_folder_data()
-        info_subset = info[info["FolderID"] == self.folder_id]
-        date_modified = info_subset["DateLastModified"].values[0]
+        info_subset = info[info["FolderId"] == self.folder_id]
+        date_modified = info_subset["LastModified"].values[0]
         return date_modified
 
     def __validate_inputs(self, create):
@@ -241,7 +219,7 @@ class Folder(object):
             self.__name = folder
             data_subset = self.__data[self.__data["Name"] == self.__name]
             if len(data_subset) == 1:
-                self.__folder_id = data_subset["ID"].values[0]
+                self.__folder_id = data_subset["Id"].values[0]
             elif (len(data_subset) > 0) & (self.__create is False):
                 raise ValueError("Multiple folders with the same name exist. " +
                                  "Use Folder ID instead to retrieve the desired " +
@@ -250,7 +228,7 @@ class Folder(object):
             
         elif (isinstance(folder, int)) or (isinstance(folder, np.int64)):
             self.__folder_id = folder
-            data_subset = self.__data[self.__data["ID"] == self.__folder_id]
+            data_subset = self.__data[self.__data["Id"] == self.__folder_id]
             if len(data_subset) == 1:
                 self.__name = data_subset["Name"].values[0]
             elif len(data_subset) == 0:
@@ -276,7 +254,7 @@ class Folder(object):
     def __retrieve_parent_id(self):
         if (isinstance(self.__parent_folder, int)) or\
                 (isinstance(self.__parent_folder, np.int32)):
-            data_subset = self.__data[self.__data["ID"] == self.__parent_folder]
+            data_subset = self.__data[self.__data["Id"] == self.__parent_folder]
             if len(data_subset) == 1:
                 self.__parent_id = self.__parent_folder
                 return 

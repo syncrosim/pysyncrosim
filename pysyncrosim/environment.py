@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 
-def runtime_input_folder(scenario, datasheet_name):
+def runtime_data_folder(scenario, datasheet_name):
     """
-    Creates a SyncroSim Datasheet input folder.
+    Creates a SyncroSim Datasheet data folder.
 
     Parameters
     ----------
@@ -15,33 +15,11 @@ def runtime_input_folder(scenario, datasheet_name):
     Returns
     -------
     String
-        Path to input folder.
-
-    """    
-    _validate_environment()
-    parent_folder = _environment.input_directory.item()
-    
-    return _create_scenario_folder(scenario, parent_folder, datasheet_name)
-
-def runtime_output_folder(scenario, datasheet_name):
-    """
-    Creates a SyncroSim Datasheet output folder.
-
-    Parameters
-    ----------
-    scenario : Scenario
-        Scenario class instance.
-    datasheet_name : String
-        Name of SyncroSim Datasheet.
-
-    Returns
-    -------
-    String
-        Path to ouput folder.
+        Path to data folder.
 
     """
     _validate_environment()
-    parent_folder = _environment.output_directory.item()
+    parent_folder = _environment().data_directory.item()
     
     return _create_scenario_folder(scenario, parent_folder, datasheet_name)
 
@@ -205,8 +183,7 @@ def _environment():
          "library_filepath": [os.getenv("SSIM_LIBRARY_FILEPATH")],
          "project_id": [int(os.getenv("SSIM_PROJECT_ID", default=-1))],
          "scenario_id": [int(os.getenv("SSIM_SCENARIO_ID", default=-1))],
-         "input_directory": [os.getenv("SSIM_INPUT_DIRECTORY")],
-         "output_directory": [os.getenv("SSIM_OUTPUT_DIRECTORY")],
+         "data_directory": [os.getenv("SSIM_DATA_DIRECTORY")],
          "temp_directory": [os.getenv("SSIM_TEMP_DIRECTORY")],
          "transfer_directory": [os.getenv("SSIM_TRANSFER_DIRECTORY")],
          "before_iteration": [
@@ -235,7 +212,7 @@ def _create_scenario_folder(scenario, parent_folder, datasheet_name):
     f = os.path.join(parent_folder, sidpart, datasheet_name)
     
     if not os.path.isdir(f):
-        os.mkdir(f)
+        os.makedirs(f)
         
     return f
 

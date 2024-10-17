@@ -14,13 +14,13 @@
    .. autosummary::
    
       ~Library.__init__
+      ~Library.add_packages
       ~Library.backup
       ~Library.datasheets
       ~Library.delete
-      ~Library.disable_addons
-      ~Library.enable_addons
       ~Library.folders
       ~Library.projects
+      ~Library.remove_packages
       ~Library.run
       ~Library.save_datasheet
       ~Library.scenarios
@@ -34,14 +34,13 @@
 
    .. autosummary::
    
-      ~Library.addons
       ~Library.date_modified
       ~Library.description
       ~Library.info
       ~Library.location
       ~Library.name
       ~Library.owner
-      ~Library.package
+      ~Library.packages
       ~Library.readonly
       ~Library.session
       ~Library.use_conda

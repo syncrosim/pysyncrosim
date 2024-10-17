@@ -30,7 +30,7 @@ class Scenario(object):
             self.__sid = int(e.scenario_id.item())
             temp_df = self.__library.scenarios()
             self.__name = temp_df[
-                temp_df["ScenarioID"] == self.__sid]["Name"].item()
+                temp_df["ScenarioId"] == self.__sid]["Name"].item()
             # revisit these!!
             self.__env = e.transfer_directory.item()
             self.__temp = e.temp_directory
@@ -264,6 +264,72 @@ class Scenario(object):
     @folder_id.setter
     def folder_id(self, value):
         self.__add_scenario_to_folder(value)
+
+    @property
+    def dependencies(self):
+        """
+        Retrieves the dependencies of a Scenario.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Returns a pandas DataFrame of existing dependencies for the 
+            given Scenario.
+
+        """
+        
+        return self.__init_dependencies()
+            
+    @dependencies.setter
+    def dependencies(self, value):
+
+        # Create list of dependencies to add
+        if isinstance(value, list):
+            dependencies = value
+        else:
+            dependencies = [value]
+
+        did_list = []
+        for d in dependencies:
+            # Check types
+            if d is None:
+                continue
+
+            elif isinstance(d, ps.Scenario):
+                d_name = d.name
+                d = d.sid
+                
+            elif isinstance(d, str):
+                # check if scenario exists
+                d_name = d
+                d = self.library._Library__scenarios[
+                    self.library._Library__scenarios.Name==d]               
+                self.__validate_dependencies(d, name_or_id=d_name)
+                d = d["ScenarioId"].item()
+                
+            elif isinstance(d, int) or isinstance(d, np.int64):
+                # check if scenarios exists
+                deps = self.library._Library__scenarios[
+                       self.library._Library__scenarios["ScenarioId"]==d
+                    ]
+                self.__validate_dependencies(deps, name_or_id=d)
+                d_name = deps.Name.item()
+                
+            else:
+                raise TypeError(
+                    "dependency must be a Scenario, String, Integer, or List")
+
+            # Append dependency ID to list
+            did_list.append(d)
+
+        # Paste together did_list separated by comma
+        value = ",".join(map(str, did_list))
+
+        # Remove current dependencies
+        self.__remove_all_dependencies() # TODO: replace remove_dependencies with remove_all_dependencies
+
+        # Add new dependencies
+        self.__add_dependencies(value) #TODO: replace add_dependency with add_dependencies
     
     def folders(self, folder=None, parent_folder=None, create=False):
         """
@@ -388,10 +454,6 @@ class Scenario(object):
                 and not isinstance(timestep, list)\
                     and not isinstance(timestep, range):
             raise TypeError("timestep must be an Integer, List, or Range")
-        
-        # Check that self is Results Scenario
-        if self.is_result == "No":
-            raise ValueError("Scenario must be a Results Scenario")
             
         # Check that Datasheet has package prefix
         datasheet = self.library._Library__check_datasheet_name(datasheet)
@@ -399,6 +461,9 @@ class Scenario(object):
         # Retrieve Datasheet as DataFrame
         d = self.datasheets(name = datasheet, filter_column = filter_column,
                             filter_value = filter_value, show_full_paths = False)
+        
+        if d.empty:
+            raise ValueError(f"Datasheet {datasheet} does not contain data.")
         
         # Check if column is raster column
         args = ["--list", "--columns", "--allprops",
@@ -494,7 +559,7 @@ class Scenario(object):
         # Find folder with raster data - search in input, temp, and output
         if self.__env is None:
             
-            for folder in [".input", ".temp", ".output"]:
+            for folder in [".data", ".temp"]:
                 
                 if folder != ".temp":
                     lib_dir = self.__find_output_fpath(
@@ -518,7 +583,7 @@ class Scenario(object):
         else:
             e = _environment()
 
-            for folder in [".input", ".temp", ".output"]:
+            for folder in [".data", ".temp"]:
                 
                 if folder != ".temp":
                     lib_dir = self.__find_output_fpath(
@@ -640,82 +705,8 @@ class Scenario(object):
         if len(s) > 1:
             s = s[-1:]
         
-        return ps.Scenario(s["ScenarioID"].values[0],
+        return ps.Scenario(s["ScenarioId"].values[0],
                            s["Name"].values[0], self.project, self.library)
-    
-    def dependencies(self, dependency=None, remove=False, force=False):
-        """
-        Gets, sets, or removes dependencies from a Scenario.
-
-        Parameters
-        ----------
-        dependency : Scenario, Int, String, or List, optional
-            Scenario(s) to be added or removed as dependencies. If None, then 
-            returns a DataFrame of dependencies. The default is None.
-        remove : Logical, optional
-            If False, adds the dependency. If True, removes the dependency. 
-            The default is False.
-        force : Logical, optional
-            If True, then does not prompt the user when removing a dependency.
-            The default is False.
-
-        Raises
-        ------
-        TypeError
-            If arguments are not of the correct Type, throws an error.
-
-        Returns
-        -------
-        pandas.DataFrame
-            If no dependencies are specified, then returns a pandas DataFrame
-            of existing dependencies for the given Scenario.
-
-        """
-        
-        if dependency is None:
-            return self.__dependencies
-        
-        if not isinstance(dependency, list):
-            dependency = [dependency]
-        
-        for d in dependency:
-            # Check types
-            if isinstance(d, ps.Scenario):
-                d_name = d.name
-                d = d.sid
-                
-            elif isinstance(d, str):
-                # check if scenario exists
-                d_name = d
-                d = self.library._Library__scenarios[
-                    self.library._Library__scenarios.Name==d]               
-                self.__validate_dependencies(d, d_name=d_name)
-                d = d["ScenarioID"].item()
-                
-            elif isinstance(d, int) or isinstance(d, np.int64):
-                # check if scenarios exists
-                deps = self.library._Library__scenarios[
-                       self.library._Library__scenarios["ScenarioID"]==d
-                    ]
-                self.__validate_dependencies(deps, d_name=d)
-                d_name = deps.Name.item()
-                
-            else:
-                raise TypeError(
-                    "dependency must be a Scenario, String, Integer, or List")
-
-            # Add dependency
-            if remove is False:
-                # Remove and re-add to guarantee order
-                self.__remove_dependency(d, force=True)
-                self.__add_dependency(d)
-                
-            # Remove dependency
-            elif remove is True:
-                self.__remove_dependency(d, d_name=d_name, force=force)
-                
-            else: 
-                raise TypeError("remove must be a Logical")
     
     def ignore_dependencies(self, value=None):
         """
@@ -740,7 +731,7 @@ class Scenario(object):
             scn_info = self.library._Library__scenarios
             return scn_info[
                 scn_info[
-                    "ScenarioID"] == self.sid]["IgnoreDependencies"].item()
+                    "ScenarioId"] == self.sid]["IgnoreDependencies"].item()
         else:
             self.__validate_ignore_dependencies(value)
             args = ["--setprop", "--lib=%s" % self.library.location,
@@ -772,7 +763,7 @@ class Scenario(object):
         
         scn_info = self.library._Library__scenarios
         merge_dep_status =  scn_info[scn_info[
-                "ScenarioID"] == self.sid]["MergeDependencies"].item()
+                "ScenarioId"] == self.sid]["MergeDependencies"].item()
         
         if value is None:
             return merge_dep_status
@@ -801,19 +792,17 @@ class Scenario(object):
         # Reset Scenario information
         self.library._Library__init_scenarios()
         
-    def run(self, jobs=1, copy_external_inputs=False):
+    def run(self, copy_external_inputs=False):
         """
         Runs a Scenario.
 
         Parameters
         ----------
-        jobs : Int, optional
-            Number of multiprocessors to use when running a Scenario. The 
-            default is 1.
         copy_external_inputs : Logical, optional
             If False, then a copy of external input files (e.g. GeoTIFF files)
             is not created for each job. Otherwise, a copy of external inputs 
-            is created for each job. Applies only when jobs > 1. The default is
+            is created for each job. Applies only when jobs > 1. The number of 
+            jobs is set using the 'core_Multiprocessing' datasheet. The default is
             False.
 
         Returns
@@ -821,39 +810,46 @@ class Scenario(object):
         Scenario
             SyncroSim Scenario class instance.
 
-        """
-        if not isinstance(jobs, int) and not isinstance(jobs, np.int64):
-            raise TypeError("jobs must be an Integer")
-        
+        """    
         # Runs the scenario
         args = ["--run", "--lib=%s" % self.library.location,
-                "--sid=%d" % self.__sid, "--jobs=%d" % jobs]
+                "--sid=%d" % self.__sid]
         
-        if jobs > 1 and copy_external_inputs is True:
+        if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
+        
+        try:    
+            print(f"Running Scenario [{self.sid}] {self.name}")
+            result = self.library.session._Session__call_console(args)
             
-        print(f"Running Scenario [{self.sid}] {self.name}")
-        result = self.library.session._Session__call_console(args)
-        
-        if result.returncode == 0:
-            print("Run successful")
-        
-        # Reset Project Scenarios
-        self.project._Project__scenarios = None
+            if result.returncode == 0:
+                print("Run successful")
 
-        # Reset results
-        self.__results = None
-        
-        # Retrieve Results Scenario ID
-        # Also resets scenarios and results info
-        result_id = self.results()["ScenarioID"].values[-1]
-        
-        # Return Results Scenario
-        result_scn = self.library.scenarios(project=self.project,
-                                            name=None,
-                                            sid=result_id)
-        
-        return result_scn
+        except RuntimeError as e:
+            print(e)
+
+        finally:
+            
+            # Reset Project Scenarios
+            self.project._Project__scenarios = None
+
+            # Reset results
+            self.__results = None
+            
+            # Retrieve Results Scenario ID
+            # Also resets scenarios and results info
+            results_df = self.results()
+
+            if (not results_df.empty):
+            
+                result_id = results_df["ScenarioId"].values[-1]
+                
+                # Return Results Scenario
+                result_scn = self.library.scenarios(project=self.project,
+                                                    name=None,
+                                                    sid=result_id)
+                
+                return result_scn
     
     def run_log(self):
         """
@@ -906,9 +902,8 @@ class Scenario(object):
                 raise ValueError(f'Scenario [{sid}] is not a Results Scenario')
         
         elif self.__results is None:
-            s = self.project.scenarios()
-            pat = '['+str(self.__sid)+']'
-            self.__results = s[s.Name.str.contains(pat)]
+            s = self.project.scenarios(optional = True)
+            self.__results = s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
             return self.__results
         else:
             return self.__results
@@ -916,7 +911,9 @@ class Scenario(object):
     def __retrieve_scenario_folder_id(self):
 
         lib_structure = self.library._Library__get_library_structure()   
-        scn_ind = lib_structure.index[lib_structure['id'] == str(self.sid)].tolist()[0]
+        scn_ind = lib_structure.index[
+            ((lib_structure['id'] == str(self.sid)) & (lib_structure["item"] == "Scenario"))
+            ].tolist()[0]
         scn_level = lib_structure.iloc[scn_ind]['level']
         folder_id = None
         for i in reversed(range(scn_ind)):
@@ -968,11 +965,11 @@ class Scenario(object):
         # Set Scenario information
         scn_info = self.library.scenarios(project=self.project.pid,
                                           optional=True)
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
         self.__owner = scn_info["Owner"].item()
         self.__date_modified = scn_info["DateLastModified"].item()
         self.__readonly = scn_info["IsReadOnly"].item()
-        self.__project_id = scn_info["ProjectID"].item()
+        self.__project_id = scn_info["ProjectId"].item()
         self.__info = scn_info.set_axis(
             ["Value"], axis=0
             ).T.rename_axis("Property").reset_index()
@@ -986,15 +983,15 @@ class Scenario(object):
         
         # Find out if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
         return scn_info["IsResult"].values[0]
     
     def __init_parent_id(self):
         
         # Find out parent ID if result scenario
         scn_info = self.library._Library__scenarios
-        scn_info = scn_info[scn_info["ScenarioID"] == self.sid]
-        parent_id = scn_info["ParentID"].values[0]
+        scn_info = scn_info[scn_info["ScenarioId"] == self.sid]
+        parent_id = scn_info["ParentId"].values[0]
         if type(parent_id) == float:
             return int(parent_id)
         else:
@@ -1007,13 +1004,13 @@ class Scenario(object):
                 "--sid=%d" % self.sid, ]
         return self.library._Library__console_to_csv(args) 
 
-    def __validate_dependencies(self, dependencies, d_name):
+    def __validate_dependencies(self, dependencies, name_or_id):
 
         if len(dependencies) > 1:
             raise ValueError(
                 "dependency name not unique, use ID or Scenario")
         elif len(dependencies) == 0:
-            raise ValueError(f"Scenario dependency {d_name} does not exist")
+            raise ValueError(f"Scenario dependency {name_or_id} does not exist")
 
     def __validate_ignore_dependencies(self, dependencies):
 
@@ -1021,7 +1018,7 @@ class Scenario(object):
             raise TypeError("value must be a String")
 
         scenario_list = self.library._Library__scenarios
-        scn = scenario_list["ScenarioID"].values[0]
+        scn = scenario_list["ScenarioId"].values[0]
         scn_obj = self.library.scenarios(
             project=self.project.pid, sid=scn)
         scn_datasheets = scn_obj.datasheets()
@@ -1033,50 +1030,39 @@ class Scenario(object):
             if dep not in datasheet_list:
                 raise ValueError(f"Scenario dependency [{dep}] does not exist")
 
-    def __remove_dependency(self, d, d_name=None, force=False):
+    def __remove_all_dependencies(self):
 
-        if d in self.__dependencies.ID.values:
-            args = ["--delete", "--dependency", 
-                    "--lib=%s" % self.library.location,
-                    "--sid=%d" % self.sid, "--did=%d" % d]
-            if force:
-                args += ["--force"]
-            else:
-                answer = input (
-                    f"Do you really want to remove dependency {d_name} \
-                        (Y/N)?")
-                if answer == "Y":
-                    args += ["--force"]
-                else:
-                    print(f"dependency {d_name} not removed")
-                    return
-
-            try:
-                self.library.session._Session__call_console(args)
-                self.__dependencies = self.__init_dependencies()
-
-            except RuntimeError as e:
-                    print(e)
-
-    def __add_dependency(self, d):
-
-        args = ["--create", "--dependency",
+        args = ["--remove", "--dependency", 
                 "--lib=%s" % self.library.location,
-                "--sid=%d" % self.sid, "--did=%d" % d]
+                "--sid=%d" % self.sid, "--all", "--force"]
+        
+        try:
+            self.library.session._Session__call_console(args)
+
+        except RuntimeError as e:
+                print(e)
+
+    def __add_dependencies(self, d):
+
+        if d == '':
+            return
+        
+        args = ["--add", "--dependency",
+                "--lib=%s" % self.library.location,
+                "--sid=%d" % self.sid]
+        
+        if "," in d:
+            args += ["--dids=%s" % d]
+        else:
+            args += ["--did=%s" % d]
                 
         try:
             self.library.session._Session__call_console(args)
-            self.__dependencies = self.__init_dependencies()
             
         except RuntimeError as e:
             print(e)
     
     def __find_output_fpath(self, f_base_path, datasheet):
-                
-        # If package is not included in name, add it
-        if datasheet.startswith(self.library.package) is False:
-            if datasheet.startswith("core") is False:
-                datasheet = self.library.package + "_" + datasheet
 
         fpath = os.path.join(f_base_path, f"Scenario-{self.sid}", datasheet)
         

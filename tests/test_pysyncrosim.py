@@ -5,11 +5,16 @@ import pandas as pd
 import math
 import numpy as np
 import rasterio
-# import re
+import tempfile
+
+temp_path = tempfile.TemporaryDirectory()
+session_path = None
+test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
+existing_lib_name = os.path.join("C:/gitprojects/pysyncrosim/tests", "spatial-example.ssim")
 
 def test_session_attributes():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     
     # Test init
     assert isinstance(mySession, ps.Session)
@@ -24,46 +29,59 @@ def test_session_attributes():
     # Test packages method
     assert isinstance(mySession.packages(), pd.DataFrame)
     assert isinstance(mySession.packages(installed=False), pd.DataFrame)
-    assert isinstance(mySession.packages(installed="BASE"), pd.DataFrame)
     
     with pytest.raises(TypeError,
-                       match="installed must be Logical or 'BASE'"):
+                       match="installed must be Logical"):
         mySession.packages(installed=1)
-        
-        
+
+    # Test conda_filepath
+    conda_fp = mySession.conda_filepath
+    assert isinstance(conda_fp, str) or conda_fp is None  
+
 def test_session_package_functions():
     
-    mySession = ps.Session()
+    mySession = ps.Session(session_path)
     
-    # Test add_packages, remove_packages, update_packages methods
+    # Test install_packages, uninstall_packages methods
     with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.add_packages(1)
+        mySession.install_packages(1)
     with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.remove_packages(1)
-    with pytest.raises(TypeError, match="packages must be a String or List"):
-        mySession.update_packages(1)
+        mySession.uninstall_packages(1)
         
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.add_packages(["helloworldSpatial", 1])
+        mySession.install_packages(["helloworld", 1])
     with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.remove_packages(["helloworldSpatial", 1])
-    with pytest.raises(TypeError, match="all packages must be Strings"):
-        mySession.update_packages(["helloworldSpatial", 1])
+        mySession.uninstall_packages(["helloworld", 1])
         
-    mySession.add_packages("helloworldSpatial")
-    assert "helloworldSpatial" in mySession.packages()["Name"].values
+    # Test with no version
+    mySession.install_packages("helloworld")
+    assert "helloworld" in mySession.packages()["Name"].values
     
-    mySession.remove_packages("helloworldSpatial")
-    assert "helloworldSpatial" not in mySession.packages()["Name"].values
+    mySession.uninstall_packages("helloworld")
+    assert "helloworld" not in mySession.packages()["Name"].values
     
-    mySession.add_packages("helloworldSpatial")
+    # Test with version - this requires v2.0.0 and v2.0.2 to be on package repo
+    mySession.install_packages("helloworld", version="2.0.0")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" in pkg_subset["Version"].values
+
+    # Should now have two versions of the package
+    mySession.install_packages("helloworld", version="2.0.1")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" in pkg_subset["Version"].values
+    assert "2.0.1" in pkg_subset["Version"].values
+
+    # Test uninstall with version
+    mySession.uninstall_packages("helloworld", version="2.0.0")
+    pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
+    assert "2.0.0" not in pkg_subset["Version"].values
+    assert "2.0.1" in pkg_subset["Version"].values
     
 def test_helper():
     
-    mySession = ps.Session()
-    mySession.add_packages("stsim")
-    mySession.add_packages("stsimsf")
-    mySession.add_packages("stsimcbmcfs3")
+    mySession = ps.Session(session_path)
+    mySession.install_packages("stsim")
+    mySession.install_packages("stsimecodep")
     
     # Type checking
     with pytest.raises(
@@ -77,91 +95,56 @@ def test_helper():
     with pytest.raises(
             TypeError,
             match="session must be None or pysyncrosim Session instance"):
-        ps.library(name="Test", session=1)
+        ps.library(name=test_lib_name, session=1)
         
-    with pytest.raises(TypeError, match="package must be a String"):
-        ps.library(name="Test", package=1)
-        
-    with pytest.raises(TypeError, match="addons must be None, a String, or a List"):
-        ps.library(name="Test", addons=1)
+    with pytest.raises(TypeError, match="packages must be None, a String, or a List"):
+        ps.library(name=test_lib_name, packages=1, session=mySession)
 
-    with pytest.raises(TypeError, match="addons in list are not all strings"):
-        ps.library(name="Test", addons=["addon1", 1])
-
-    with pytest.raises(TypeError, match="templates must be a String"):
-        ps.library(name="Test", template=1)
+    with pytest.raises(TypeError, match="packages in list are not all strings"):
+        ps.library(name=test_lib_name, packages=["package", 1], session=mySession)
         
     with pytest.raises(TypeError, match="forceUpdate must be a Logical"):
-        ps.library(name="Test", forceUpdate="True")
+        ps.library(name=test_lib_name, forceUpdate="True", session=mySession)
         
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
-        ps.library(name="Test", overwrite="False")
+        ps.library(name=test_lib_name, overwrite="False", session=mySession)
 
     # Test package installation
-    mySession.remove_packages("stsim")
-    with pytest.raises(ValueError, match="The package stsim is not installed"):
-        ps.library(name="Test", package="stsim", session=mySession)
-    mySession.add_packages("stsim")
+    mySession.install_packages("demosales")
+    mySession.uninstall_packages("demosales")
+    with pytest.raises(ValueError, match="The package demosales is not installed"):
+        ps.library(name=test_lib_name, packages="demosales", session=mySession)
+    mySession.install_packages("stsim")
         
     # Test Library path
     with pytest.raises(ValueError, match="Path to Library does not exist"):
-        ps.library("path/to/library")
-        
-    # Test template
-    with pytest.raises(ValueError,
-                       match="Template test does not exist in package"):
-        ps.library("Test", package="stsim", template="test")
+        ps.library("path/to/library", session=mySession)
       
     # Test output
-    myLibrary = ps.library(name="Test", forceUpdate=True)
+    myLibrary = ps.library(name=test_lib_name, forceUpdate=True, session=mySession)
     assert isinstance(myLibrary, ps.Library)
 
-    # Test addon packages
-    myLibrary = ps.library(name = "stsimLibrary",
+    # Test packages argument
+    myLibrary = ps.library(name = test_lib_name,
                        session = mySession,
-                       package = "stsim",
-                       addons = "stsimsf",
+                       packages = ["stsim", "stsimecodep"],
                        overwrite = True)
-    addon_list = myLibrary.addons["Name"].tolist()
-    assert "stsimsf" in addon_list
-    assert "stsimcbmcfs3" in addon_list
-    assert len(addon_list) >= 2
-    assert "No" in myLibrary.addons.Enabled.values
-    assert "Yes" in myLibrary.addons.Enabled.values
-
-    myLibrary = ps.library(name = "stsimLibrary",
-                       session = mySession,
-                       package = "stsim",
-                       addons = ["stsimsf", "stsimcbmcfs3"],
-                       overwrite = True)
-    addon_list = myLibrary.addons["Name"].tolist()
-    assert "stsimsf" in addon_list
-    assert "stsimcbmcfs3" in addon_list
-    addon_enabled_list = np.unique(myLibrary.addons.Enabled.values).tolist()
-    assert "Yes" in addon_enabled_list
-
-    # Test addon templates
-    myLibrary = ps.library(name = "stsimLibrary",
-                           session = mySession,
-                           package = "stsim",
-                           addons = ["stsimsf", "stsimcbmcfs3"],
-                           template = "cbm-cfs3-example",
-                           overwrite = True,
-                           forceUpdate = True)
-    assert isinstance(myLibrary, ps.Library)
-    assert len(myLibrary.scenarios()) > 0
+    pkg_list = myLibrary.packages["Name"].tolist()
+    assert "core" in pkg_list
+    assert "stsim" in pkg_list
+    assert "stsimecodep" in pkg_list
+    assert len(pkg_list) == 3
     
 def test_library_attributes():
     
-    myLibrary = ps.library(name="Test", overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     
     # Check attributes
     assert isinstance(myLibrary.name, str)
     assert isinstance(myLibrary.session, ps.Session)
     assert isinstance(myLibrary.location, str)
     assert os.path.isfile(myLibrary.location)
-    assert isinstance(myLibrary.package, str)
-    assert isinstance(myLibrary.addons, pd.DataFrame)
 
     # Check environment error
     with pytest.raises(RuntimeError,
@@ -169,8 +152,9 @@ def test_library_attributes():
         ps.Library()
 
 def test_library_projects():
-    
-    myLibrary = ps.library(name="Test", overwrite=True)
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     
     # Test inputs
     with pytest.raises(TypeError, match="name must be a String"):
@@ -203,8 +187,9 @@ def test_library_projects():
     assert isinstance(myLibrary.projects(summary=False), list)
         
 def test_library_scenarios():
-    
-    myLibrary = ps.library(name="Test", overwrite=True)
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     with pytest.raises(
@@ -249,7 +234,7 @@ def test_library_scenarios():
     assert isinstance(myLibrary.scenarios(), pd.DataFrame) 
     assert isinstance(myLibrary.scenarios(pid=1, summary=False), ps.Scenario)
     assert len(myLibrary.scenarios(pid=1).columns) == 4
-    assert len(myLibrary.scenarios(pid=1, optional=True).columns) == 11
+    assert len(myLibrary.scenarios(pid=1, optional=True).columns) == 10
     assert myLibrary.scenarios(name="test", pid=1, overwrite=True).sid != 1
     assert all(myLibrary.scenarios(project=1) == myLibrary.scenarios(pid=1))
     assert all(
@@ -259,8 +244,10 @@ def test_library_scenarios():
         project=1) == myLibrary.scenarios(project=myProject))
     
 def test_library_datasheets():
-    
-    myLibrary = ps.library(name="Test", overwrite=True)
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, 
+                           packages=["stsim"], session=mySession)
     
     # Test datasheets method inputs
     with pytest.raises(TypeError, match="name must be a String"):
@@ -281,14 +268,14 @@ def test_library_datasheets():
         myLibrary.datasheets(scope="test")
         
     with pytest.raises(
-            RuntimeError,
-            match="The data sheet does not exist: stsim_test"):
+            ValueError,
+            match="datasheet name must be prefixed with package name"):
         myLibrary.datasheets(name="test")
         
     with pytest.raises(
             ValueError,
-            match="filter column Test not in Datasheet stsim_RunControl"):
-        myLibrary.datasheets(name="RunControl", filter_column="Test",
+            match="filter column Test not in Datasheet core_Option"):
+        myLibrary.datasheets(name="core_Option", filter_column="Test",
                              filter_value=1)
         
     # Test datasheets method outputs
@@ -296,7 +283,7 @@ def test_library_datasheets():
     assert isinstance(myLibrary.datasheets(name="core_Backup"), pd.DataFrame)
     assert isinstance(myLibrary.datasheets(summary=False), list)
     assert len(myLibrary.datasheets().columns) == 3
-    assert len(myLibrary.datasheets(optional=True).columns) == 7
+    assert len(myLibrary.datasheets(optional=True).columns) == 6
     assert myLibrary.datasheets(name="core_Backup", empty=True).empty
     assert not myLibrary.datasheets().equals(
         myLibrary.datasheets(scope="Project"))
@@ -304,8 +291,9 @@ def test_library_datasheets():
         myLibrary.datasheets(scope="Scenario"))
     
 def test_library_delete():
-    
-    myLibrary = ps.library(name="Test", overwrite=True)
+
+    mySession = ps.Session(session_path)   
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     # Test delete method
@@ -343,8 +331,9 @@ def test_library_delete():
     assert "test" not in myLibrary.scenarios().Name.values
     
 def test_library_save_datasheet():
-    
-    myLibrary = ps.library(name="Test", overwrite=True, forceUpdate=True)
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, forceUpdate=True, session=mySession)
     
     # Test save_datasheet method
     with pytest.raises(
@@ -372,8 +361,8 @@ def test_library_save_datasheet():
     with pytest.raises(TypeError, match="scope must be a String"):
         myLibrary.save_datasheet(name="test", data=pd.DataFrame(), scope=1)
         
-    with pytest.raises(RuntimeError,
-                       match="The data sheet does not exist: stsim_test"):
+    with pytest.raises(ValueError,
+                       match="datasheet name must be prefixed with package name"):
         myLibrary.save_datasheet(name="test", data=pd.DataFrame(), force=True)
         
     with pytest.raises(
@@ -386,26 +375,24 @@ def test_library_save_datasheet():
         RuntimeError,
         match ="The transfer method is not valid for a single row data sheet."
     ):
-        myLibDF = pd.DataFrame({"IncludeInput": ["Yes"],
-                                "IncludeOutput": ["Yes"], 
+        myLibDF = pd.DataFrame({"IncludeData": ["Yes"],
                                 "BeforeUpdate": ["Yes"]})
         myLibrary.save_datasheet(name="core_Backup", data=myLibDF, append=True)
     
     initial_core_backup = myLibrary.datasheets(name="core_Backup")
-    assert initial_core_backup["IncludeOutput"].isna().values[0]
+    assert (initial_core_backup["IncludeData"] == "Yes").item()
     
-    initial_core_backup["IncludeOutput"] = "Yes"
+    initial_core_backup["IncludeData"] = "No"
     myLibrary.save_datasheet(name="core_Backup", data=initial_core_backup)
     modified_core_backup = myLibrary.datasheets(name="core_Backup")
-    assert (modified_core_backup["IncludeOutput"] == "Yes").item()   
+    assert (modified_core_backup["IncludeData"] == "No").item()   
 
-    initial_core_backup["IncludeOutput"] = False
+    initial_core_backup["IncludeData"] = True
     myLibrary.save_datasheet(name="core_Backup", data=initial_core_backup)
     modified_core_backup = myLibrary.datasheets(name="core_Backup")
-    assert (modified_core_backup["IncludeOutput"] == "No").item() 
+    assert (modified_core_backup["IncludeData"] == "Yes").item() 
 
-    myLibDF = pd.DataFrame({"IncludeInput": ["Yes"],
-                            "IncludeOutput": ["Yes"], 
+    myLibDF = pd.DataFrame({"IncludeData": ["Yes"],
                             "BeforeUpdate": ["Yes"]})
     myLibrary.save_datasheet(name="core_Backup", data=myLibDF)
     assert myLibrary.datasheets(name="core_Backup").equals(myLibDF)
@@ -418,11 +405,15 @@ def test_library_save_datasheet():
     
 def test_library_run():
     
-    mySession = ps.Session()
-    mySession.add_packages("helloworldSpatial")
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           template="example-library", overwrite=True,
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession,
                            forceUpdate=True)
+    all_scns = myLibrary.scenarios()
+    num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
+    num_scns = len(all_scns)
+    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    proj_id = myLibrary.projects().iloc[0].ProjectId
     
     # Test run method
     with pytest.raises(
@@ -433,73 +424,36 @@ def test_library_run():
     with pytest.raises(
             TypeError,
             match="project must be Project instance, String, or Integer"):
-        myLibrary.run(project=[1])
-        
-    with pytest.raises(
-            TypeError,
-            match="jobs must be an Integer"):
-        myLibrary.run(jobs="1")
-    
-    runcontrol = myLibrary.datasheets("RunControl", True, False, False,
-                                      "Scenario", None, None, False, True, False, 1)
-    runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
-    myLibrary.save_datasheet("RunControl", runcontrol, 
-                             False, False,
-                             "Scenario", 1)
+        myLibrary.run(project=[proj_id])
     
     myLibrary.run()
-    assert len(myLibrary.scenarios()) == 2
-    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
+    num_scns += num_parent_scns
+    assert len(myLibrary.scenarios()) == num_scns
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
-    myLibrary.run(project=1)
-    assert len(myLibrary.scenarios()) == 3
-    assert myLibrary.scenarios().iloc[2]["IsResult"] == "Yes"
+    myLibrary.run(project=proj_id)
+    num_scns += num_parent_scns
+    assert len(myLibrary.scenarios()) == num_scns
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
-    myLibrary.run(project=1, scenarios=1)
-    assert len(myLibrary.scenarios()) == 4     
-    assert myLibrary.scenarios().iloc[3]["IsResult"] == "Yes"
+    myLibrary.run(project=proj_id, scenarios=scn_id)
+    num_scns += 1
+    assert len(myLibrary.scenarios()) == num_scns     
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
     myLibrary.projects(name="New Project")
     with pytest.raises(
             ValueError,
             match="Must specify project when > 1 Project in the Library"):
         myLibrary.run()
-        
-def test_library_addons_functions():
-    
-    myLibrary = ps.library(name="stsim_test", package="stsim", overwrite=True)
-    
-    # Test enable_addons method
-    with pytest.raises(TypeError,
-                       match="name must be a String or List of Strings"):
-        myLibrary.enable_addons(name=1)
-    
-    with pytest.raises(TypeError,
-                       match="all elements in name must be Strings"):
-        myLibrary.enable_addons(name=[1, True])
-        
-    myLibrary.enable_addons("stsimsf")
-    stsimsf_info = myLibrary.addons[myLibrary.addons["Name"] == "stsimsf"]
-    assert stsimsf_info["Enabled"].item() == "Yes"    
-    
-    # Test disable_addons method
-    with pytest.raises(TypeError,
-                       match="name must be a String or List of Strings"):
-        myLibrary.disable_addons(name=1)
-    
-    with pytest.raises(TypeError,
-                       match="all elements in name must be Strings"):
-        myLibrary.disable_addons(name=[1, True])
-        
-    myLibrary.disable_addons("stsimsf")
-    stsimsf_info = myLibrary.addons[myLibrary.addons["Name"] == "stsimsf"]
-    assert stsimsf_info["Enabled"].item() == "No" 
+
+    myLibrary.delete(project="New Project", force=True)
     
 def test_project_attributes():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Check attributes
@@ -511,8 +465,9 @@ def test_project_attributes():
     
 def test_project_scenarios():  
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Test scenarios method
@@ -534,23 +489,21 @@ def test_project_scenarios():
     assert isinstance(myProject.scenarios(summary=False), list)
     assert myProject.scenarios().empty
     assert len(myProject.scenarios().columns) == 4
-    assert len(myProject.scenarios(optional=True).columns) == 11    
+    assert len(myProject.scenarios(optional=True).columns) == 10    
     assert isinstance(myProject.scenarios(name="test"), ps.Scenario)
     assert len(myProject.scenarios()) == 1
     assert isinstance(myProject.scenarios(sid=1), ps.Scenario)    
 
 def test_project_datasheets():
 
-    mySession = ps.Session()
-    pkgs_to_add = ["stsim", "stsimsf", "stsimcbmcfs3", "helloworldSpatial"]
+    mySession = ps.Session(session_path)
+    pkgs_to_add = ["stsim", "stsimecodep", "dgsim", "helloworld"]
     for pkg in pkgs_to_add:
         if pkg not in mySession.packages()["Name"].values:
-            mySession.add_packages(pkg)
+            mySession.install_packages(pkg)
 
-    if "helloworldSpatial" not in mySession.packages()["Name"].values:
-        mySession.add_packages("helloworldSpatial")
-
-    myLibrary = ps.library(name="Test", package="helloworldSpatial")
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"], 
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
     # Test Datasheets
@@ -569,7 +522,7 @@ def test_project_datasheets():
     assert isinstance(myProject.datasheets(), pd.DataFrame)
     assert isinstance(myProject.datasheets(summary=False), list)
     assert len(myProject.datasheets().columns) == 3
-    assert len(myProject.datasheets(optional=True).columns) == 7
+    assert len(myProject.datasheets(optional=True).columns) == 6
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
 
@@ -585,8 +538,10 @@ def test_project_datasheets():
     
 def test_project_save_datasheet():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, forceUpdate=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
+                           overwrite=True, forceUpdate=True, 
+                           session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     myLibrary.scenarios(name="test")
     myLibrary.scenarios(name="test2")
@@ -609,50 +564,61 @@ def test_project_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myProject.save_datasheet(name="test", data=1)
         
-    assert myProject.datasheets(name="core_AutoGenTag").empty
-    test_datasheet = pd.DataFrame({"Name": ["test"], "AutoGenTagKey": ["key"],
-                                  "AutoGenTagValue": [1]})
-    myProject.save_datasheet(name="core_AutoGenTag", data=test_datasheet)
-    assert myProject.datasheets(name="core_AutoGenTag").empty is False
+    assert myProject.datasheets(name="core_DistributionType").empty
+    test_datasheet = pd.DataFrame({"Name": ["Test"], 
+                                   "Description": ["Test Distribution Type"],
+                                   "IsInternal": [False]})
+    myProject.save_datasheet(name="core_DistributionType", data=test_datasheet)
+    assert myProject.datasheets(name="core_DistributionType").empty is False
+    assert myProject.datasheets(name = "core_DistributionType").equals(test_datasheet)
 
-    myProjDF = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF)
-    assert myProject.datasheets(name = "core_RunSchedulerScenario").equals(myProjDF)
+    myProjDF2 = pd.DataFrame({"Name": ["Test2"], 
+                              "Description": ["Test Distribution Type2"],
+                              "IsInternal": [False]})
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False, force=True)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 1
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [2], "Order": [2]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False, force=True)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 1
+    myProjDF2 = pd.DataFrame({"Name": ["Test3"], 
+                              "Description": ["Test Distribution Type3"],
+                              "IsInternal": [False]})    
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=True, force=True)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [1], "Order": [1]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=True, force=True)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+    myProjDF2 = pd.DataFrame({"Name": ["Test4"], 
+                              "Description": ["Test Distribution Type4"],
+                              "IsInternal": [False]})    
+    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False)
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProjDF2 = pd.DataFrame({'ScheduledScenarioID': [3], "Order": [3]})
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = myProjDF2, append=False)
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
+    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame())
+    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
 
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame())
-    assert len(myProject.datasheets(name = "core_RunSchedulerScenario")) == 2
-
-    myProject.save_datasheet(name = "core_RunSchedulerScenario", data = pd.DataFrame(), force=True)
-    assert myProject.datasheets(name = "core_RunSchedulerScenario").empty
+    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame(), force=True)
+    assert myProject.datasheets(name = "core_DistributionType").empty
 
 def test_project_copy_delete():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial")
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, packages=["helloworld"], 
+                           overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
 
     # Test copy
     with pytest.raises(TypeError, match="name must be a String"):
         myProject.copy(name=1)
+
+    test_datasheet = pd.DataFrame({"Name": ["Test"], 
+                                   "Description": ["Test Distribution Type"],
+                                   "IsInternal": [False]})
+    myProject.save_datasheet(name="core_DistributionType", data=test_datasheet)
         
     myNewProj = myProject.copy()
     assert myNewProj.name == "Definitions - Copy"
-    assert myNewProj.datasheets(name="core_AutoGenTag").empty is False
+    assert myNewProj.datasheets(name="core_DistributionType").empty is False
     
     myNewerProj = myProject.copy(name="Definitions 2")
     assert myNewerProj.name == "Definitions 2"
-    assert myNewerProj.datasheets(name="core_AutoGenTag").empty is False
+    assert myNewerProj.datasheets(name="core_DistributionType").empty is False
     
     # Test delete    
     with pytest.raises(
@@ -665,43 +631,44 @@ def test_project_copy_delete():
         myNewProj.scenarios()
 
 def test_project_run():
-    myLibrary = ps.library(name = "stsimLibrary",
-                           package = "stsim",
-                           template = "non-spatial-example",
-                           overwrite=True,
+
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession,
                            forceUpdate=True)
+    myProject = myLibrary.projects(name="Definitions")
+    all_scns = myProject.scenarios()
+    num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
+    num_scns = len(all_scns)
+    scn_id = myProject.scenarios().iloc[1].ScenarioId
 
-    myProject = myLibrary.projects(pid=1)
-    myProject.run([5,14])
-    scenarios = myProject.scenarios()
-    result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
-    assert len(result_scenarios) == 2
-
-    for result_scn in result_scenarios:
-        myProject.delete(scenario=result_scn, force=True)
-    assert len(myProject.scenarios()) == 2
+    myProject.run([scn_id])
+    num_scns += 1
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
 
     myProject.run()
+    num_scns += num_parent_scns
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
+
+    myProject.run(scn_id)
+    num_scns += 1
+    assert len(myProject.scenarios()) == num_scns
+    assert myProject.scenarios().iloc[-1]["IsResult"] == "Yes"
+
     scenarios = myProject.scenarios()
     result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
-    assert len(result_scenarios) == 2
-
+    scenarios["IsResult"] == "Yes"].ScenarioId.tolist()
     for result_scn in result_scenarios:
         myProject.delete(scenario=result_scn, force=True)
     assert len(myProject.scenarios()) == 2
-
-    myProject.run(5)
-    scenarios = myProject.scenarios()
-    result_scenarios = scenarios[
-        scenarios["IsResult"] == "Yes"].ScenarioID.tolist()
-    assert len(result_scenarios) == 1 
 
 def test_scenarios_attributes():
 
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, packages="helloworld",
+                           overwrite=True, session=mySession)
     myScenario = myLibrary.scenarios("Test Scenario")
     
     # Check attributes
@@ -718,10 +685,12 @@ def test_scenarios_attributes():
     
 def test_scenario_datasheets():
     
-    myLibrary = ps.library(name="ds_test", package="helloworldSpatial",
-                           overwrite=True, template="example-library",
-                           forceUpdate=True)
-    myScenario = myLibrary.scenarios(sid=1)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, 
+                           packages=["stsim"],
+                           overwrite=True,
+                           session=mySession)
+    myScenario = myLibrary.scenarios("test")
     
     # Test datasheets
     with pytest.raises(TypeError, match="name must be a String"):
@@ -739,29 +708,36 @@ def test_scenario_datasheets():
     assert isinstance(myScenario.datasheets(), pd.DataFrame)
     assert isinstance(myScenario.datasheets(summary=False), list)
     assert len(myScenario.datasheets().columns) == 3
-    assert len(myScenario.datasheets(optional=True).columns) == 8
+    assert len(myScenario.datasheets(optional=True).columns) == 7
+
+    runcontrol = myScenario.datasheets(name="stsim_RunControl")
+    runcontrol = pd.DataFrame({"MaximumTimestep": [2], 
+                               "MaximumIteration": [2]})
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
+
     assert isinstance(myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration", 
         filter_value="1"), pd.DataFrame)
     assert len(myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration",
         filter_value="1") == 1)
     assert myScenario.datasheets(
-        name="RunControl",
+        name="stsim_RunControl",
         filter_column="MinimumIteration",
         filter_value="2").empty    
-    assert myScenario.datasheets(name="InputDatasheet").empty is False
-    assert myScenario.datasheets(name="InputDatasheet", empty=True).empty
+    assert myScenario.datasheets(name="stsim_RunControl").empty is False
+    assert myScenario.datasheets(name="stsim_RunControl", empty=True).empty
 
 def test_scenario_save_datasheet():
 
-    mySession = ps.Session()
-    mySession.add_packages("helloworld")
-    myLibrary = ps.library(name="ds_test", package="helloworld",
+    mySession = ps.Session(session_path)
+    mySession.install_packages("helloworld")
+    myLibrary = ps.library(name=test_lib_name, 
+                           packages="helloworld",
                            overwrite=True,
-                           forceUpdate=True)
+                           session=mySession)
     myScenario = myLibrary.scenarios(name="test")    
 
     # Test save_datasheet
@@ -781,11 +757,11 @@ def test_scenario_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myScenario.save_datasheet(name="test", data=1)
 
-    myDataFrame = pd.DataFrame({'x': [1.0], 'a': [2]})
+    myDataFrame = pd.DataFrame({'x': [1.5], 'a': [2]})
     myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame)
     assert myScenario.datasheets(name="helloworld_InputDatasheet").equals(myDataFrame)
 
-    myDataFrame2 = pd.DataFrame({'x': [2.0], 'a': [2]})
+    myDataFrame2 = pd.DataFrame({'x': [2.5], 'a': [2]})
     myScenario.save_datasheet(name="helloworld_InputDatasheet", data=myDataFrame2, append=True)
     assert len(myScenario.datasheets(name="helloworld_InputDatasheet")) == 2
 
@@ -797,34 +773,35 @@ def test_scenario_save_datasheet():
     
 def test_scenario_run_and_results():
     
-    myLibrary = ps.library(name="Test", overwrite=True,
-                           package="helloworldSpatial",
-                           template="example-library",
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession,
                            forceUpdate=True)
-    myScenario = myLibrary.scenarios(sid=1)
-    runcontrol = myScenario.datasheets(name="RunControl")
+    all_scns = myLibrary.scenarios()
+    num_scns = len(all_scns)
+    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    myScenario = myLibrary.scenarios(sid=scn_id)
+    runcontrol = myScenario.datasheets(name="stsim_RunControl")
     runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
-    myScenario.save_datasheet("RunControl", runcontrol)
+    runcontrol["MinimumTimestep"] = 2000
+    runcontrol["MaximumTimestep"] = 2020
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test run
-    with pytest.raises(TypeError, match="jobs must be an Integer"):
-        myScenario.run(jobs="1")
-        
-    myScenario.run(jobs=2)
-    assert len(myLibrary.scenarios()) == 2 
-    assert myLibrary.scenarios().iloc[1]["IsResult"] == "Yes"
+    myScenario.run()    
+    assert len(myLibrary.scenarios()) == num_scns + 1 
+    assert myLibrary.scenarios().iloc[-1]["IsResult"] == "Yes"
     
     # Test results
     with pytest.raises(TypeError, match="Scenario ID must be an Integer"):
         myScenario.results(sid="5")
         
     with pytest.raises(ValueError, match="not a Results Scenario"):
-        myScenario.results(sid=1)
+        myScenario.results(sid=scn_id)
         
     assert isinstance(myScenario.results(), pd.DataFrame)
     assert (myScenario.results()["IsResult"] == "Yes").all()
-    res_sid = myLibrary.scenarios().iloc[1]["ScenarioID"].item()
+    res_sid = myLibrary.scenarios().iloc[-1]["ScenarioId"].item()
     assert isinstance(myScenario.results(sid=res_sid), ps.Scenario) 
     
     # Test run_log
@@ -837,86 +814,82 @@ def test_scenario_run_and_results():
         myResultsScenario.datasheet_rasters(datasheet=1, column="test")
         
     with pytest.raises(TypeError, match="column must be a String"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column=1)
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column=1)
         
     with pytest.raises(TypeError, match="iteration must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
                                            iteration="test")
         
     with pytest.raises(TypeError, match="timestep must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
                                            timestep="test")
         
-    with pytest.raises(ValueError,
-                       match="Scenario must be a Results Scenario"):
-        myScenario.datasheet_rasters(datasheet="test", column="test")
-        
     with pytest.raises(RuntimeError,
-                       match="The data sheet does not exist"):
-        myResultsScenario.datasheet_rasters(datasheet="test", column="test")
+                       match="The datasheet does not belong to this library: stsim_test"):
+        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test")
         
     with pytest.raises(ValueError,
                        match="No raster columns found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="OutputDatasheet")
+        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputStratum")
     
     with pytest.raises(
             ValueError,
             match="Column test not found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
+        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
                                            column="test")
         
     with pytest.raises(
             ValueError, 
             match="Specified iteration above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          iteration=3) 
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          iteration=1000) 
        
     with pytest.raises(ValueError, match="iteration cannot be below 1"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
                                           iteration=0)
        
     with pytest.raises(ValueError,
                        match="Some iteration values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          iteration=[1, 2, 3])  
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          iteration=[1, 2, 1000])  
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          timestep=3) 
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          timestep=9999) 
        
     with pytest.raises(
             ValueError, 
             match="Specified timestep below range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
                                           timestep=0) 
        
     with pytest.raises(ValueError,
                        match="Some timestep values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="IntermediateDatasheet",
-                                          column="OutputRasterFile",
-                                          timestep=[1, 2, 3])  
+       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
+                                          column="Filename",
+                                          timestep=[1999, 2002, 2003])  
        
     with pytest.raises(
             ValueError, 
             match = "Must specify a filter_value to filter the filter_column"):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
-            filter_column="IntermediateDatasheetID") 
+            filter_column="OutputSpatialStateId") 
         
     with pytest.raises(
             ValueError, 
             match = "filter column test not in Datasheet"
             ):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
             filter_column="test",
             filter_value="test") 
@@ -925,32 +898,32 @@ def test_scenario_run_and_results():
             RuntimeError, 
             match="Cannot find a value for: test"):
         myResultsScenario.datasheet_rasters(
-            datasheet="IntermediateDatasheet",
+            datasheet="stsim_OutputSpatialState",
             column = None,
-            filter_column="IntermediateDatasheetID",
+            filter_column="OutputSpatialStateId",
             filter_value="test") 
       
     raster1 = myResultsScenario.datasheet_rasters(
-        datasheet="IntermediateDatasheet", column="OutputRasterFile",
-        iteration=1, timestep=1)
+        datasheet="stsim_OutputSpatialState", column="Filename",
+        iteration=1, timestep=2001)
     assert isinstance(raster1, ps.Raster)
     
     raster2 = myResultsScenario.datasheet_rasters(
-        datasheet="IntermediateDatasheet", column="OutputRasterFile")
-    assert len(raster2) == 4
+        datasheet="stsim_OutputSpatialState", column="Filename")
+    assert len(raster2) > 1
     assert all([isinstance(x, ps.Raster) for x in raster2])
     
     raster3 = myResultsScenario.datasheet_rasters(
-        datasheet = "IntermediateDatasheet", 
+        datasheet = "stsim_OutputSpatialState", 
         column = None,
-        filter_column="IntermediateDatasheetID",
-        filter_value=2)
-    assert isinstance(raster3, ps.Raster)
+        filter_column="Timestep",
+        filter_value=2001)
+    assert isinstance(raster3[0], ps.Raster)
     
     # Test raster class attributes
     assert os.path.isfile(raster1.source)
     assert isinstance(raster1.name, str)
-    assert raster1.name.endswith(".it1.ts1")
+    assert raster1.name.endswith(".it1.ts2001")
     assert isinstance(raster1.dimensions, dict)
     assert all([
         x in raster1.dimensions.keys() for x in [
@@ -965,14 +938,16 @@ def test_scenario_run_and_results():
     
 def test_scenario_copy_dep_delete():
     
-    myLibrary = ps.library(name="Test", package="helloworldSpatial",
-                           overwrite=True, template="example-library",
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=existing_lib_name, 
+                           session=mySession,
                            forceUpdate=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
-    runcontrol = myScenario.datasheets(name="RunControl")
-    runcontrol["MaximumIteration"] = 2
-    runcontrol["MaximumTimestep"] = 2
-    myScenario.save_datasheet("RunControl", runcontrol)
+    runcontrol = pd.DataFrame({
+        "MinimumTimestep": [2000],
+        "MaximumTimestep": [2015], 
+        "MaximumIteration": [5]})
+    myScenario.save_datasheet("stsim_RunControl", runcontrol)
     
     # Test copy
     with pytest.raises(TypeError, match="name must be a String"):
@@ -980,57 +955,51 @@ def test_scenario_copy_dep_delete():
         
     myNewScn = myScenario.copy()
     assert myNewScn.name == "My Scenario - Copy"
-    assert myNewScn.datasheets(name="RunControl").empty is False
+    assert myNewScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewScn.datasheets(
-        name="RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 5
     
     myNewerScn = myScenario.copy(name="My Scenario 2")
     assert myNewerScn.name == "My Scenario 2"
-    assert myNewerScn.datasheets(name="RunControl").empty is False
+    assert myNewerScn.datasheets(name="stsim_RunControl").empty is False
     assert myNewerScn.datasheets(
-        name="RunControl")["MaximumIteration"].item() == 2
+        name="stsim_RunControl")["MaximumIteration"].item() == 5
     
     # Test dependencies
     with pytest.raises(
             TypeError,
             match="dependency must be a Scenario, String, Integer, or List"):
-        myNewScn.dependencies(dependency=1.5)
-        
-    with pytest.raises(
-            TypeError,
-            match="remove must be a Logical"):
-        myNewScn.dependencies(dependency=myNewerScn.sid, remove="True")
+        myNewScn.dependencies = 1.5
     
-    assert myNewScn.dependencies().empty is True
-    myNewScn.dependencies(dependency=myNewerScn)
-    assert myNewScn.dependencies().empty is False
-    assert myNewScn.dependencies().Name.item() == "My Scenario 2"
+    assert myNewScn.dependencies.empty is True
+    myNewScn.dependencies = myNewerScn
+    assert myNewScn.dependencies.empty is False
+    assert myNewScn.dependencies.Name.item() == "My Scenario 2"
     
-    myNewScn.dependencies(dependency=myNewerScn.sid, remove=True, force=True)
-    assert myNewScn.dependencies().empty is True
+    myNewScn.dependencies = None
+    assert myNewScn.dependencies.empty is True
     
-    myNewScn.dependencies(dependency=myNewerScn.name)
-    assert myNewScn.dependencies().empty is False
+    myNewScn.dependencies = myNewerScn.name
+    assert myNewScn.dependencies.empty is False
 
-    myNewScn.dependencies(dependency=myNewerScn.name) # should not throw error
+    myNewScn.dependencies = myNewerScn.name # should not throw error
 
     with pytest.raises(
             ValueError,
             match="Scenario dependency My Scenario 3 does not exist"):
-        myNewScn.dependencies(dependency=[myNewerScn.name, "My Scenario 3"])
+        myNewScn.dependencies = [myNewerScn.name, "My Scenario 3"]
     
     sameNameScn = myScenario.copy(name="My Scenario 2")
     with pytest.raises(
             ValueError,
             match="dependency name not unique, use ID or Scenario"):
-        myNewScn.dependencies(dependency=sameNameScn.name)
+        myNewScn.dependencies = sameNameScn.name
 
-    myNewScn.dependencies(dependency=[myNewerScn, sameNameScn])
-    assert len(myNewScn.dependencies()) == 2
+    myNewScn.dependencies = [myNewerScn, sameNameScn]
+    assert len(myNewScn.dependencies) == 2
 
-    myNewScn.dependencies(dependency=[myNewerScn.sid, sameNameScn.sid],
-        remove=True, force=True)
-    assert myNewScn.dependencies().empty is True
+    myNewScn.dependencies = None
+    assert myNewScn.dependencies.empty is True
         
     # Test ignore_dependencies
     with pytest.raises(TypeError, match="value must be a String"):
@@ -1038,13 +1007,13 @@ def test_scenario_copy_dep_delete():
     
     assert math.isnan(myNewScn.ignore_dependencies())
     
-    myNewScn.ignore_dependencies(value="RunControl")
+    myNewScn.ignore_dependencies(value="stsim_RunControl")
     myNewScn.ignore_dependencies()
     
-    assert myNewScn.ignore_dependencies() == "RunControl"
+    assert myNewScn.ignore_dependencies() == "stsim_RunControl"
     
-    myNewScn.ignore_dependencies(value="InputDatasheet,OutputDatasheet")
-    assert myNewScn.ignore_dependencies() == "InputDatasheet,OutputDatasheet"
+    myNewScn.ignore_dependencies(value="stsim_RunControl,stsim_DeterministicTransition")
+    assert myNewScn.ignore_dependencies() == "stsim_RunControl,stsim_DeterministicTransition"
     
     # Test merge_dependencies
     with pytest.raises(TypeError, match="value must be a Logical"):
@@ -1056,19 +1025,21 @@ def test_scenario_copy_dep_delete():
     assert myNewScn.merge_dependencies() == "Yes"
     
     # Test delete            
-    with pytest.raises(RuntimeError, match="The scenario does not exist"):
-        myNewScn.delete(force=True)
-        myNewScn.run()
+    myNewScn.delete(force=True)
+    emptyResScn = myNewScn.run()
+    assert emptyResScn is None
+    
+    # Delete other scenarios
+    sameNameScn.delete(force=True)
+    myNewerScn.delete(force=True)
 
 def test_folder_functions():
 
-    myLibrary = ps.library(name = "stsimLibrary",
-                        package = "stsim",
-                        template = "non-spatial-example",
-                        overwrite=True,
-                        forceUpdate=True)
-
-    myProject = myLibrary.projects(pid=1)
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, 
+                           overwrite=True, 
+                           session=mySession)
+    myProject = myLibrary.projects("Definitions")
 
     df = myLibrary.folders()
     assert df.empty is True
@@ -1109,7 +1080,8 @@ def test_folder_functions():
     assert my_nested_folder.parent_id is not None
 
     # Move scenario into a folder
-    scn_id = myProject.scenarios()["ScenarioID"][0]
+    my_scenario = myProject.scenarios(name = "test")
+    scn_id = my_scenario.sid
     myScenario = myProject.scenarios(sid=scn_id)
     assert myScenario.folder_id is None
     myScenario.folder_id = fid
@@ -1119,7 +1091,7 @@ def test_folder_functions():
     myProject2 = myLibrary.projects(name = "New Project")
     my_folder2 = myProject2.folders(folder = "test3")
     df = myLibrary.folders()
-    assert len(df["Project ID"].unique()) == 2
+    assert len(df["ProjectId"].unique()) == 2
     assert my_folder2.project_id == myProject2.pid
 
     # Test project-subsetted folder data
@@ -1128,9 +1100,9 @@ def test_folder_functions():
     assert proj1_df.empty is False
     assert proj2_df.empty is False
     assert proj1_df.equals(proj2_df) is False
-    assert proj1_df["ID"].unique().tolist() != proj2_df["ID"].unique().tolist()
-    assert proj1_df["Project ID"].unique().item() == myProject.pid
-    assert proj2_df["Project ID"].unique().item() == myProject2.pid
+    assert proj1_df["Id"].unique().tolist() != proj2_df["Id"].unique().tolist()
+    assert proj1_df["ProjectId"].unique().item() == myProject.pid
+    assert proj2_df["ProjectId"].unique().item() == myProject2.pid
 
     # Test readonly and publish attributes
     assert my_folder.readonly == "No"
