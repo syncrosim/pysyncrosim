@@ -321,7 +321,7 @@ class Library(object):
                     return
 
             args = ["--add", "--package", "--lib=%s" % self.location,
-                    "--pkg=%s" % pkg_name, "--version=%s" % pkg_ver]
+                    "--pkg=%s" % pkg_name, "--ver=%s" % pkg_ver]
 
             self.session._Session__call_console(args)
             print(f"Package <{pkg} v{ver}> added")

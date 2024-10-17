@@ -817,29 +817,39 @@ class Scenario(object):
         
         if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
+        
+        try:    
+            print(f"Running Scenario [{self.sid}] {self.name}")
+            result = self.library.session._Session__call_console(args)
             
-        print(f"Running Scenario [{self.sid}] {self.name}")
-        result = self.library.session._Session__call_console(args)
-        
-        if result.returncode == 0:
-            print("Run successful")
-        
-        # Reset Project Scenarios
-        self.project._Project__scenarios = None
+            if result.returncode == 0:
+                print("Run successful")
 
-        # Reset results
-        self.__results = None
-        
-        # Retrieve Results Scenario ID
-        # Also resets scenarios and results info
-        result_id = self.results()["ScenarioId"].values[-1]
-        
-        # Return Results Scenario
-        result_scn = self.library.scenarios(project=self.project,
-                                            name=None,
-                                            sid=result_id)
-        
-        return result_scn
+        except RuntimeError as e:
+            print(e)
+
+        finally:
+            
+            # Reset Project Scenarios
+            self.project._Project__scenarios = None
+
+            # Reset results
+            self.__results = None
+            
+            # Retrieve Results Scenario ID
+            # Also resets scenarios and results info
+            results_df = self.results()
+
+            if (not results_df.empty):
+            
+                result_id = results_df["ScenarioId"].values[-1]
+                
+                # Return Results Scenario
+                result_scn = self.library.scenarios(project=self.project,
+                                                    name=None,
+                                                    sid=result_id)
+                
+                return result_scn
     
     def run_log(self):
         """
@@ -892,9 +902,8 @@ class Scenario(object):
                 raise ValueError(f'Scenario [{sid}] is not a Results Scenario')
         
         elif self.__results is None:
-            s = self.project.scenarios()
-            pat = '['+str(self.__sid)+']'
-            self.__results = s[s.Name.str.contains(pat)]
+            s = self.project.scenarios(optional = True)
+            self.__results = s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
             return self.__results
         else:
             return self.__results

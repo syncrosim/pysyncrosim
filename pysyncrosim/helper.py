@@ -132,7 +132,7 @@ def _check_library_update(session, loc, forceUpdate):
 
     try:
         
-        args = ["--list", "--packages", "--lib=%s" % loc]
+        args = ["--list", "--library", "--lib=%s" % loc]
         session._Session__call_console(args)
         return
         

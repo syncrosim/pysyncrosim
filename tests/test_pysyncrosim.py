@@ -8,7 +8,7 @@ import rasterio
 import tempfile
 
 temp_path = tempfile.TemporaryDirectory()
-session_path = "C:/gitprojects/ssimbin3"
+session_path = None
 test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
 existing_lib_name = os.path.join("C:/gitprojects/pysyncrosim/tests", "spatial-example.ssim")
 
@@ -407,7 +407,8 @@ def test_library_run():
     
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
-                           session=mySession)
+                           session=mySession,
+                           forceUpdate=True)
     all_scns = myLibrary.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
     num_scns = len(all_scns)
@@ -623,7 +624,8 @@ def test_project_run():
 
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
-                           session=mySession)
+                           session=mySession,
+                           forceUpdate=True)
     myProject = myLibrary.projects(name="Definitions")
     all_scns = myProject.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
@@ -763,7 +765,8 @@ def test_scenario_run_and_results():
     
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
-                           session=mySession)
+                           session=mySession,
+                           forceUpdate=True)
     all_scns = myLibrary.scenarios()
     num_scns = len(all_scns)
     scn_id = myLibrary.scenarios().iloc[1].ScenarioId
@@ -927,7 +930,8 @@ def test_scenario_copy_dep_delete():
     
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
-                           session=mySession)
+                           session=mySession,
+                           forceUpdate=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
     runcontrol = pd.DataFrame({
         "MinimumTimestep": [2000],
@@ -1011,9 +1015,9 @@ def test_scenario_copy_dep_delete():
     assert myNewScn.merge_dependencies() == "Yes"
     
     # Test delete            
-    with pytest.raises(RuntimeError, match="The scenario does not exist"):
-        myNewScn.delete(force=True)
-        myNewScn.run()
+    myNewScn.delete(force=True)
+    emptyResScn = myNewScn.run()
+    assert emptyResScn is None
     
     # Delete other scenarios
     sameNameScn.delete(force=True)

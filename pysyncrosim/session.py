@@ -49,7 +49,7 @@ class Session(object):
         self.__is_windows = os.name == 'nt'
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "3.0.0"
+        ssim_required_version = "3.0.9"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -330,7 +330,7 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                location = "C:/Program Files/SyncroSim3"
+                location = "C:/Program Files/SyncroSim Studio"
 
             else:
                 location = e.program_directory.item()
