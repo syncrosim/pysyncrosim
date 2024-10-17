@@ -922,7 +922,6 @@ class Library(object):
             
     def __check_datasheet_name(self, name):
         # Appends package name to Datasheet name
-
         if "_" not in name:
             raise ValueError("datasheet name must be prefixed with package name")
 

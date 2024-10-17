@@ -525,6 +525,16 @@ def test_project_datasheets():
     assert len(myProject.datasheets(optional=True).columns) == 6
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
+
+    # Test Addon Datasheet return
+    myLibrary = ps.library(name = "Test",
+                          package = "stsim",
+                          addons = ["stsimsf", "stsimcbmcfs3"],
+                          overwrite=True)
+
+    myProject = myLibrary.projects(name = "Definitions")
+    ds = myProject.datasheets(name = "stsimsf_FlowGroup")
+    assert isinstance(ds, pd.DataFrame)
     
 def test_project_save_datasheet():
     
