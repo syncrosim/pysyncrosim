@@ -4,7 +4,7 @@ Installation
 
 Before beginning the installation of ``pysyncrosim``, make sure you have the latest release of `SyncroSim`_ installed.
 
-	.. _SyncroSim: https://syncrosim.com/download/
+	.. _SyncroSim: https://syncrosim.com/studio-download/
 
 Dependencies
 ------------
@@ -37,7 +37,7 @@ Follow these steps to get started with ``conda`` and use ``conda`` to install ``
 .. code-block:: console
 
 	# Create new conda environment
-	conda create -n myenv python=3.12.4
+	conda create -n myenv python=3.12
 
 	# Activate environment
 	conda activate myenv
