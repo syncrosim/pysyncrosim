@@ -336,7 +336,7 @@ class Library(object):
 
         """
         library_pkgs = self.packages
-        packages = self.session._Session__validate_packages(packages)
+        self.session._Session__validate_packages(packages, None)
 
         for pkg in packages:
             if pkg in library_pkgs.Name.values:
