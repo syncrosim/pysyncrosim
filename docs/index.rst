@@ -16,6 +16,7 @@ Welcome to ``pysyncrosim``'s documentation!
 
    install
    quickstart
+   pysyncrosim_v2_update
    module_summary
    support
 
