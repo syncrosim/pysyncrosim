@@ -64,6 +64,10 @@ Variable naming
 ---------------
 The **ID** in variable names have been changed to **Id**. It is generally safe to substitute ``ID`` for ``Id`` throughout your script, unless that affects any variables not related to SyncroSim.
 
+Core datasheets
+---------------
+The ``corestime_`` datasheets are now simply called ``core_``.
+
 stsimsf
 -------
 The ST-Sim Stock & Flow package, ``stsimsf`` have been incorporated into ST-Sim. Substitute all ``stsimsf_`` datasheets throghout your script for ``stsim_``.
