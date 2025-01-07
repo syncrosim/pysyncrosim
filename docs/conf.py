@@ -22,7 +22,6 @@ copyright = '2024, ApexRMS'
 author = 'ApexRMS'
 
 # The full version, including alpha/beta/rc tags
-from osgeo import gdal
 import pysyncrosim as ps
 release = ps._version.__version__
 
