@@ -1,37 +1,13 @@
 Quickstart
 ==========
-``pysyncrosim`` is the Python interface to the `SyncroSim software framework`_, a program that structures and models your data. This tutorial will cover the basics of using the ``pysyncrosim`` package within the SyncroSim software framework.
-
-	.. _SyncroSim software framework: https://syncrosim.com
-	
-To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosim`_. You will also need to install the `helloworldTimePy`_ SyncroSim package.
+This tutorial will cover the basics of using the ``pysyncrosim`` package within the SyncroSim software framework. To complete this tutorial, you must `install SyncroSim`_ and `install pysyncrosim`_. You will also need to install the `helloworldTimePy`_ SyncroSim package.
 
 	.. _install SyncroSim: https://syncrosim.com/studio-download/
 	.. _install pysyncrosim: https://pysyncrosim.readthedocs.io/en/latest/install.html
 	.. _helloworldTimePy: https://apexrms.github.io/helloworldEnhanced/
 
-Overview of SyncroSim
----------------------
-`SyncroSim`_ is a software platform that helps you turn your data into forecasts. At the core of SyncroSim is an engine that automatically structures your existing data, regardless of its original format. SyncroSim transforms this structured data into forecasts by running it through a pipeline of calculations (i.e. a suite of models). Finally, SyncroSim provides a rich interface to interact with your data and models, allowing you to explore and track the consequences of alternative “what-if” forecasting scenarios. Within this software framework is the ability to use and create SyncroSim packages.
-
-	.. _SyncroSim: https://syncrosim.com
-
-For more details consult the `SyncroSim online documentation`_.
-
-    .. _SyncroSim online documentation: https://docs.syncrosim.com/
-
-Overview of ``pysyncrosim``
----------------------------
-``pysyncrosim`` is a Python package designed to facilitate the development of modeling workflows for the SyncroSim software framework. Using the ``pysyncrosim`` interface, simulation models can be added and run through SyncroSim to transform scenario-based datasets into model forecasts. This Python package takes advantage of general features of SyncroSim, such as defining scenarios with spatial or non-spatial inputs, running Monte Carlo simulations, and summarizing model outputs. 
-
-.. note::
-
-	`SyncroSim v3.0.9`_ or higher is required to use ``pysyncrosim v2.0.0`` or higher.
-
-		.. _SyncroSim v3.0.9: https://syncrosim.com/studio-download/
-
 SyncroSim package: `helloworldTimePy`
------------------------------------
+-------------------------------------
 `helloworldTimePy`_ was designed to be a simple package to show off some key functionalities of SyncroSim, including the ability to add timesteps to SyncroSim modeling workflows.
 
 	.. _helloworldTimePy: https://apexrms.github.io/helloworldEnhanced/
@@ -388,6 +364,7 @@ Configuring the RunControl Datasheet
 Next, we will populate the ``Pipeline`` datasheet. The ``Pipeline`` datasheet is a built-in SyncroSim datasheet, meaning that it comes with every SyncroSim library regardless of which packages that library uses. The Pipeline datasheet determines which transformer stage the scenarios will run and in which order. We use the term “transformers” because these constitute scripts that *transform* input data into output data. Use the code below to assign the ``Pipeline`` datasheet to a new DataFrame variable and check the values required by the datasheet.
 
 .. code-block:: pycon
+
     # Load Pipeline datasheet to a new pandas DataFrame
     >>> pipeline_df = my_scenario.datasheets(name = "core_Pipeline")
 
@@ -411,6 +388,7 @@ The pipeline datasheet requires two values:
 To find which **StageNameId** values are available, we can use the :meth:`~pysyncrosim.scenario.Scenario.datasheets()` method to view the project-scoped core ``Transformer`` datasheet.
 
 .. code-block:: pycon
+    
     # View the Transformer datasheet for the project
     >>> my_project.datasheets(name = "core_Transformer")
                             Name                DisplayName       PackageName  \
@@ -424,7 +402,7 @@ Below we will use the ``pandas`` ``concat()`` function to update the ``Pipeline`
 .. code-block:: pycon
 
     # Create pipeline DataFrame
-    >>> myPipeline = pd.DataFrame({"StageNameId":[“Hello World Time (Python)”], 
+    >>> myPipeline = pd.DataFrame({"StageNameId":["Hello World Time (Python)"], 
     >>>                            "RunOrder": [1]})
 
     # Append pipeline data to pipeline_df

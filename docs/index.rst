@@ -14,8 +14,10 @@ Welcome to ``pysyncrosim``'s documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   overview
    install
    quickstart
+   pysyncrosim_v2_update
    module_summary
    support
 
