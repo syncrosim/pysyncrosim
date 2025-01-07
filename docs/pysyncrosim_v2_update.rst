@@ -1,6 +1,6 @@
-Updating your pysyncrosim scripts to pysyncrosim v 2.0
+Updating scripts to pysyncrosim v2
 ========================================================
-The introduction of `SyncroSim Studio`_ brought some structural changes and new functionalities, which get reflected in the ``pysyncrosim`` module. Use the guide below to update your ``pysyncrosim`` version 1 scripts to be compatible with ``pysyncrosim v2.0``.
+The introduction of `SyncroSim Studio`_ brought some structural changes and new functionalities, which get reflected in the ``pysyncrosim`` module. Use the guide below to update your ``pysyncrosim`` version 1 scripts to be compatible with ``pysyncrosim v2``.
 
         .. _SyncroSim Studio: https://syncrosim.com/studio/
 
@@ -25,15 +25,19 @@ Previously, the ``add_packages()`` and ``remove_packages()`` methods were used t
         session.uninstall_packages()
 
 You can also have multiple versions of a package installed. Use the ``version`` argument in the ``install_packages()`` method to specify which version of the package you would like to install. If you do not specify a version, then the latest version of the package will be installed.
-::
-        # Install St-Sim version 4.0.0
+
+.. code-block:: pycon
+
+        # Install ST-Sim version 4.0.0
         mySession.install_packages(packages = "stsim", version = "4.0.0")
 
         # Install the latest version of ST-Sim on the package server
         mySession.install_packages(packages = "stsim")
 
 You can also use the ``version`` argument in the ``uninstall_packages()`` method to specify which version you would like to uninstall. If you do not specify a version, then all versions of that package will be uninstalled.
-::
+
+.. code-block:: pycon
+
         # Uninstall ST-Sim version 4.0.0
         mySession.uninstall_packages(packages = "stsim", version = "4.0.0")
 
@@ -53,7 +57,9 @@ Now you can use multiple SyncroSim packages in a single library. To add and remo
 **Note:** when you remove a package from your library any associated datasheets will be removed as well.
 
 You can also choose which package version to use within a library. Use the ``versions`` argument in the ``add_package()`` method to load a specific version of a package in a library, or to change the version of a package that the library uses.
-::
+
+.. code-block:: pycon
+
         # Add ST-Sim version 4.0.0 to your library
         myLibrary.add_packages(packages = "stsim", versions = "4.0.0")
 
@@ -67,16 +73,17 @@ Creating libraries
 In SyncroSim 3, the concept of *addon* packages no longer exists. All addon packages have either been converted to standalone packages (e.g., ``burnP3PlusPrometheus``), and can be added to a library without having to load a base package first, or incorporated directly into its base package (e.g., ``stsimsf`` is now part of ``stsim``).
 Because of that, and since SyncroSim libraries can support multiple packages, the following changes have been made to the ``library()`` method:
 
-* The ``addon`` argument has been removed.
+* The ``addon`` argument has been removed
 
-* The ``package`` argument has been renamed to ``packages`` (plural).
-::
+* The ``package`` argument has been renamed to ``packages`` (plural)
+
+.. code-block:: pycon
 
         # pysyncrosim version 1:
         myLibrary = ps.library(package = "packageName", addon = "addonName")
 
         # pysyncrosim version 2:
-        myLibrary = ps.library(packages = ["package1", "package2"])
+        myLibrary = ps.library(packages = ["packageName1", "packageName2"])
 
 
 Library information
@@ -126,7 +133,9 @@ Multiprocessing
 ^^^^^^^^^^^^^^^
 the ``run()`` method no longer has the ``jobs`` argument for setting the number of cores to use during a multiprocessing run. 
 Instead, use the ``core_Multiprocessing`` library datasheet to set the number of cores to use.
-::
+
+.. code-block:: pycon
+
         multiprocessing = pd.DataFrame({'EnableMultiprocessing': True,
                                         'MaximumJobs': [6]})
 
@@ -139,7 +148,9 @@ Deprecated methods
 
 Addon methods
 ^^^^^^^^^^^^^^^
-Since the *addon* concept no longer applies, the following methods have been removed::
+Since the *addon* concept no longer applies, the following library methods have been removed
+
+.. code-block:: pycon
 
         myLibrary.addons()
         myLibrary.enable_addons()
@@ -164,6 +175,6 @@ Core datasheets
 ---------------
 The `system datasheets`_, previously identified by the prefix ``corestime_``, are now prefixed by ``core_``.
 
-        .. _system datasheets_: https://docs.syncrosim.com/reference/ds_overview.html
+        .. _system datasheets: https://docs.syncrosim.com/reference/ds_overview.html
 
 
