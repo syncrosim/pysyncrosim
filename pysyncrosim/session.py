@@ -49,7 +49,7 @@ class Session(object):
         self.__is_windows = os.name == 'nt'
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "3.0.9"
+        ssim_required_version = "3.0.24"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -303,24 +303,33 @@ class Session(object):
                 self.console_exe = self.__init_console(console=True)
 
 
-    def install_conda(self):
+    def install_conda(self, software="Miniforge"):
         """
-        Installs Miniconda to the default installation path
+        Installs Miniforge or Miniconda to the default installation path
         within the SyncroSim installation folder. If you already
         have conda installed in a non-default location, then you
         can point SyncroSim towards that installation using the 
         conda_filepath argument when loading the Session class.
+
+        Parameters
+        ----------
+        software : Str, optional
+            The software to install. Options are "Miniforge" (Default)
+            or "Miniconda".
         
         Returns
         -------
         None.
 
-        """        
-        args = ["--conda", "--install"]
+        """
+        if software not in ["Miniforge", "Miniconda"]:
+            raise ValueError("software must be 'Miniforge' or 'Miniconda'")
+
+        args = ["--conda", "--install", f"--software={software}"]
         result = self.__call_console(args)
 
         if result.returncode == 0:
-            print("Miniconda installed successfully")
+            print(f"{software} installed successfully")
         else:
             print(result.stdout.decode('utf-8'))
 
