@@ -303,7 +303,7 @@ class Session(object):
                 self.console_exe = self.__init_console(console=True)
 
 
-    def install_conda(self, software="Miniforge"):
+    def install_conda(self, software="miniforge"):
         """
         Installs Miniforge or Miniconda to the default installation path
         within the SyncroSim installation folder. If you already
@@ -314,16 +314,16 @@ class Session(object):
         Parameters
         ----------
         software : Str, optional
-            The software to install. Options are "Miniforge" (Default)
-            or "Miniconda".
+            The software to install. Options are "miniforge" (Default)
+            or "miniconda".
         
         Returns
         -------
         None.
 
         """
-        if software not in ["Miniforge", "Miniconda"]:
-            raise ValueError("software must be 'Miniforge' or 'Miniconda'")
+        if software not in ["miniforge", "miniconda"]:
+            raise ValueError("software must be 'miniforge' or 'miniconda'")
 
         args = ["--conda", "--install", f"--software={software}"]
         result = self.__call_console(args)
