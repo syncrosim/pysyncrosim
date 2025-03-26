@@ -5,6 +5,7 @@ import subprocess
 import pandas as pd
 import pysyncrosim as ps
 from pysyncrosim._version import __version__
+from pysyncrosim import helper
 
 class Session(object):
     """
@@ -150,10 +151,10 @@ class Session(object):
         -------
         None.
         """
-        profile_info = self.__retrieve_profile()
-        is_signed_in = profile_info.startswith('Username')
+        is_signed_in = self.__check_signin()
 
         if is_signed_in:
+            profile_info = self.__retrieve_profile()
             sign_in_status = "You are already signed in to the following SyncroSim account:\r\n"
             sign_in_status += f"{profile_info}\r\n"
             sign_in_status += "Use the sign_out() method to sign out of the current SyncroSim account."
@@ -170,21 +171,21 @@ class Session(object):
 
         while counter < counterMax and success is False:
             time.sleep(1)
-            profile_info = self.__retrieve_profile()
-            is_signed_in = profile_info.startswith('Username')
+            is_signed_in = self.__check_signin()
             if is_signed_in:
                 success = True
             counter += 1
 
         if success:
-            sign_in_status = "Successfully signed into SyncroSim account.\r\n"
+            profile_info = self.__retrieve_profile()
+            sign_in_status = "\r\nSuccessfully signed into SyncroSim account.\r\n"
             sign_in_status += f"{profile_info}"
 
         elif counter == counterMax:
-            sign_in_status = "Sign in timed out."
+            sign_in_status = "Sign in timed out.\r\n"
 
         else:
-            sign_in_status = "Sign in failed."
+            sign_in_status = "Sign in failed.\r\n"
 
         print(sign_in_status)
 
@@ -197,11 +198,10 @@ class Session(object):
         -------
         None.
         """
-        profile_info = self.__retrieve_profile()
-        is_signed_in = profile_info.startswith('Username')
+        is_signed_in = self.__check_signin()
 
         if not is_signed_in:
-            sign_out_status = "You are not currently signed in."
+            sign_out_status = "You are not currently signed in.\r\n"
             print(sign_out_status)
 
             return
@@ -216,8 +216,7 @@ class Session(object):
 
         while counter < counterMax and success is False:
             time.sleep(1)
-            profile_info = self.__retrieve_profile()
-            is_signed_in = profile_info.startswith('Username')
+            is_signed_in = self.__check_signin()
             if not is_signed_in:
                 success = True
             counter += 1
@@ -643,3 +642,23 @@ class Session(object):
             version = [v for v2 in version for v in v2]
 
         return zip(packages, version)
+    
+    def __check_signin(self):
+        """
+        Checks if the user is signed in to SyncroSim
+
+        Parameters
+        ----------
+        session : Session
+            SyncroSim Session class instance.
+
+        Returns
+        -------
+        is_signed_in : Logical
+            True if user is signed in, False if not.
+        """
+
+        profile_info = self.__retrieve_profile()
+        is_signed_in = profile_info.startswith('Username')
+
+        return is_signed_in

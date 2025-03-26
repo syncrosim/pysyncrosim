@@ -1,5 +1,6 @@
 import pysyncrosim as ps
 from pysyncrosim.environment import _environment
+from pysyncrosim import helper
 import os
 import io
 import re
