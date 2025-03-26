@@ -162,8 +162,7 @@ class Session(object):
             return
         
         args = ["--signin", "--force"]
-        sign_in_status = self.__call_console(args, decode=True)
-        print(sign_in_status)
+        self.__call_console_interactive(args)
 
         counter = 1
         counterMax = 30
@@ -209,8 +208,7 @@ class Session(object):
         
         else:
             args = ["--signout", "--force"]
-            sign_out_status = self.__call_console(args, decode=True)
-            print(sign_out_status)
+            self.__call_console_interactive(args)
 
         counter = 1
         counterMax = 30
@@ -506,6 +504,32 @@ class Session(object):
         else:    
             return result
 
+    def __call_console_interactive(self, args):
+        final_args = []
+        
+        final_args.append(self.console_exe)
+        final_args += args
+        
+        if self.__print_cmd:
+            print(final_args)
+            
+        if not self.__is_windows:
+            final_args = ["mono"] + final_args
+
+        process = subprocess.Popen(
+            final_args,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True)
+        
+        while True:
+            output = process.stdout.readline()
+            if output == "" and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+        
     def __retrieve_conda_filepath(self):        
         result = self.__call_console(["--conda", "--config"])
         
