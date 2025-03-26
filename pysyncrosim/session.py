@@ -1,5 +1,6 @@
 import os
 import io
+import time
 import subprocess
 import pandas as pd
 import pysyncrosim as ps
@@ -49,7 +50,7 @@ class Session(object):
         self.__is_windows = os.name == 'nt'
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "3.0.24"
+        ssim_required_version = "3.1.0"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -140,7 +141,118 @@ class Session(object):
     @conda_filepath.setter
     def conda_filepath(self, value):
         self.__set_conda_filepath(value)
+
+    def sign_in(self):
+        """
+        Signs in to SyncroSim.
+
+        Returns
+        -------
+        None.
+        """
+        profile_info = self.__retrieve_profile()
+        is_signed_in = profile_info.startswith('Username')
+
+        if is_signed_in:
+            sign_in_status = "You are already signed in to the following SyncroSim account:\r\n"
+            sign_in_status += f"{profile_info}\r\n"
+            sign_in_status += "Use the sign_out() method to sign out of the current SyncroSim account."
+            print(sign_in_status)
+
+            return
         
+        args = ["--signin", "--force"]
+        sign_in_status = self.__call_console(args, decode=True)
+        print(sign_in_status)
+
+        counter = 1
+        counterMax = 30
+        success = False
+
+        while counter < counterMax and success is False:
+            time.sleep(1)
+            profile_info = self.__retrieve_profile()
+            is_signed_in = profile_info.startswith('Username')
+            if is_signed_in:
+                success = True
+            counter += 1
+
+        if success:
+            sign_in_status = "Successfully signed into SyncroSim account.\r\n"
+            sign_in_status += f"{profile_info}"
+
+        elif counter == counterMax:
+            sign_in_status = "Sign in timed out."
+
+        else:
+            sign_in_status = "Sign in failed."
+
+        print(sign_in_status)
+
+    
+    def sign_out(self):
+        """
+        Signs out of SyncroSim.
+        
+        Returns
+        -------
+        None.
+        """
+        profile_info = self.__retrieve_profile()
+        is_signed_in = profile_info.startswith('Username')
+
+        if not is_signed_in:
+            sign_out_status = "You are not currently signed in."
+            print(sign_out_status)
+
+            return
+        
+        else:
+            args = ["--signout", "--force"]
+            sign_out_status = self.__call_console(args, decode=True)
+            print(sign_out_status)
+
+        counter = 1
+        counterMax = 30
+        success = False
+
+        while counter < counterMax and success is False:
+            time.sleep(1)
+            profile_info = self.__retrieve_profile()
+            is_signed_in = profile_info.startswith('Username')
+            if not is_signed_in:
+                success = True
+            counter += 1
+
+        if success:
+            sign_out_status = "Successfully signed out of SyncroSim account."
+
+        elif counter == counterMax:
+            sign_out_status = "Sign out timed out."
+
+        else:
+            sign_out_status = "Sign out failed."
+
+        print(sign_out_status)
+    
+    def view_profile(self):
+        """
+        Retrieves your SyncroSim profile information if signed in.
+        
+        Returns
+        -------
+        None.
+        """
+        profile_info = self.__retrieve_profile()
+
+        print(profile_info)
+
+    def __retrieve_profile(self):
+
+        args = ["--profile"]
+        p = self.__call_console(args, decode=True)
+
+        return p
         
     def version(self):
         """
@@ -339,7 +451,7 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                location = "C:/Program Files/SyncroSim Studio"
+                location = "C:/Program Files/SyncroSim"
 
             else:
                 location = e.program_directory.item()
