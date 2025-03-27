@@ -514,13 +514,20 @@ class Session(object):
             
         if not self.__is_windows:
             final_args = ["mono"] + final_args
+            process = subprocess.Popen(
+                final_args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
+        else:
+            process = subprocess.Popen(
+                final_args,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
 
-        process = subprocess.Popen(
-            final_args,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True)
+
         
         while True:
             output = process.stdout.readline()
