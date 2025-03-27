@@ -166,7 +166,7 @@ class Session(object):
         self.__call_console_interactive(args)
 
         counter = 1
-        counterMax = 30
+        counterMax = 60
         success = False
 
         while counter < counterMax and success is False:
@@ -526,8 +526,6 @@ class Session(object):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True)
-
-
         
         while True:
             output = process.stdout.readline()
