@@ -423,7 +423,7 @@ class Scenario(object):
             The timestep to subset by. The default is None.
         filter_column : String
             The column to filter the output rasters by 
-            (e.g. "TransitionGroupID=20"). The default is None.
+            (e.g. "TransitionGroupId=20"). The default is None.
         filter_value : String, Int, Logical
             The value to filter the filter_column by. The default is None.
         path_only : Logical
