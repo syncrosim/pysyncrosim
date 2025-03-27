@@ -1,9 +1,8 @@
 import pysyncrosim as ps
 from pysyncrosim.environment import _environment
-from pysyncrosim import helper
 import os
 import io
-import re
+import warnings
 import pandas as pd
 import numpy as np
 
@@ -437,24 +436,9 @@ class Scenario(object):
             Raster class instance or List of these.
 
         """
-        # Type Checks
-        if not isinstance(datasheet, str):
-            raise TypeError("datasheet must be a String")
-            
-        if column is not None and not isinstance(column, str):
-            raise TypeError("column must be a String")
-            
-        if iteration is not None and not isinstance(iteration, int)\
-            and not isinstance(iteration, np.int64)\
-                and not isinstance(iteration, list)\
-                    and not isinstance(iteration, range):
-            raise TypeError("iteration must be an Integer, List, or Range")
-            
-        if timestep is not None and not isinstance(timestep, int)\
-            and not isinstance(timestep, np.int64)\
-                and not isinstance(timestep, list)\
-                    and not isinstance(timestep, range):
-            raise TypeError("timestep must be an Integer, List, or Range")
+        # Validate inputs
+        self.__validate_datasheet_raster_inputs(
+            datasheet, column, iteration, timestep)
             
         # Check that Datasheet has package prefix
         datasheet = self.library._Library__check_datasheet_name(datasheet)
@@ -467,163 +451,40 @@ class Scenario(object):
             raise ValueError(f"Datasheet {datasheet} does not contain data.")
         
         # Check if column is raster column
-        args = ["--list", "--columns", "--allprops",
-                "--sheet=%s" % datasheet, "--csv", 
-                "--lib=%s" % self.library.location]
-        props = self.library.session._Session__call_console(args, decode=True,
-                                                            csv=True)
-        props = pd.read_csv(io.StringIO(props))
-        props["is_raster"] = props.Properties.str.contains(r"isRaster\^True")
+        column = self.__retrieve_raster_column(datasheet, column)
         
-        if (props.is_raster == False).all():
-            raise ValueError(
-                f"No raster columns found in Datasheet {datasheet}")
-          
-        # If no raster column specified, find the raster column
-        if column is None:
-            if len(props[props.is_raster == True]) > 1:
-                raise ValueError(
-                    "> 1 raster output column available, please specify.")
-            column = props[props.is_raster == True].Name.values[0]
-            
-        if not (props.Name == column).any():
-            raise ValueError(
-               f"Column {column} not found in Datasheet {datasheet}")
-            
-        col_props = props[props.Name == column]
-        
-        if col_props.is_raster is False:
-            raise ValueError(f"Column {column} is not a raster column")
-            
-        # TODO: Get band column if it exists
-        # if col_props.Properties.str.contains("bandColumn").any():
-        #     prop_split = col_props.Properties.str.split("!").values[0]
-        #     band_column = [b for b in prop_split if b.startswith("bandColumn")]
-        #     col_props["band_column"] = band_column[0].split("^")[1]
-        
-        if isinstance(iteration, range):
-            iteration = list(iteration)
-        
-        if iteration is not None:
-            if isinstance(iteration, int):
-                
-                if iteration > d.Iteration.max():
-                    raise ValueError(
-                        "Specified iteration above range of plausible values")
-                elif iteration <= 0:
-                    raise ValueError("iteration cannot be below 1")
+        # Filter data by iteration and timestep
+        d = self.__filter_by_iteration(iteration, d)
+        d = self.__filter_by_timestep(timestep, d)
                     
-                d = d.loc[d["Iteration"] == iteration]
-                
-            if isinstance(iteration, list):
-                
-                if any(x > d.Iteration.max() for x in iteration) or any(
-                        x < 1 for x in iteration):
-                    raise ValueError("Some iteration values outside of range")
-                    
-                d = d.loc[d["Iteration"].isin(iteration)]
-                
-            d = d.reset_index()
-            
-        if isinstance(timestep, range):
-            timestep = list(timestep)
-            
-        if timestep is not None:
-            if isinstance(timestep, int):
-                
-                if timestep > d.Timestep.max():
-                    raise ValueError(
-                        "Specified timestep above range of plausible values")
-                if timestep < d.Timestep.min():
-                    raise ValueError(
-                        "Specified timestep below range of plausible values")
-                    
-                d = d.loc[d["Timestep"] == timestep]
-                
-            if isinstance(timestep, list):
-                
-                if any(x > d.Timestep.max() for x in timestep) or any(
-                        x < d.Timestep.min() for x in timestep):
-                    raise ValueError("Some timestep values outside of range")
-                
-                d = d.loc[d["Timestep"].isin(timestep)]
-                
-            d = d.reset_index()
-                
-        # Create empty list to store raster objects
-        raster_list = []
-        
-        # Search for the following raster tifs in all possible output places
-        raster_tifs = d[column].values
-        rpaths = []
-        
-        # Find folder with raster data - search in input, temp, and output
-        if self.__env is None:
-            
-            for folder in [".data", ".temp"]:
-                
-                if folder != ".temp":
-                    lib_dir = self.__find_output_fpath(
-                        self.library.location + folder, datasheet)
-                else:
-                    lib_dir = self.library.location + folder
-                
-                for raster_tif in raster_tifs:
-                    for root, dirs, files in os.walk(lib_dir):
-                        if raster_tif in files:
-                            rpaths.append(os.path.join(root, raster_tif))
-                        else:
-                            break
-                        
-                    if len(rpaths) == 0:
-                        break
-                    
-                if len(rpaths) !=0:
-                    break
+        # Determine which folder to look for raster tifs      
+        if self.__env is None:                       
+            lib_dir = self.__find_output_fpath(
+                self.library.location + ".data", datasheet)
                 
         else:
+            # TODO: test update - do we need to also search .data?
             e = _environment()
-
-            for folder in [".data", ".temp"]:
-                
-                if folder != ".temp":
-                    lib_dir = self.__find_output_fpath(
-                        e.library_filepath.item() + folder, datasheet)
-                else:
-                    lib_dir = e.library_filepath.item() + folder
-                
-                for raster_tif in raster_tifs:
-                    for root, dirs, files in os.walk(lib_dir):
-                        if raster_tif in files:
-                            rpaths.append(os.path.join(root, raster_tif))
-                        else:
-                            break
-                        
-                    if len(rpaths) == 0:
-                        break
-                    
-                if len(rpaths) !=0:
-                    break
+            lib_dir = e.library_filepath.item() + ".temp"
+        
+        # Search for raster tifs in data or temp directories
+        raster_tifs = d[column].values
+        rpaths = self.__list_datasheet_rasters(raster_tifs, lib_dir)
         
         # Return only filepaths to rasters if path_only is True
         if path_only:
             return rpaths
         
-        # Iterate through all raster files in Datasheet
-        for i in range(0, len(rpaths)):
+        # Iterate through all raster files in datasheet and store in list
+        raster_list = []
+
+        for rpath in rpaths:
             
             # Open and append each raster from the Datasheet
-            if "Iteration" in d.columns:
-                if "Timestep" in d.columns:
-                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i],
-                                       timestep = d["Timestep"].loc[i])
-                else:
-                    raster = ps.Raster(rpaths[i], iteration = d["Iteration"].loc[i])
-            elif "Timestep" in d.columns:
-                raster = ps.Raster(rpaths[i], timestep=d["Timestep"].loc[i])
-            else:
-                raster = ps.Raster(rpaths[i])
-
+            data_row = d[d.Filename == os.path.basename(rpath)]
+            iter = None if "Iteration" not in d.columns else data_row.Iteration.item()
+            ts = None if "Timestep" not in d.columns else data_row.Timestep.item()   
+            raster = ps.Raster(rpath, iteration=iter, timestep=ts)
             raster_list.append(raster)
             
         if len(raster_list) == 1:
@@ -997,6 +858,129 @@ class Scenario(object):
             return int(parent_id)
         else:
             return parent_id
+    
+    def __validate_datasheet_raster_inputs(self, datasheet, column, iteration, timestep):
+                
+        if not isinstance(datasheet, str):
+            raise TypeError("datasheet must be a String")
+            
+        if column is not None and not isinstance(column, str):
+            raise TypeError("column must be a String")
+            
+        if iteration is not None and not isinstance(iteration, int)\
+            and not isinstance(iteration, np.int64)\
+                and not isinstance(iteration, list)\
+                    and not isinstance(iteration, range):
+            raise TypeError("iteration must be an Integer, List, or Range")
+            
+        if timestep is not None and not isinstance(timestep, int)\
+            and not isinstance(timestep, np.int64)\
+                and not isinstance(timestep, list)\
+                    and not isinstance(timestep, range):
+            raise TypeError("timestep must be an Integer, List, or Range")
+        
+    def __retrieve_raster_column(self, datasheet, column):
+
+        args = ["--list", "--columns", "--allprops",
+                "--sheet=%s" % datasheet, "--csv", 
+                "--lib=%s" % self.library.location]
+        props = self.library.session._Session__call_console(args, decode=True,
+                                                            csv=True)
+        props = pd.read_csv(io.StringIO(props))
+        props["is_raster"] = props.Properties.str.contains(r"isRaster\^True")
+        
+        if (props.is_raster == False).all():
+            raise ValueError(
+                f"No raster columns found in Datasheet {datasheet}")
+          
+        # If no raster column specified, find the raster column
+        if column is None:
+            if len(props[props.is_raster == True]) > 1:
+                raise ValueError(
+                    "> 1 raster output column available, please specify.")
+            column = props[props.is_raster == True].Name.values[0]
+            
+        if not (props.Name == column).any():
+            raise ValueError(
+               f"Column {column} not found in Datasheet {datasheet}")
+            
+        col_props = props[props.Name == column]
+        
+        if col_props.is_raster is False:
+            raise ValueError(f"Column {column} is not a raster column")
+        
+        return column
+    
+    def __list_datasheet_rasters(self, raster_tifs, lib_dir):
+
+        rpaths = []
+        for raster_tif in raster_tifs:
+            for root, _, files in os.walk(lib_dir):
+                if raster_tif in files:
+                    rpaths.append(os.path.join(root, raster_tif))
+                else:
+                    warnings.warn(f"The following raster was not found: {raster_tif}", 
+                                    UserWarning)
+                    
+        return rpaths
+    
+    def __filter_by_iteration(self, iteration, d):
+
+        if iteration is None:
+            return d
+
+        if isinstance(iteration, range):
+            iteration = list(iteration)
+        
+        if isinstance(iteration, int):
+            
+            if iteration > d.Iteration.max():
+                raise ValueError(
+                    "Specified iteration above range of plausible values")
+            elif iteration <= 0:
+                raise ValueError("iteration cannot be below 1")
+                
+            d = d.loc[d["Iteration"] == iteration]
+            
+        if isinstance(iteration, list):
+            
+            if any(x > d.Iteration.max() for x in iteration) or any(
+                    x < 1 for x in iteration):
+                raise ValueError("Some iteration values outside of range")
+                
+            d = d.loc[d["Iteration"].isin(iteration)]
+            
+        return d.reset_index()
+        
+    def __filter_by_timestep(self, timestep, d):
+
+        if timestep is None:
+            return d
+
+        if isinstance(timestep, range):
+            timestep = list(timestep)
+            
+        if isinstance(timestep, int):
+            
+            if timestep > d.Timestep.max():
+                raise ValueError(
+                    "Specified timestep above range of plausible values")
+            if timestep < d.Timestep.min():
+                raise ValueError(
+                    "Specified timestep below range of plausible values")
+                
+            d = d.loc[d["Timestep"] == timestep]
+            
+        if isinstance(timestep, list):
+            
+            if any(x > d.Timestep.max() for x in timestep) or any(
+                    x < d.Timestep.min() for x in timestep):
+                raise ValueError("Some timestep values outside of range")
+            
+            d = d.loc[d["Timestep"].isin(timestep)]
+            
+        d = d.reset_index()
+                
     
     def __init_dependencies(self):
         
