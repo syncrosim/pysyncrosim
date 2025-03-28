@@ -482,9 +482,9 @@ class Scenario(object):
             
             # Open and append each raster from the Datasheet
             data_row = d[d.Filename == os.path.basename(rpath)]
-            iter = None if "Iteration" not in d.columns else data_row.Iteration.item()
+            iter_val = None if "Iteration" not in d.columns else data_row.Iteration.item()
             ts = None if "Timestep" not in d.columns else data_row.Timestep.item()   
-            raster = ps.Raster(rpath, iteration=iter, timestep=ts)
+            raster = ps.Raster(rpath, iteration=iter_val, timestep=ts)
             raster_list.append(raster)
             
         if len(raster_list) == 1:
