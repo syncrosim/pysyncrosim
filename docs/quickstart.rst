@@ -112,8 +112,8 @@ Now ``helloworldTimePy`` should be included in the package list.
 .. code-block:: pycon
 
    >>> my_session.packages()
-                       Name                                       Description Version Schema Status
-        0  helloworldTimePy Example demonstrating how to use timesteps wit...   2.0.0    2.0     OK
+                  Name                                       Description Version Schema Status
+   0  helloworldTimePy Example demonstrating how to use timesteps wit...   2.0.0    2.0     OK
 
 You can also uninstall a SyncroSim package from your session using the :meth:`~pysyncrosim.session.Session.uninstall_packages()` method.
 
