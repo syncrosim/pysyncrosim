@@ -463,7 +463,7 @@ class Scenario(object):
                 self.library.location + ".data", datasheet)
                 
         else:
-            # TODO: test update - do we need to also search .data?
+            # TODO: test update - do we need to also search .data when in ssim env?
             e = _environment()
             lib_dir = e.library_filepath.item() + ".temp"
         
@@ -979,7 +979,7 @@ class Scenario(object):
             
             d = d.loc[d["Timestep"].isin(timestep)]
             
-        d = d.reset_index()
+        return d.reset_index()
                 
     
     def __init_dependencies(self):
