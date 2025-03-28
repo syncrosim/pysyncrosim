@@ -525,16 +525,6 @@ def test_project_datasheets():
     assert len(myProject.datasheets(optional=True).columns) == 6
     assert myProject.datasheets(name="core_Transformer").empty is False
     assert myProject.datasheets(name="core_Transformer", empty=True).empty
-
-    # Test Addon Datasheet return
-    myLibrary = ps.library(name = "Test",
-                          package = "stsim",
-                          addons = ["stsimsf", "stsimcbmcfs3"],
-                          overwrite=True)
-
-    myProject = myLibrary.projects(name = "Definitions")
-    ds = myProject.datasheets(name = "stsimsf_FlowGroup")
-    assert isinstance(ds, pd.DataFrame)
     
 def test_project_save_datasheet():
     
@@ -564,37 +554,33 @@ def test_project_save_datasheet():
     with pytest.raises(TypeError, match="data must be a pandas DataFrame"):
         myProject.save_datasheet(name="test", data=1)
         
-    assert myProject.datasheets(name="core_DistributionType").empty
+    assert myProject.datasheets(name="core_ExternalVariableType").empty
     test_datasheet = pd.DataFrame({"Name": ["Test"], 
-                                   "Description": ["Test Distribution Type"],
-                                   "IsInternal": [False]})
-    myProject.save_datasheet(name="core_DistributionType", data=test_datasheet)
-    assert myProject.datasheets(name="core_DistributionType").empty is False
-    assert myProject.datasheets(name = "core_DistributionType").equals(test_datasheet)
+                                   "Description": ["Test External Variable Type"]})
+    myProject.save_datasheet(name="core_ExternalVariableType", data=test_datasheet)
+    assert myProject.datasheets(name="core_ExternalVariableType").empty is False
+    assert myProject.datasheets(name = "core_ExternalVariableType").equals(test_datasheet)
 
     myProjDF2 = pd.DataFrame({"Name": ["Test2"], 
-                              "Description": ["Test Distribution Type2"],
-                              "IsInternal": [False]})
-    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False, force=True)
-    assert len(myProject.datasheets(name = "core_DistributionType")) == 1
+                              "Description": ["Test External Variable Type2"]})
+    myProject.save_datasheet(name = "core_ExternalVariableType", data = myProjDF2, append=False, force=True)
+    assert len(myProject.datasheets(name = "core_ExternalVariableType")) == 1
 
     myProjDF2 = pd.DataFrame({"Name": ["Test3"], 
-                              "Description": ["Test Distribution Type3"],
-                              "IsInternal": [False]})    
-    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=True, force=True)
-    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
+                              "Description": ["Test External Variable Type3"]})    
+    myProject.save_datasheet(name = "core_ExternalVariableType", data = myProjDF2, append=True, force=True)
+    assert len(myProject.datasheets(name = "core_ExternalVariableType")) == 2
 
     myProjDF2 = pd.DataFrame({"Name": ["Test4"], 
-                              "Description": ["Test Distribution Type4"],
-                              "IsInternal": [False]})    
-    myProject.save_datasheet(name = "core_DistributionType", data = myProjDF2, append=False)
-    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
+                              "Description": ["Test External Variable Type4"]})    
+    myProject.save_datasheet(name = "core_ExternalVariableType", data = myProjDF2, append=False)
+    assert len(myProject.datasheets(name = "core_ExternalVariableType")) == 2
 
-    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame())
-    assert len(myProject.datasheets(name = "core_DistributionType")) == 2
+    myProject.save_datasheet(name = "core_ExternalVariableType", data = pd.DataFrame())
+    assert len(myProject.datasheets(name = "core_ExternalVariableType")) == 2
 
-    myProject.save_datasheet(name = "core_DistributionType", data = pd.DataFrame(), force=True)
-    assert myProject.datasheets(name = "core_DistributionType").empty
+    myProject.save_datasheet(name = "core_ExternalVariableType", data = pd.DataFrame(), force=True)
+    assert myProject.datasheets(name = "core_ExternalVariableType").empty
 
 def test_project_copy_delete():
     

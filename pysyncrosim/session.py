@@ -1,9 +1,11 @@
 import os
 import io
+import time
 import subprocess
 import pandas as pd
 import pysyncrosim as ps
 from pysyncrosim._version import __version__
+from pysyncrosim import helper
 
 class Session(object):
     """
@@ -49,7 +51,7 @@ class Session(object):
         self.__is_windows = os.name == 'nt'
         
         # Add check to make sure that correct version of SyncroSim is being used
-        ssim_required_version = "3.0.9"
+        ssim_required_version = "3.1.0"
         ssim_current_version = self.version().split(" ")[-1]
         ssim_required_bits = ssim_required_version.split(".")
         ssim_current_bits = ssim_current_version.split(".")
@@ -140,7 +142,114 @@ class Session(object):
     @conda_filepath.setter
     def conda_filepath(self, value):
         self.__set_conda_filepath(value)
+
+    def sign_in(self):
+        """
+        Signs in to SyncroSim.
+
+        Returns
+        -------
+        None.
+        """
+        is_signed_in = self.__check_signin()
+
+        if is_signed_in:
+            profile_info = self.__retrieve_profile()
+            sign_in_status = "You are already signed in to the following SyncroSim account:\r\n"
+            sign_in_status += f"{profile_info}\r\n"
+            sign_in_status += "Use the sign_out() method to sign out of the current SyncroSim account."
+            print(sign_in_status)
+
+            return
         
+        args = ["--signin", "--force"]
+        self.__call_console_interactive(args)
+
+        counter = 1
+        counterMax = 60
+        success = False
+
+        while counter < counterMax and success is False:
+            time.sleep(1)
+            is_signed_in = self.__check_signin()
+            if is_signed_in:
+                success = True
+            counter += 1
+
+        if success:
+            profile_info = self.__retrieve_profile()
+            sign_in_status = "\r\nSuccessfully signed into SyncroSim account.\r\n"
+            sign_in_status += f"{profile_info}"
+
+        elif counter == counterMax:
+            sign_in_status = "Sign in timed out.\r\n"
+
+        else:
+            sign_in_status = "Sign in failed.\r\n"
+
+        print(sign_in_status)
+
+    
+    def sign_out(self):
+        """
+        Signs out of SyncroSim.
+        
+        Returns
+        -------
+        None.
+        """
+        is_signed_in = self.__check_signin()
+
+        if not is_signed_in:
+            sign_out_status = "You are not currently signed in.\r\n"
+            print(sign_out_status)
+
+            return
+        
+        else:
+            args = ["--signout", "--force"]
+            self.__call_console_interactive(args)
+
+        counter = 1
+        counterMax = 30
+        success = False
+
+        while counter < counterMax and success is False:
+            time.sleep(1)
+            is_signed_in = self.__check_signin()
+            if not is_signed_in:
+                success = True
+            counter += 1
+
+        if success:
+            sign_out_status = "Successfully signed out of SyncroSim account."
+
+        elif counter == counterMax:
+            sign_out_status = "Sign out timed out."
+
+        else:
+            sign_out_status = "Sign out failed."
+
+        print(sign_out_status)
+    
+    def view_profile(self):
+        """
+        Retrieves your SyncroSim profile information if signed in.
+        
+        Returns
+        -------
+        None.
+        """
+        profile_info = self.__retrieve_profile()
+
+        print(profile_info)
+
+    def __retrieve_profile(self):
+
+        args = ["--profile"]
+        p = self.__call_console(args, decode=True)
+
+        return p
         
     def version(self):
         """
@@ -303,24 +412,33 @@ class Session(object):
                 self.console_exe = self.__init_console(console=True)
 
 
-    def install_conda(self):
+    def install_conda(self, software="miniforge"):
         """
-        Installs Miniconda to the default installation path
+        Installs Miniforge or Miniconda to the default installation path
         within the SyncroSim installation folder. If you already
         have conda installed in a non-default location, then you
         can point SyncroSim towards that installation using the 
         conda_filepath argument when loading the Session class.
+
+        Parameters
+        ----------
+        software : Str, optional
+            The software to install. Options are "miniforge" (Default)
+            or "miniconda".
         
         Returns
         -------
         None.
 
-        """        
-        args = ["--conda", "--install"]
+        """
+        if software not in ["miniforge", "miniconda"]:
+            raise ValueError("software must be 'miniforge' or 'miniconda'")
+
+        args = ["--conda", "--install", f"--software={software}"]
         result = self.__call_console(args)
 
         if result.returncode == 0:
-            print("Miniconda installed successfully")
+            print(f"{software} installed successfully")
         else:
             print(result.stdout.decode('utf-8'))
 
@@ -330,7 +448,7 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                location = "C:/Program Files/SyncroSim Studio"
+                location = "C:/Program Files/SyncroSim"
 
             else:
                 location = e.program_directory.item()
@@ -385,6 +503,37 @@ class Session(object):
         else:    
             return result
 
+    def __call_console_interactive(self, args):
+        final_args = []
+        
+        final_args.append(self.console_exe)
+        final_args += args
+        
+        if self.__print_cmd:
+            print(final_args)
+            
+        if not self.__is_windows:
+            final_args = ["mono"] + final_args
+            process = subprocess.Popen(
+                final_args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
+        else:
+            process = subprocess.Popen(
+                final_args,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
+        
+        while True:
+            output = process.stdout.readline()
+            if output == "" and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+        
     def __retrieve_conda_filepath(self):        
         result = self.__call_console(["--conda", "--config"])
         
@@ -498,3 +647,23 @@ class Session(object):
             version = [v for v2 in version for v in v2]
 
         return zip(packages, version)
+    
+    def __check_signin(self):
+        """
+        Checks if the user is signed in to SyncroSim
+
+        Parameters
+        ----------
+        session : Session
+            SyncroSim Session class instance.
+
+        Returns
+        -------
+        is_signed_in : Logical
+            True if user is signed in, False if not.
+        """
+
+        profile_info = self.__retrieve_profile()
+        is_signed_in = profile_info.startswith('Username')
+
+        return is_signed_in

@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Apex Resource Management Solution Ltd. (ApexRMS). All rights reserved.
+# Copyright (c) 2025 Apex Resource Management Solution Ltd. (ApexRMS). All rights reserved.
 # MIT License
 
 from setuptools import setup, find_packages

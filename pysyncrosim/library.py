@@ -1421,8 +1421,8 @@ class Library(object):
                          "--lib=%s" % self.location,
                          "--sid=%d" % ids]
         optional_cols = self.__console_to_csv(optional_args)
-        optional_cols = optional_cols.replace({"No": False, 
-                                               "Yes": True})
+        optional_cols = optional_cols.replace(
+            {"No": False, "Yes": True}).infer_objects(copy=False)
         
         if optional_cols["DataInherited"].sum() > 0:
             add_cols = ["Name", "Data", "DataInherited",

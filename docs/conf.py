@@ -18,13 +18,13 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'pysyncrosim'
-copyright = '2024, ApexRMS'
+copyright = '2025, ApexRMS'
 author = 'ApexRMS'
 
 # The full version, including alpha/beta/rc tags
 import pysyncrosim as ps
 release = ps._version.__version__
-
+version = release
 
 # -- General configuration ---------------------------------------------------
 
@@ -75,8 +75,7 @@ html_static_path = ['_static']
 # Add logo
 html_logo = "img/logo.png"
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True}
+    'logo_only': True}
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
