@@ -481,7 +481,7 @@ class Scenario(object):
         for rpath in rpaths:
             
             # Open and append each raster from the Datasheet
-            data_row = d[d.Filename == os.path.basename(rpath)]
+            data_row = d[d[column] == os.path.basename(rpath)]
             iter_val = None if "Iteration" not in d.columns else data_row.Iteration.item()
             ts = None if "Timestep" not in d.columns else data_row.Timestep.item()   
             raster = ps.Raster(rpath, iteration=iter_val, timestep=ts)
@@ -688,6 +688,9 @@ class Scenario(object):
                 print("Run successful")
 
         except RuntimeError as e:
+            # TODO: add handling when the error message contains "You must be signed in" or "There has been an issue with your SyncroSim license file"
+
+            
             print(e)
 
         finally:
