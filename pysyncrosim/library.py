@@ -126,6 +126,19 @@ class Library(object):
 
         """
         return self.__location
+    
+    @property
+    def environment(self):
+        """
+        Retrieves the environment status of this Library.
+
+        Returns
+        -------
+        Boolean
+            True if this Library is in a SyncroSim environment, False otherwise.
+
+        """
+        return self.__environment
 
     @property
     def use_conda(self):
