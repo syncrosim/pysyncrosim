@@ -104,7 +104,7 @@ def test_helper():
         ps.library(name=test_lib_name, packages=["package", 1], session=mySession)
         
     with pytest.raises(TypeError, match="forceUpdate must be a Logical"):
-        ps.library(name=test_lib_name, forceUpdate="True", session=mySession)
+        ps.library(name=test_lib_name, force_update="True", session=mySession)
         
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
         ps.library(name=test_lib_name, overwrite="False", session=mySession)
@@ -121,7 +121,7 @@ def test_helper():
         ps.library("path/to/library", session=mySession)
       
     # Test output
-    myLibrary = ps.library(name=test_lib_name, forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_name, force_update=True, session=mySession)
     assert isinstance(myLibrary, ps.Library)
 
     # Test packages argument
@@ -333,7 +333,7 @@ def test_library_delete():
 def test_library_save_datasheet():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=test_lib_name, overwrite=True, forceUpdate=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_name, overwrite=True, force_update=True, session=mySession)
     
     # Test save_datasheet method
     with pytest.raises(
@@ -408,7 +408,7 @@ def test_library_run():
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
                            session=mySession,
-                           forceUpdate=True)
+                           force_update=True)
     all_scns = myLibrary.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
     num_scns = len(all_scns)
@@ -530,7 +530,7 @@ def test_project_save_datasheet():
     
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=test_lib_name, packages=["helloworld"],
-                           overwrite=True, forceUpdate=True, 
+                           overwrite=True, force_update=True, 
                            session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     myLibrary.scenarios(name="test")
@@ -621,7 +621,7 @@ def test_project_run():
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
                            session=mySession,
-                           forceUpdate=True)
+                           force_update=True)
     myProject = myLibrary.projects(name="Definitions")
     all_scns = myProject.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
@@ -762,7 +762,7 @@ def test_scenario_run_and_results():
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
                            session=mySession,
-                           forceUpdate=True)
+                           force_update=True)
     all_scns = myLibrary.scenarios()
     num_scns = len(all_scns)
     scn_id = myLibrary.scenarios().iloc[1].ScenarioId
@@ -927,7 +927,7 @@ def test_scenario_copy_dep_delete():
     mySession = ps.Session(session_path)
     myLibrary = ps.library(name=existing_lib_name, 
                            session=mySession,
-                           forceUpdate=True)
+                           force_update=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
     runcontrol = pd.DataFrame({
         "MinimumTimestep": [2000],

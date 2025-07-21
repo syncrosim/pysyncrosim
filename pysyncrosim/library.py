@@ -20,7 +20,8 @@ class Library(object):
     __scenarios = None
     __datasheets = None
     
-    def __init__(self, location=None, session=None, use_conda=None, packages=None):
+    def __init__(self, location=None, session=None, use_conda=None, packages=None,
+                 use_ssim_env=True):
         """
         Initializes a pysyncrosim Library instance.
 
@@ -37,6 +38,10 @@ class Library(object):
             is None.
         packages : String or List of Strings, optional
             List of package names to add to the Library. The default is None.
+        use_ssim_env : Logical, optional
+            If set to False, will not use the currently running SyncroSim environment.
+            If set to True (Default), will use the currently running SyncroSim environment if 
+            available.
 
         Returns
         -------
@@ -49,15 +54,17 @@ class Library(object):
         self.__environment = False
 
         # Initialize when in a SyncroSim environment
-        if location is None and session is None:
+        if use_ssim_env:
             e = _environment()
             if e.program_directory.item() is not None:
                 self.__location = e.library_filepath.item()
                 self.__session = ps.Session(e.program_directory.item())
                 self.__environment = True
-            else:
+            elif location is None and session is None:
                 raise RuntimeError("Not in a SyncroSim environment." +
-                                   " Please specify a location and session.")
+                                    " Please specify a location and session.")
+            else:
+                self.__environment = False
 
         if self.__session is None:
             self.__session = ps.Session()

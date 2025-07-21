@@ -4,7 +4,8 @@ import pandas as pd
 import io
 
 def library(name, session=None, packages=None,
-            forceUpdate=False, overwrite=False, use_conda=None):
+            force_update=False, overwrite=False, use_conda=None,
+            use_ssim_env=True):
     """
     Creates a new SyncroSim Library and opens it as a Library
     class instance.
@@ -30,6 +31,9 @@ def library(name, session=None, packages=None,
         default is None, meaning the Library properties determine whether
         the Library is run in a conda environment. When new Libraries are 
         created, the default for use_conda is `False`.
+    use_ssim_env : Logical, optional
+        If True (Default), will use the currently running SyncroSim environment if
+        available. If False, will not use the currently running SyncroSim environment.
 
     Returns
     -------
@@ -37,24 +41,24 @@ def library(name, session=None, packages=None,
         SyncroSim Library class instance.
 
     """
-    _validate_library_inputs(name, session, packages,
-                             forceUpdate, overwrite, use_conda)
-    
+    _validate_library_inputs(name, session, packages, force_update, 
+                             overwrite, use_conda, use_ssim_env)
+
     if session is None:
         session = ps.Session()
 
     name, loc = _configure_library_name(name)
 
     if os.path.exists(loc) and overwrite is False and packages is None:
-        _check_library_update(session, loc, forceUpdate)
-        return ps.Library(location=loc, session=session)
+        _check_library_update(session, loc, force_update)
+        return ps.Library(location=loc, session=session, use_ssim_env=use_ssim_env)
     
     args = ["--create", "--library", "--name=\"%s\"" % loc]
     
     if overwrite is True:      
         args += ["--force"]
 
-    if forceUpdate is True:
+    if force_update is True:
         args += ["--update"]
         
     try:
@@ -73,12 +77,13 @@ def library(name, session=None, packages=None,
         else:
             raise RuntimeError(re1)
 
-    _check_library_update(session, loc, forceUpdate)
+    _check_library_update(session, loc, force_update)
         
-    return ps.Library(location=loc, session=session, use_conda=use_conda, packages=packages)
+    return ps.Library(location=loc, session=session, use_conda=use_conda, 
+                      packages=packages, use_ssim_env=use_ssim_env)
 
-def _validate_library_inputs(name, session, packages, 
-                             forceUpdate, overwrite, use_conda):
+def _validate_library_inputs(name, session, packages, force_update, 
+                             overwrite, use_conda, use_ssim_env):
     """
     Validates input types for the create_library function
     """
@@ -93,13 +98,15 @@ def _validate_library_inputs(name, session, packages,
         if isinstance(packages, list):
             if not all(isinstance(package, str) for package in packages):
                 raise TypeError("packages in list are not all strings")
-    if not isinstance(forceUpdate, bool):
+    if not isinstance(force_update, bool):
         raise TypeError("forceUpdate must be a Logical")
     if not isinstance(overwrite, bool):
         raise TypeError("overwrite must be a Logical")
     if use_conda is not None and not isinstance(use_conda, bool):
         raise TypeError("use_conda must be None or a Logical")
-    
+    if use_ssim_env is not None and not isinstance(use_ssim_env, bool):
+        raise TypeError("use_ssim_env must be None or a Logical")
+
     # Check if packages currently installed
     if packages is not None:
         installed = session.packages()
