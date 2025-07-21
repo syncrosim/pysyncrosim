@@ -46,6 +46,7 @@ class Library(object):
         self.__location = location
         self.__session = session
         self.__use_conda = use_conda
+        self.__environment = False
 
         # Initialize when in a SyncroSim environment
         if location is None and session is None:
@@ -53,6 +54,7 @@ class Library(object):
             if e.program_directory.item() is not None:
                 self.__location = e.library_filepath.item()
                 self.__session = ps.Session(e.program_directory.item())
+                self.__environment = True
             else:
                 raise RuntimeError("Not in a SyncroSim environment." +
                                    " Please specify a location and session.")
@@ -724,18 +726,19 @@ class Library(object):
                 data[col] = data[col].map({True: "Yes", False: "No"})
             
         # Check if running in a SyncroSim environment from the user interface
-        e = _environment()
-        transfer_dir = e.transfer_directory.item()
-        
-        # If running from user interface, save data to transfer directory
-        if (transfer_dir is not None) & (append is False):
-            fpath = '{}\\SSIM_OVERWRITE-{}.csv'.format(transfer_dir, name)
-            data.to_csv(fpath, index=False)
-            return
-        elif (transfer_dir is not None) & (append is True):
-            fpath = '{}\\SSIM_APPEND-{}.csv'.format(transfer_dir, name)
-            data.to_csv(fpath, index=False)
-            return
+        if self.__environment is True:
+            e = _environment()
+            transfer_dir = e.transfer_directory.item()
+            
+            # If running from user interface, save data to transfer directory
+            if (transfer_dir is not None) & (append is False):
+                fpath = '{}\\SSIM_OVERWRITE-{}.csv'.format(transfer_dir, name)
+                data.to_csv(fpath, index=False)
+                return
+            elif (transfer_dir is not None) & (append is True):
+                fpath = '{}\\SSIM_APPEND-{}.csv'.format(transfer_dir, name)
+                data.to_csv(fpath, index=False)
+                return
         
         # Otherwise export the data to SyncroSim
         else:
