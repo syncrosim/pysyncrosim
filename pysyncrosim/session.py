@@ -436,6 +436,38 @@ class Session(object):
         else:
             print(result.stdout.decode('utf-8'))
 
+    def restore(self, filepath, folder=None):
+
+        """
+        Restores a SyncroSim Library backup file (.ssimbak) to a SyncroSim Library (.ssim)
+
+        Parameters
+        ----------
+        filepath : Str
+            The filepath to the backup file (.ssimbak).
+        
+        folder: Str, optional
+            The output folder name. If no folder name is provided, the library gets extracted to the same folder as the .ssimbak file.
+        
+        Returns
+        -------
+        None.
+
+        """
+
+        if not os.path.exists(filepath):
+            raise ValueError(f"Library not found: {filepath}")
+
+        args = ["--restore", f"--lib={filepath}"]
+
+        if folder is not None:
+            if not os.path.exists(folder):
+                raise ValueError(f"Output folder not found: {folder}")
+            args += [f"--folder={folder}"]
+
+        result = self.__call_console(args)
+        print(result.stdout.decode('utf-8'))
+
          
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
