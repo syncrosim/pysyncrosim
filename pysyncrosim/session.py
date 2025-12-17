@@ -244,12 +244,6 @@ class Session(object):
 
         print(profile_info)
 
-    def __retrieve_profile(self):
-
-        args = ["--profile"]
-        p = self.__call_console(args, decode=True)
-
-        return p
         
     def version(self):
         """
@@ -667,3 +661,24 @@ class Session(object):
         is_signed_in = profile_info.startswith('Username')
 
         return is_signed_in
+    
+    def __retrieve_profile(self):
+
+        """
+        Retrieves profile information for the currently signed-in user.
+
+        Parameters
+        ----------
+        session : Session
+            SyncroSim Session class instance.
+
+        Returns
+        -------
+        p : String
+            Profile information about the user.
+        """
+
+        args = ["--profile"]
+        p = self.__call_console(args, decode=True)
+
+        return p
