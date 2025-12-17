@@ -873,6 +873,21 @@ class Library(object):
         
         self.session._Session__call_console(args)
 
+    def compact(self):
+        """
+        Compacts a SyncroSim library to reduce its footprint on disk.
+        
+        Returns
+        -------
+        None.
+        """
+        try:
+            args = ["--compact", f"--lib={self.location}"]
+            self.session._Session__call_console(args)
+        
+        except RuntimeError as e:
+            print(e)
+
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
 
