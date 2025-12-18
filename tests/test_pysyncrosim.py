@@ -98,7 +98,8 @@ def test_session_restore_function():
 
     # Delete restored Library for next test
     os.remove(lib_path)
-    shutil.rmtree(f"{lib_path}.data")
+    if os.path.exists(f"{lib_path}.data"):
+        shutil.rmtree(f"{lib_path}.data")
 
     # Make output folder
     testOutputFolder = os.path.join(os.path.dirname(lib_backup_path),
