@@ -879,11 +879,13 @@ class Library(object):
         
         Returns
         -------
-        None.
+        String.
+            Path to the compacted library.
         """
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
+            return self.location
         
         except RuntimeError as e:
             print(e)
