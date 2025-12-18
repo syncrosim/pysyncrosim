@@ -99,7 +99,6 @@ def test_session_restore_function():
     # Delete restored Library for next test
     myLibrary = ps.library(libPath, session=mySession, force_update=True)
     myLibrary.delete(force=True)
-    shutil.rmtree(f"{libPath}.data")
 
     # Make output folder
     testOutputFolder = os.path.join(os.path.dirname(libBackupPath),
@@ -112,8 +111,6 @@ def test_session_restore_function():
     assert os.path.exists(testFolderLibPath)
 
     # Delete folder with restored Library
-    myLibrary = ps.library(testFolderLibPath, session=mySession, force_update=True)
-    myLibrary.delete(force=True)
     shutil.rmtree(testOutputFolder)
     
 def test_helper():
@@ -487,6 +484,15 @@ def test_library_run():
         myLibrary.run()
 
     myLibrary.delete(project="New Project", force=True)
+
+def test_library_compact():
+    
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=test_lib_name, session=mySession)
+
+    compactLib = myLibrary.compact()
+    assert os.path.getsize(test_lib_name) > os.path.getsize(compactLib)
+
     
 def test_project_attributes():
     

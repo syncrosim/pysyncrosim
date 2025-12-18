@@ -2,6 +2,7 @@ import pysyncrosim as ps
 import os
 import pandas as pd
 import io
+import shutil
 
 def library(name, session=None, packages=None,
             force_update=False, overwrite=False, use_conda=None,
