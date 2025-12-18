@@ -198,7 +198,10 @@ def _delete_library(name, session=None, force=False):
         if answer == "Y":
             for f in files:
                 if os.path.exists(f):
-                    os.remove(f)  
+                    if os.path.isdir(f):
+                        shutil.rmtree(f)
+                    else:
+                        os.remove(f)  
                     
     except (RuntimeError):
         pass
