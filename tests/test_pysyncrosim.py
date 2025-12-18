@@ -6,14 +6,15 @@ import math
 import numpy as np
 import rasterio
 import tempfile
+import shutil
 
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
-lib_name = "spatial-example.ssim"
-gitrepopath = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
-existing_lib_path = os.path.join(gitrepopath, "pysyncrosim/tests", lib_name)
-test_backup = os.path.join(gitrepopath, "pysyncrosim/tests", "spatial-example.ssimbak")
+libName = "spatial-example.ssim"
+gitRepoPath = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+libPath = os.path.join(gitRepoPath, "pysyncrosim/tests", libName)
+libBackupPath = os.path.join(gitRepoPath, "pysyncrosim/tests", "spatial-example.ssimbak")
 
 def test_session_attributes():
     
@@ -81,33 +82,39 @@ def test_session_package_functions():
     assert "2.0.1" in pkg_subset["Version"].values
 
 def test_session_restore_function():
+
+    # Test with incorrect Library
     mySession = ps.Session(session_path)
-    
     with pytest.raises(ValueError, match=f"Library not found: test"):
         mySession.restore("test")
     
+    # Test with incorrect output folder
     with pytest.raises(ValueError, match=f"Output folder not found: test"):
-        mySession.restore(test_backup, folder = "test")
+        mySession.restore(libBackupPath, folder="test")
 
-    mySession.restore(test_backup)
+    # Restore and test that restore worked
+    mySession.restore(libBackupPath)
+    assert os.path.exists(libPath)
 
-    assert os.path.exists(existing_lib_path)
+    # Delete restored Library for next test
+    myLibrary = ps.library(libPath, session=mySession, force_update=True)
+    myLibrary.delete(force=True)
+    shutil.rmtree(f"{libPath}.data")
 
-    myLibrary = ps.library(existing_lib_path, session=mySession, force_update=True)
-    myLibrary.delete(force = True)
-
-    testfolder = os.path.dirname(test_backup)
-    testoutputfolder = os.path.join(testfolder, "restore_test")
-    os.makedirs(testoutputfolder, exist_ok=True)
-    mySession.restore(test_backup, folder = testoutputfolder)
-
-    test_folder_lib_path = os.path.join(testoutputfolder, lib_name)
-
-    assert os.path.exists(test_folder_lib_path)
-
-    myLibrary = ps.library(test_folder_lib_path, session=mySession, force_update=True)
-    myLibrary.delete(force = True)
+    # Make output folder
+    testOutputFolder = os.path.join(os.path.dirname(libBackupPath),
+                                    "restore-test")
+    os.makedirs(testOutputFolder, exist_ok=True)
     
+    # Restore to output folder and test that restore worked
+    mySession.restore(libBackupPath, folder=testOutputFolder)
+    testFolderLibPath = os.path.join(testOutputFolder, libName)
+    assert os.path.exists(testFolderLibPath)
+
+    # Delete folder with restored Library
+    myLibrary = ps.library(testFolderLibPath, session=mySession, force_update=True)
+    myLibrary.delete(force=True)
+    shutil.rmtree(testOutputFolder)
     
 def test_helper():
     
@@ -438,7 +445,7 @@ def test_library_save_datasheet():
 def test_library_run():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=existing_lib_path, 
+    myLibrary = ps.library(name=libPath, 
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
@@ -651,7 +658,7 @@ def test_project_copy_delete():
 def test_project_run():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=existing_lib_path, 
+    myLibrary = ps.library(name=libPath, 
                            session=mySession,
                            force_update=True)
     myProject = myLibrary.projects(name="Definitions")
@@ -792,7 +799,7 @@ def test_scenario_save_datasheet():
 def test_scenario_run_and_results():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=existing_lib_path, 
+    myLibrary = ps.library(name=libPath, 
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
@@ -957,7 +964,7 @@ def test_scenario_run_and_results():
 def test_scenario_copy_dep_delete():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=existing_lib_path, 
+    myLibrary = ps.library(name=libPath, 
                            session=mySession,
                            force_update=True)
     myScenario = myLibrary.scenarios(name="My Scenario")

@@ -192,8 +192,7 @@ def _delete_library(name, session=None, force=False):
         
         files = [lib._Library__location,
                  lib._Library__location + ".backup",
-                 lib._Library__location + ".input",
-                 lib._Library__location + ".output",
+                 lib._Library__location + ".data",
                  lib._Library__location + ".temp"]
         
         if answer == "Y":
