@@ -10,11 +10,11 @@ import shutil
 
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
-testLibPath = os.path.join(temp_path.name, "stsimLibrary.ssim")
-libName = "spatial-example.ssim"
-gitRepoPath = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
-libPath = os.path.join(gitRepoPath, "pysyncrosim/tests", libName)
-libBackupPath = os.path.join(gitRepoPath, "pysyncrosim/tests", "spatial-example.ssimbak")
+test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
+lib_name = "spatial-example.ssim"
+git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
+lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
 def test_session_attributes():
     
@@ -90,24 +90,24 @@ def test_session_restore_function():
     
     # Test with incorrect output folder
     with pytest.raises(ValueError, match=f"Output folder not found: test"):
-        mySession.restore(libBackupPath, folder="test")
+        mySession.restore(lib_backup_path, folder="test")
 
     # Restore and test that restore worked
-    mySession.restore(libBackupPath)
-    assert os.path.exists(libPath)
+    mySession.restore(lib_backup_path)
+    assert os.path.exists(lib_path)
 
     # Delete restored Library for next test
-    myLibrary = ps.library(libPath, session=mySession, force_update=True)
-    myLibrary.delete(force=True)
+    os.remove(lib_path)
+    shutil.rmtree(f"{lib_path}.data")
 
     # Make output folder
-    testOutputFolder = os.path.join(os.path.dirname(libBackupPath),
+    testOutputFolder = os.path.join(os.path.dirname(lib_backup_path),
                                     "restore-test")
     os.makedirs(testOutputFolder, exist_ok=True)
     
     # Restore to output folder and test that restore worked
-    mySession.restore(libBackupPath, folder=testOutputFolder)
-    testFolderLibPath = os.path.join(testOutputFolder, libName)
+    mySession.restore(lib_backup_path, folder=testOutputFolder)
+    testFolderLibPath = os.path.join(testOutputFolder, lib_name)
     assert os.path.exists(testFolderLibPath)
 
     # Delete folder with restored Library
@@ -131,25 +131,25 @@ def test_helper():
     with pytest.raises(
             TypeError,
             match="session must be None or pysyncrosim Session instance"):
-        ps.library(name=testLibPath, session=1)
+        ps.library(name=test_lib_path, session=1)
         
     with pytest.raises(TypeError, match="packages must be None, a String, or a List"):
-        ps.library(name=testLibPath, packages=1, session=mySession)
+        ps.library(name=test_lib_path, packages=1, session=mySession)
 
     with pytest.raises(TypeError, match="packages in list are not all strings"):
-        ps.library(name=testLibPath, packages=["package", 1], session=mySession)
+        ps.library(name=test_lib_path, packages=["package", 1], session=mySession)
         
     with pytest.raises(TypeError, match="forceUpdate must be a Logical"):
-        ps.library(name=testLibPath, force_update="True", session=mySession)
+        ps.library(name=test_lib_path, force_update="True", session=mySession)
         
     with pytest.raises(TypeError, match="overwrite must be a Logical"):
-        ps.library(name=testLibPath, overwrite="False", session=mySession)
+        ps.library(name=test_lib_path, overwrite="False", session=mySession)
 
     # Test package installation
     mySession.install_packages("demosales")
     mySession.uninstall_packages("demosales")
     with pytest.raises(ValueError, match="The package demosales is not installed"):
-        ps.library(name=testLibPath, packages="demosales", session=mySession)
+        ps.library(name=test_lib_path, packages="demosales", session=mySession)
     mySession.install_packages("stsim")
         
     # Test Library path
@@ -157,11 +157,11 @@ def test_helper():
         ps.library("path/to/library", session=mySession)
       
     # Test output
-    myLibrary = ps.library(name=testLibPath, force_update=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, force_update=True, session=mySession)
     assert isinstance(myLibrary, ps.Library)
 
     # Test packages argument
-    myLibrary = ps.library(name = testLibPath,
+    myLibrary = ps.library(name = test_lib_path,
                        session = mySession,
                        packages = ["stsim", "stsimecodep"],
                        overwrite = True)
@@ -174,7 +174,7 @@ def test_helper():
 def test_library_attributes():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, overwrite=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
     
     # Check attributes
     assert isinstance(myLibrary.name, str)
@@ -190,7 +190,7 @@ def test_library_attributes():
 def test_library_projects():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, overwrite=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
     
     # Test inputs
     with pytest.raises(TypeError, match="name must be a String"):
@@ -225,7 +225,7 @@ def test_library_projects():
 def test_library_scenarios():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, overwrite=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     with pytest.raises(
@@ -282,7 +282,7 @@ def test_library_scenarios():
 def test_library_datasheets():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, overwrite=True, 
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, 
                            packages=["stsim"], session=mySession)
     
     # Test datasheets method inputs
@@ -329,7 +329,7 @@ def test_library_datasheets():
 def test_library_delete():
 
     mySession = ps.Session(session_path)   
-    myLibrary = ps.library(name=testLibPath, overwrite=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     # Test delete method
@@ -369,7 +369,7 @@ def test_library_delete():
 def test_library_save_datasheet():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, overwrite=True, force_update=True, session=mySession)
+    myLibrary = ps.library(name=test_lib_path, overwrite=True, force_update=True, session=mySession)
     
     # Test save_datasheet method
     with pytest.raises(
@@ -442,7 +442,7 @@ def test_library_save_datasheet():
 def test_library_run():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=libPath, 
+    myLibrary = ps.library(name=lib_path, 
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
@@ -488,19 +488,19 @@ def test_library_run():
 def test_library_compact():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=libName, session=mySession)
+    myLibrary = ps.library(name=lib_path, session=mySession)
 
-    sizeBefore = os.path.getsize(myLibrary.location)
+    size_before = os.path.getsize(myLibrary.location)
     compactLibrary = myLibrary.compact()
-    sizeAfter = os.path.getsize(compactLibrary)
+    size_after = os.path.getsize(compactLibrary)
 
-    assert sizeBefore > sizeAfter
+    assert size_before > size_after
 
     
 def test_project_attributes():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, packages=["helloworld"],
+    myLibrary = ps.library(name=test_lib_path, packages=["helloworld"],
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
@@ -514,7 +514,7 @@ def test_project_attributes():
 def test_project_scenarios():  
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, packages=["helloworld"],
+    myLibrary = ps.library(name=test_lib_path, packages=["helloworld"],
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
@@ -550,7 +550,7 @@ def test_project_datasheets():
         if pkg not in mySession.packages()["Name"].values:
             mySession.install_packages(pkg)
 
-    myLibrary = ps.library(name=testLibPath, packages=["helloworld"], 
+    myLibrary = ps.library(name=test_lib_path, packages=["helloworld"], 
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
     
@@ -577,7 +577,7 @@ def test_project_datasheets():
 def test_project_save_datasheet():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, packages=["helloworld"],
+    myLibrary = ps.library(name=test_lib_path, packages=["helloworld"],
                            overwrite=True, force_update=True, 
                            session=mySession)
     myProject = myLibrary.projects(name="Definitions")
@@ -633,7 +633,7 @@ def test_project_save_datasheet():
 def test_project_copy_delete():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, packages=["helloworld"], 
+    myLibrary = ps.library(name=test_lib_path, packages=["helloworld"], 
                            overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="Definitions")
 
@@ -667,7 +667,7 @@ def test_project_copy_delete():
 def test_project_run():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=libPath, 
+    myLibrary = ps.library(name=lib_path, 
                            session=mySession,
                            force_update=True)
     myProject = myLibrary.projects(name="Definitions")
@@ -701,7 +701,7 @@ def test_project_run():
 def test_scenarios_attributes():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, packages="helloworld",
+    myLibrary = ps.library(name=test_lib_path, packages="helloworld",
                            overwrite=True, session=mySession)
     myScenario = myLibrary.scenarios("Test Scenario")
     
@@ -720,7 +720,7 @@ def test_scenarios_attributes():
 def test_scenario_datasheets():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, 
+    myLibrary = ps.library(name=test_lib_path, 
                            packages=["stsim"],
                            overwrite=True,
                            session=mySession)
@@ -768,7 +768,7 @@ def test_scenario_save_datasheet():
 
     mySession = ps.Session(session_path)
     mySession.install_packages("helloworld")
-    myLibrary = ps.library(name=testLibPath, 
+    myLibrary = ps.library(name=test_lib_path, 
                            packages="helloworld",
                            overwrite=True,
                            session=mySession)
@@ -808,7 +808,7 @@ def test_scenario_save_datasheet():
 def test_scenario_run_and_results():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=libPath, 
+    myLibrary = ps.library(name=lib_path, 
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
@@ -973,7 +973,7 @@ def test_scenario_run_and_results():
 def test_scenario_copy_dep_delete():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=libPath, 
+    myLibrary = ps.library(name=lib_path, 
                            session=mySession,
                            force_update=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
@@ -1070,7 +1070,7 @@ def test_scenario_copy_dep_delete():
 def test_folder_functions():
 
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=testLibPath, 
+    myLibrary = ps.library(name=test_lib_path, 
                            overwrite=True, 
                            session=mySession)
     myProject = myLibrary.projects("Definitions")
