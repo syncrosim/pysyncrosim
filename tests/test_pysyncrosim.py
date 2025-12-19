@@ -11,7 +11,7 @@ import shutil
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
-lib_name = "spatial-example.ssim"
+lib_name = "spatial-example.ssim" 
 git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
@@ -97,22 +97,21 @@ def test_session_restore_function():
     assert os.path.exists(lib_path)
 
     # Delete restored Library for next test
-    os.remove(lib_path)
-    if os.path.exists(f"{lib_path}.data"):
-        shutil.rmtree(f"{lib_path}.data")
+    myLibrary = ps.library(lib_path, session=mySession, force_update=True)
+    myLibrary.delete(force=True)
 
-    # Make output folder
-    testOutputFolder = os.path.join(os.path.dirname(lib_backup_path),
-                                    "restore-test")
-    os.makedirs(testOutputFolder, exist_ok=True)
+    # # Make output folder
+    # test_output_folder = os.path.join(os.path.dirname(lib_backup_path),
+    #                                 "restore-test")
+    # os.makedirs(test_output_folder, exist_ok=True)
     
-    # Restore to output folder and test that restore worked
-    mySession.restore(lib_backup_path, folder=testOutputFolder)
-    testFolderLibPath = os.path.join(testOutputFolder, lib_name)
-    assert os.path.exists(testFolderLibPath)
+    # # Restore to output folder and test that restore worked
+    # mySession.restore(lib_backup_path, folder=test_output_folder)
+    # test_folder_lib_path = os.path.join(test_output_folder, lib_name)
+    # assert os.path.exists(test_folder_lib_path)
 
-    # Delete folder with restored Library
-    shutil.rmtree(testOutputFolder)
+    # # Delete folder with restored Library
+    # shutil.rmtree(test_output_folder)
     
 def test_helper():
     

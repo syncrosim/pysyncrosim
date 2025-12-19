@@ -162,7 +162,7 @@ def _check_library_update(session, loc, forceUpdate):
                 raise Exception("Updates not applied and Library not loaded.")
             
 
-def _delete_library(name, session=None, force=False):
+def _delete_library(name, session=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
     """
     Deletes a SyncroSim Library.
 
@@ -175,6 +175,18 @@ def _delete_library(name, session=None, force=False):
         creates a Session class instance using the default installation path
         to the SyncroSim executable. The default is None.
 
+    force : Logical, optional
+        If True, does not ask the user before deleting. The default is False.
+
+    remove_backup : Logical, optional
+        If True, will remove the backup folder when deleting a Library. Default is False.
+    
+    remove_publish : Logical, optional
+        If True, will remove the publish folder when deleting a Library. Default is False.
+    
+    remove_custom : Logical, optional
+        If True and custom folders have been configured for a Library, then will remove the custom publish and/or backup folders when deleting a Library. Note that the remove_publish and remove_backup arguments must also be set to TRUE to remove the respective custom folders. Default is FALSE.
+
     Returns
     -------
     None.
@@ -182,27 +194,32 @@ def _delete_library(name, session=None, force=False):
     """
     if session is None:
         session = ps.Session()
+    
+    if not os.path.exists(name):
+        raise ValueError(f"Library not found: {name}")
 
     if force is False:
-        answer = input (f"Are you sure you want to delete {name} (Y/N)?")
+        answer = input(f"Are you sure you want to delete {name} (Y/N)?")
     else:
         answer = "Y"
     
-    try:
-        lib = ps.Library(name, session)
+    if answer == "Y":
+        args = ["--delete", "--library", f"--lib={name}", "--force"]
+
+        if remove_backup is True:
+            args += ["--delrelback"]
+            if remove_custom_folders is True:
+                args += ["--delcustback"]
+
+        if remove_publish is True:
+            args += ["--delrelpub"]
+            if remove_custom_folders is True:
+                args += ["--delcustpub"]
+
+        args += ["--delcusttemp", "--delcustdata"]
         
-        files = [lib._Library__location,
-                 lib._Library__location + ".backup",
-                 lib._Library__location + ".data",
-                 lib._Library__location + ".temp"]
-        
-        if answer == "Y":
-            for f in files:
-                if os.path.exists(f):
-                    if os.path.isdir(f):
-                        shutil.rmtree(f)
-                    else:
-                        os.remove(f)  
+        session._Session__call_console(args)
+
                     
     except (RuntimeError):
         pass
