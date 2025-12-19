@@ -276,3 +276,30 @@ def _delete_scenario(library, project, name=None, sid=None, session=None,
         # Reset Scenarios
         library._Library__scenarios = None
         library._Library__init_scenarios()
+
+def _delete_folder(library, fid, session=None, force=False):
+    
+    if session is None:
+        session = ps.Session()
+
+    if force is False:
+        answer = input(f"Are you sure you want to delete folder {fid} (Y/N)?")
+    else:
+        answer = "Y"
+    
+    if answer == "Y":
+
+        # Retrieve Folder DataFrame
+        args = ["--lib=%s" % library.location, "--list", "--folders"]
+        folder_data = session._Session__call_console(args, decode=True, csv=True)
+        folder_df = pd.read_csv(io.StringIO(folder_data))
+        
+        if fid not in folder_df["Id"].values:
+            raise ValueError(f"Folder ID {fid} does not exist")
+
+
+                
+        # Delete Folder using Console
+        args = ["--delete", "--folder", f"--lib={library.location}", f"--fid={fid}", "--force"]
+
+        session._Session__call_console(args)
