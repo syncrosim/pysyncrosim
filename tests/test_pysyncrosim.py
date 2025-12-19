@@ -11,7 +11,7 @@ import shutil
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
-lib_name = "spatial-example.ssim" 
+lib_name = "spatial-example-2.ssim" 
 git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
@@ -331,8 +331,11 @@ def test_library_datasheets():
 def test_library_delete():
 
     mySession = ps.Session(session_path)   
-    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
-    myLibrary.projects(name="test")
+    myLibrary = ps.library(name=lib_path, overwrite=True, session=mySession)
+    myProject = myLibrary.projects(name="test")
+    myFolder = myProject.folders(folder="test-folder")
+    myFolder2 = myProject.folders(folder="test-folder2")
+    fid = myFolder2.folder_id
     
     # Test delete method
     with pytest.raises(
@@ -347,7 +350,16 @@ def test_library_delete():
         
     with pytest.raises(TypeError, match="force must be a Logical"):
         myLibrary.delete(force="True")
+    
+    with pytest.raises(TypeError, match="remove_backup must be a Logical"):
+        myLibrary.delete(force=True, remove_backup="True")
         
+    with pytest.raises(TypeError, match="remove_publish must be a Logical"):
+        myLibrary.delete(force=True, remove_publish="True")
+
+    with pytest.raises(TypeError, match="remove_custom_folders must be a Logical"):
+        myLibrary.delete(force=True, remove_custom_folders="True")
+    
     with pytest.raises(ValueError, match="Project ID 2 does not exist"):
         myLibrary.delete(project=2)
         
@@ -359,6 +371,19 @@ def test_library_delete():
         
     with pytest.raises(ValueError, match="scenario dne does not exist"):
         myLibrary.delete(scenario="dne")
+    
+    with pytest.raises(TypeError, match="folder must be a Folder instance or Integer"):
+        myLibrary.delete(folder="folder")
+
+    with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
+        myLibrary.delete(folder=50, force=True)
+
+    
+    myLibrary.delete(folder=myFolder, force=True)
+    assert myFolder.folder_id not in myLibrary.folders()["Id"].values
+
+    myLibrary.delete(folder=fid, force=True)
+    assert fid not in myLibrary.folders()["Id"].values
         
     myLibrary.delete(project="test", force=True)
     assert myLibrary._Library__projects.empty

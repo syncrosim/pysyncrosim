@@ -715,14 +715,14 @@ class Library(object):
         
         elif folder is not None:
 
-            # turn folder into folder ID
+            # turn folder into folder ID if int
 
             if type(folder) is int:
                 fid = folder
             elif isinstance(folder, ps.Folder):
                 fid = folder.folder_id
             else:
-                raise TypeError(f"Folder must be a Folder instance or Integer")
+                raise TypeError("folder must be a Folder instance or Integer")
     
             helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
     

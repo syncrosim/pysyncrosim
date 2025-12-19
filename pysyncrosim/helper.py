@@ -296,8 +296,6 @@ def _delete_folder(library, fid, session=None, force=False):
         
         if fid not in folder_df["Id"].values:
             raise ValueError(f"Folder ID {fid} does not exist")
-
-
                 
         # Delete Folder using Console
         args = ["--delete", "--folder", f"--lib={library.location}", f"--fid={fid}", "--force"]
