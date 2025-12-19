@@ -2,7 +2,6 @@ import pysyncrosim as ps
 import os
 import pandas as pd
 import io
-import shutil
 
 def library(name, session=None, packages=None,
             force_update=False, overwrite=False, use_conda=None,
@@ -178,15 +177,6 @@ def _delete_library(name, session=None, force=False, remove_backup=False, remove
     force : Logical, optional
         If True, does not ask the user before deleting. The default is False.
 
-    remove_backup : Logical, optional
-        If True, will remove the backup folder when deleting a Library. Default is False.
-    
-    remove_publish : Logical, optional
-        If True, will remove the publish folder when deleting a Library. Default is False.
-    
-    remove_custom : Logical, optional
-        If True and custom folders have been configured for a Library, then will remove the custom publish and/or backup folders when deleting a Library. Note that the remove_publish and remove_backup arguments must also be set to TRUE to remove the respective custom folders. Default is FALSE.
-
     Returns
     -------
     None.
@@ -220,10 +210,6 @@ def _delete_library(name, session=None, force=False, remove_backup=False, remove
         
         session._Session__call_console(args)
 
-                    
-    except (RuntimeError):
-        pass
-    
 def _delete_project(library, name=None, pid=None, session=None,
                     force=False):
     

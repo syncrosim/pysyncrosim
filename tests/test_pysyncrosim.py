@@ -100,18 +100,20 @@ def test_session_restore_function():
     myLibrary = ps.library(lib_path, session=mySession, force_update=True)
     myLibrary.delete(force=True)
 
-    # # Make output folder
-    # test_output_folder = os.path.join(os.path.dirname(lib_backup_path),
-    #                                 "restore-test")
-    # os.makedirs(test_output_folder, exist_ok=True)
+    # Make output folder
+    test_output_folder = os.path.join(os.path.dirname(lib_backup_path),
+                                    "restore-test")
+    os.makedirs(test_output_folder, exist_ok=True)
     
-    # # Restore to output folder and test that restore worked
-    # mySession.restore(lib_backup_path, folder=test_output_folder)
-    # test_folder_lib_path = os.path.join(test_output_folder, lib_name)
-    # assert os.path.exists(test_folder_lib_path)
+    # Restore to output folder and test that restore worked
+    mySession.restore(lib_backup_path, folder=test_output_folder)
+    test_folder_lib_path = os.path.join(test_output_folder, lib_name)
+    assert os.path.exists(test_folder_lib_path)
 
-    # # Delete folder with restored Library
-    # shutil.rmtree(test_output_folder)
+    # Delete folder with restored Library
+    myLibrary = ps.library(test_folder_lib_path, session=mySession, force_update=True)
+    myLibrary.delete(force=True)
+    os.rmdir(test_output_folder)
     
 def test_helper():
     
