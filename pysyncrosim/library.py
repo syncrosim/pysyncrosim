@@ -614,8 +614,7 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, folder=None, data=None,
-               datasheet=None, pid=None, sid=None, ids=None, force=False,
+    def delete(self, project=None, scenario=None, pid=None, force=False,
                remove_backup=False, remove_publish=False,
                remove_custom_folders=False):
         """

@@ -11,7 +11,7 @@ import shutil
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
-lib_name = "spatial-example-2.ssim" 
+lib_name = "spatial-example.ssim" 
 git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
@@ -375,6 +375,7 @@ def test_library_delete():
     with pytest.raises(ValueError, match="scenario dne does not exist"):
         myLibrary.delete(scenario="dne")
     
+    # folder should be moved but should work
     with pytest.raises(
             TypeError,
             match="folder must be a Folder instance or Integer"):
@@ -383,20 +384,21 @@ def test_library_delete():
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
     
-    with pytest.raises(TypeError, match="data must be a Logical"):
-        myLibrary.delete(data="True")
+    # move
+    # with pytest.raises(TypeError, match="data must be a Logical"):
+    #     myLibrary.delete(data="True")
     
-    with pytest.raises(TypeError, match="datasheet must be a String"):
-        myLibrary.delete(data=True, datasheet=1)
+    # with pytest.raises(TypeError, match="datasheet must be a String"):
+    #     myLibrary.delete(data=True, datasheet=1)
     
-    with pytest.raises(TypeError, match="pid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", pid="1")
+    # with pytest.raises(TypeError, match="pid must be an Integer"):
+    #     myLibrary.delete(data=True, datasheet="core_Backup", pid="1")
 
-    with pytest.raises(TypeError, match="sid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
+    # with pytest.raises(TypeError, match="sid must be an Integer"):
+    #     myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
     
-    with pytest.raises(ValueError, match="datasheet name is required"):
-        myLibrary.delete(data=True, datasheet="")
+    # with pytest.raises(ValueError, match="datasheet name is required"):
+    #     myLibrary.delete(data=True, datasheet="")
     
     # Test delete folder from folder name
     myLibrary.delete(folder=myFolder, force=True)
@@ -582,7 +584,7 @@ def test_library_compact():
 
     size_before = os.path.getsize(myLibrary.location)
     compactLibrary = myLibrary.compact()
-    size_after = os.path.getsize(compactLibrary)
+    size_after = os.path.getsize(myLibrary.location)
 
     assert size_before > size_after
 
