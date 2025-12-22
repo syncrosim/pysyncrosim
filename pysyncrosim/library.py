@@ -614,8 +614,9 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, pid=None, force=False,
-               remove_backup=False, remove_publish=False,
+    def delete(self, project=None, scenario=None, folder=None,
+                pid=None, sid=None, data=None, datasheet=None, ids=None,
+               force=False, remove_backup=False, remove_publish=False,
                remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
@@ -631,21 +632,21 @@ class Library(object):
         folder : Folder, or Int, optional
             If called from a Library class instance, specify the folder to
             delete. The default is None.
-        data : Logical, optional
-            If set to True, will delete data from a datasheet. The default is
-            None.
-        datasheet : string, optional
-            If called from the Library class instance, specify the Datasheet to
-            delete data. Required when data is True. The default is None.
         pid : Int, optional
             Project ID for the datasheet. Not required for a library-scoped
             datasheet. The default is None.
         sid : Int, optional
             Scenario ID for the datasheet. Not required for a library-scoped
             datasheet. The default is None.
+        data : Logical, optional
+            If set to True, will delete data from a datasheet. The default is
+            None.
+        datasheet : string, optional
+            If called from the Library class instance, specify the Datasheet to
+            delete data. Required when data is True. The default is None.
         ids : Str or Int, optional
-            Primary key IDs for the rows to delete. If None, deletes all data.
-            The default is None.
+            IDs of the rows to delete. If None, deletes all data. The default
+            is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
@@ -707,8 +708,12 @@ class Library(object):
         if sid is not None and not isinstance(sid, int) and not isinstance(
             sid, np.int64):
             raise TypeError("sid must be an Integer")
+        if ids is not None and not isinstance(ids, str) and not isinstance(
+            ids, int) and not isinstance(ids, np.int64):
+            raise TypeError("ids must be a String or Integer")
         
-        if project is None and scenario is None and folder is None and datasheet is None:
+        if project is None and scenario is None and folder is None and
+            datasheet is None:
             
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup,
@@ -964,7 +969,7 @@ class Library(object):
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
-            return self.location
+            return None
         
         except RuntimeError as e:
             print(e)

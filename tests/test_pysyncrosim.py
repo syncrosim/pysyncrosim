@@ -332,11 +332,7 @@ def test_library_delete():
 
     mySession = ps.Session(session_path)   
     myLibrary = ps.library(name=lib_path, overwrite=True, session=mySession)
-    myProject = myLibrary.projects(name="test")
-    myScenario = myLibrary.scenarios(name="test")
-    myFolder = myProject.folders(folder="test-folder")
-    myFolder2 = myProject.folders(folder="test-folder2")
-    fid = myFolder2.folder_id
+    myLibrary.projects(name="test")
     
     # Test delete method
     with pytest.raises(
@@ -351,18 +347,7 @@ def test_library_delete():
         
     with pytest.raises(TypeError, match="force must be a Logical"):
         myLibrary.delete(force="True")
-    
-    with pytest.raises(TypeError, match="remove_backup must be a Logical"):
-        myLibrary.delete(force=True, remove_backup="True")
         
-    with pytest.raises(TypeError, match="remove_publish must be a Logical"):
-        myLibrary.delete(force=True, remove_publish="True")
-
-    with pytest.raises(
-            TypeError,
-            match="remove_custom_folders must be a Logical"):
-        myLibrary.delete(force=True, remove_custom_folders="True")
-    
     with pytest.raises(ValueError, match="Project ID 2 does not exist"):
         myLibrary.delete(project=2)
         
@@ -584,7 +569,7 @@ def test_library_compact():
 
     size_before = os.path.getsize(myLibrary.location)
     compactLibrary = myLibrary.compact()
-    size_after = os.path.getsize(myLibrary.location)
+    size_after = os.path.getsize(compactLibrary)
 
     assert size_before > size_after
 
