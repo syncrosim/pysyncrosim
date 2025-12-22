@@ -614,7 +614,7 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, folder=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
+    def delete(self, project=None, scenario=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -626,8 +626,6 @@ class Library(object):
         scenario : Scenario, String, or Int, optional
             If called from a Scenario class instance, specify the Scenario to
             delete. The default is None.
-        folder : Folder, or Int, optional
-            If called from a Library class instance, specify the folder to delete. The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
@@ -658,11 +656,6 @@ class Library(object):
                     scenario, str) and not isinstance(scenario, np.int64):
                 raise TypeError(
                     "scenario must be a Scenario instance, Integer, or String")
-        
-        if folder is not None and not isinstance(folder, ps.Folder):
-            if not isinstance(folder, int) and not isinstance(folder, np.int64):
-                raise TypeError(
-                    "folder must be a Folder instance or Integer")
 
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
@@ -712,19 +705,6 @@ class Library(object):
                                     name=s.name, sid=s.sid,
                                     session=self.session,
                                     force=force)
-        
-        elif folder is not None:
-
-            # turn folder into folder ID
-
-            if type(folder) is int:
-                fid = folder
-            elif isinstance(folder, ps.Folder):
-                fid = folder.folder_id
-            else:
-                raise TypeError(f"Folder must be a Folder instance or Integer")
-    
-            helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):

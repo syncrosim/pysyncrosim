@@ -331,7 +331,7 @@ def test_library_datasheets():
 def test_library_delete():
 
     mySession = ps.Session(session_path)   
-    myLibrary = ps.library(name=test_lib_path, overwrite=True, session=mySession)
+    myLibrary = ps.library(name=lib_path, overwrite=True, session=mySession)
     myLibrary.projects(name="test")
     
     # Test delete method
