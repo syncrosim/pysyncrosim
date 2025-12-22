@@ -701,7 +701,7 @@ class Library(object):
         if data is not None and not isinstance(data, bool):
             raise TypeError("data must be a Logical")
         if datasheet is not None and not isinstance(datasheet, str):
-            raise TypeError("datasheet must be an String")
+            raise TypeError("datasheet must be a String")
         if pid is not None and not isinstance(pid, int) and not isinstance(
             pid, np.int64):
             raise TypeError("pid must be an Integer")
@@ -709,7 +709,7 @@ class Library(object):
             sid, np.int64):
             raise TypeError("sid must be an Integer")
         
-        if project is None and scenario is None and folder is None:
+        if project is None and scenario is None and folder is None and datasheet is None:
             
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup,

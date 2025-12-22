@@ -333,6 +333,7 @@ def test_library_delete():
     mySession = ps.Session(session_path)   
     myLibrary = ps.library(name=lib_path, overwrite=True, session=mySession)
     myProject = myLibrary.projects(name="test")
+    myScenario = myLibrary.scenarios(name="test")
     myFolder = myProject.folders(folder="test-folder")
     myFolder2 = myProject.folders(folder="test-folder2")
     fid = myFolder2.folder_id
@@ -357,7 +358,9 @@ def test_library_delete():
     with pytest.raises(TypeError, match="remove_publish must be a Logical"):
         myLibrary.delete(force=True, remove_publish="True")
 
-    with pytest.raises(TypeError, match="remove_custom_folders must be a Logical"):
+    with pytest.raises(
+            TypeError,
+            match="remove_custom_folders must be a Logical"):
         myLibrary.delete(force=True, remove_custom_folders="True")
     
     with pytest.raises(ValueError, match="Project ID 2 does not exist"):
@@ -372,26 +375,86 @@ def test_library_delete():
     with pytest.raises(ValueError, match="scenario dne does not exist"):
         myLibrary.delete(scenario="dne")
     
-    with pytest.raises(TypeError, match="folder must be a Folder instance or Integer"):
+    with pytest.raises(
+            TypeError,
+            match="folder must be a Folder instance or Integer"):
         myLibrary.delete(folder="folder")
 
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
-
     
+    with pytest.raises(TypeError, match="data must be a Logical"):
+        myLibrary.delete(data="True")
+    
+    with pytest.raises(TypeError, match="datasheet must be a String"):
+        myLibrary.delete(data=True, datasheet=1)
+    
+    with pytest.raises(TypeError, match="pid must be an Integer"):
+        myLibrary.delete(data=True, datasheet="core_Backup", pid="1")
+
+    with pytest.raises(TypeError, match="sid must be an Integer"):
+        myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
+    
+    with pytest.raises(ValueError, match="datasheet name is required"):
+        myLibrary.delete(data=True, datasheet="")
+    
+    # Test delete folder from folder name
     myLibrary.delete(folder=myFolder, force=True)
     assert myFolder.folder_id not in myLibrary.folders()["Id"].values
 
+    # Test delete folder from folder ID
     myLibrary.delete(folder=fid, force=True)
     assert fid not in myLibrary.folders()["Id"].values
-        
+    
+    # Test delete project
     myLibrary.delete(project="test", force=True)
     assert myLibrary._Library__projects.empty
     assert "test" not in myLibrary.projects().Name.values
     
+    # Test delete scenario
     myLibrary.scenarios(name="test")
     myLibrary.delete(scenario="test", force=True)
     assert "test" not in myLibrary.scenarios().Name.values
+
+def test_library_delete_datasheet():
+
+    mySession = ps.Session(session_path)   
+    myLibrary = ps.library(name=lib_path, overwrite=True,
+        packages=["stsim"], session=mySession)
+    myProject = myLibrary.projects(name="test")
+    myScenario = myLibrary.scenarios(name="test")
+    test_data = pd.DataFrame({
+        "Name": ["a1", "a2", "a3"],
+        "Id": [1, 2, 3],
+        "Description": ["test1", "test2", "test3"]
+    })
+
+    # Add datasheet to project
+    myProject.save_datasheet(name = "stsim_Stratum", data=test_data)
+    saved_data = myProject.datasheets(name="stsim_Stratum")
+    assert len(saved_data) == 3
+
+    # Test delete datasheet from project
+    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid, force=True)
+    assert myProject.datasheets(name="stsim_Stratum").empty
+
+    # Add back datasheet for next test
+    myProject.save_datasheet(name = "stsim_Stratum", data=test_data)
+    saved_data = myProject.datasheets(name="stsim_Stratum")
+    assert len(saved_data) == 3
+
+    # Test delete datasheet by row ID
+    ids_to_delete = f"{saved_data.iloc[0]["Id"]},{saved_data.iloc[1]["Id"]}"
+    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid,
+            ids=ids_to_delete, force=True)
+    remaining_data = myProject.datasheets(name="stsim_Stratum")
+    assert len(remaining_data) == 1
+    # assert remaining_data.iloc[0]["Name"] == "a3"
+
+    # Test delete from scenario
+    myLibrary.delete(data=True, datasheet="stsim_RunControl",
+        sid=myScenario.sid, force=True)
+    assert myScenario.datasheets(name="stsim_RunControl").empty
     
 def test_library_save_datasheet():
 

@@ -322,6 +322,6 @@ def _delete_data(library, datasheet, pid=None, sid=None, ids=None, session=None,
         if sid is not None:
             args += [f"--sid={sid}"]
         if ids is not None:
-            args += [f"--ids={ids}"]
+            args += [f'--ids="{ids}"']
         
         session._Session__call_console(args)
