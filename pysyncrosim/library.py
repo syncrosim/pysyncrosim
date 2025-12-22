@@ -898,7 +898,7 @@ class Library(object):
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
-            return self.location
+            return None
         
         except RuntimeError as e:
             print(e)
