@@ -666,7 +666,7 @@ class Library(object):
         if not isinstance(remove_custom_folders, bool):
             raise TypeError("remove_custom_folders must be a Logical")
         
-        if project is None and scenario is None and folder is None:
+        if project is None and scenario is None:
             
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup, remove_publish=remove_publish, remove_custom_folders=remove_custom_folders)

@@ -111,7 +111,8 @@ def test_session_restore_function():
     assert os.path.exists(test_folder_lib_path)
 
     # Delete folder with restored Library
-    myLibrary = ps.library(test_folder_lib_path, session=mySession, force_update=True)
+    myLibrary = ps.library(test_folder_lib_path, session=mySession,
+        force_update=True)
     myLibrary.delete(force=True)
     os.rmdir(test_output_folder)
     
