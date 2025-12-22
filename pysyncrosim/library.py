@@ -614,7 +614,10 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, folder=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
+    def delete(self, project=None, scenario=None, folder=None, data=None,
+               datasheet=None, pid=None, sid=None, ids=None, force=False,
+               remove_backup=False, remove_publish=False,
+               remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -627,16 +630,38 @@ class Library(object):
             If called from a Scenario class instance, specify the Scenario to
             delete. The default is None.
         folder : Folder, or Int, optional
-            If called from a Library class instance, specify the folder to delete. The default is None.
+            If called from a Library class instance, specify the folder to
+            delete. The default is None.
+        data : Logical, optional
+            If set to True, will delete data from a datasheet. The default is
+            None.
+        datasheet : string, optional
+            If called from the Library class instance, specify the Datasheet to
+            delete data. Required when data is True. The default is None.
+        pid : Int, optional
+            Project ID for the datasheet. Not required for a library-scoped
+            datasheet. The default is None.
+        sid : Int, optional
+            Scenario ID for the datasheet. Not required for a library-scoped
+            datasheet. The default is None.
+        ids : Str or Int, optional
+            Primary key IDs for the rows to delete. If None, deletes all data.
+            The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
         remove_backup : Logical, optional
-            If True, will remove the backup folder when deleting a Library. Default is False.
+            If True, will remove the backup folder when deleting a Library.
+            Default is False.
         remove_publish : Logical, optional
-            If True, will remove the publish folder when deleting a Library. Default is False.
+            If True, will remove the publish folder when deleting a Library.
+            Default is False.
         remove_custom_folders : Logical, optional
-            If True and custom folders have been configured for a Library, then will remove the custom publish and/or backup folders when deleting a Library. Note that the remove_publish and remove_backup arguments must also be set to True to remove the respective custom folders. Default is False.
+            If True and custom folders have been configured for a Library, then
+            will remove the custom publish and/or backup folders when deleting
+            a Library. Note that the remove_publish and remove_backup arguments
+            must also be set to True to remove the respective custom folders.
+            Default is False.
 
         Returns
         -------
@@ -672,11 +697,24 @@ class Library(object):
             raise TypeError("remove_publish must be a Logical")
         if not isinstance(remove_custom_folders, bool):
             raise TypeError("remove_custom_folders must be a Logical")
+
+        if data is not None and not isinstance(data, bool):
+            raise TypeError("data must be a Logical")
+        if datasheet is not None and not isinstance(datasheet, str):
+            raise TypeError("datasheet must be an String")
+        if pid is not None and not isinstance(pid, int) and not isinstance(
+            pid, np.int64):
+            raise TypeError("pid must be an Integer")
+        if sid is not None and not isinstance(sid, int) and not isinstance(
+            sid, np.int64):
+            raise TypeError("sid must be an Integer")
         
         if project is None and scenario is None and folder is None:
             
             helper._delete_library(name = self.location, session=self.session,
-                                   force=force, remove_backup=remove_backup, remove_publish=remove_publish, remove_custom_folders=remove_custom_folders)
+                                   force=force, remove_backup=remove_backup,
+                                   remove_publish=remove_publish,
+                                   remove_custom_folders=remove_custom_folders)
         
         elif project is not None and scenario is None:
             
@@ -725,6 +763,15 @@ class Library(object):
                 raise TypeError("folder must be a Folder instance or Integer")
     
             helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
+        
+        elif data is not None:
+
+            if datasheet is None:
+                raise ValueError("datasheet name is required") 
+                
+            helper._delete_data(library=self, datasheet=datasheet, pid=pid,
+                                sid=sid, ids=ids, session=self.session,
+                                force=force)
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):

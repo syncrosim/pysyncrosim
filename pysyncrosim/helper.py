@@ -290,7 +290,7 @@ def _delete_folder(library, fid, session=None, force=False):
     if answer == "Y":
 
         # Retrieve Folder DataFrame
-        args = ["--lib=%s" % library.location, "--list", "--folders"]
+        args = [f"--lib={library.location}", "--list", "--folders"]
         folder_data = session._Session__call_console(args, decode=True, csv=True)
         folder_df = pd.read_csv(io.StringIO(folder_data))
         
@@ -300,4 +300,28 @@ def _delete_folder(library, fid, session=None, force=False):
         # Delete Folder using Console
         args = ["--delete", "--folder", f"--lib={library.location}", f"--fid={fid}", "--force"]
 
+        session._Session__call_console(args)
+
+def _delete_data(library, datasheet, pid=None, sid=None, ids=None, session=None, force=False):
+
+    if session is None:
+        session = ps.Session()
+
+    if force is False:
+        answer = input(f"Are you sure you want to delete data {ids} from {datasheet} (Y/N)?")
+    else:
+        answer = "Y"
+        
+    if answer == "Y":
+
+        # Delete Data using Console
+        args = ["--delete", "--data", f"--lib={library.location}", f"--sheet={datasheet}", "--force"]
+
+        if pid is not None:
+            args += [f"--pid={pid}"]
+        if sid is not None:
+            args += [f"--sid={sid}"]
+        if ids is not None:
+            args += [f"--ids={ids}"]
+        
         session._Session__call_console(args)
