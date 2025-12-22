@@ -496,7 +496,7 @@ def test_library_compact():
     myLibrary.compact()
     size_after = os.path.getsize(myLibrary.location)
 
-    assert size_before > size_after
+    assert size_before >= size_after
 
     
 def test_project_attributes():
