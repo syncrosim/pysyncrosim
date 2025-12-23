@@ -641,10 +641,10 @@ class Library(object):
         data : Logical, optional
             If set to True, will delete data from a datasheet. The default is
             None.
-        datasheet : string, optional
+        datasheet : String, optional
             If called from the Library class instance, specify the Datasheet to
             delete data. Required when data is True. The default is None.
-        ids : Str or Int, optional
+        ids : String or Int, optional
             IDs of the rows to delete. If None, deletes all data. The default
             is None.
         force : Logical, optional
@@ -712,8 +712,8 @@ class Library(object):
             ids, int) and not isinstance(ids, np.int64):
             raise TypeError("ids must be a String or Integer")
         
-        if project is None and scenario is None and folder is None and
-            datasheet is None:
+        if (project is None and scenario is None and folder is None and
+            data is None):
             
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup,
@@ -768,9 +768,9 @@ class Library(object):
     
             helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
         
-        elif data is not None:
+        elif data is True:
 
-            if datasheet is None:
+            if not datasheet:
                 raise ValueError("datasheet name is required") 
                 
             helper._delete_data(library=self, datasheet=datasheet, pid=pid,

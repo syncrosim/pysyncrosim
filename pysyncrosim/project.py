@@ -324,10 +324,13 @@ class Project(object):
         None.
 
         """
+        if data is True:
+            self.library.delete(data=data, datasheet=datasheet, ids=ids,
+                                pid=self.pid, force=force)
         
-        self.library.delete(project=self, scenario=scenario, data=data,
-                            datasheet=datasheet, ids=ids, pid=self.pid,
-                            force=force)
+        else:
+            self.library.delete(project=self, scenario=self, force=True)
+
 
     def save_datasheet(self, name, data, append=True, force=False):
         """

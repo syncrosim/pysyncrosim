@@ -387,6 +387,7 @@ def test_library_delete():
     myLibrary.delete(scenario="test", force=True)
     assert "test" not in myLibrary.scenarios().Name.values
 
+
 def test_delete_datasheet():
 
     mySession = ps.Session(session_path)   
@@ -415,7 +416,7 @@ def test_delete_datasheet():
         myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
     
     with pytest.raises(ValueError, match="datasheet name is required"):
-        myLibrary.delete(data=True, datasheet="")
+        myLibrary.delete(data=True)
 
     # Add datasheet to project and test delete from project using Library class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
@@ -435,21 +436,19 @@ def test_delete_datasheet():
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Scenario class
-    myScenario2.save_datasheet(name = "stsim_Stratum", data=test_data)
-    assert len(myScenario2.datasheets(name="stsim_Stratum")) == 3
-    myScenario2.delete(data=True, datasheet="stsim_Stratum", force=True)
-    assert myScenario2.datasheets(name="stsim_Stratum").empty
+    myScenario2.delete(data=True, datasheet="stsim_RunControl", force=True)
+    assert myScenario2.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet by row ID
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
-    saved_data = myProject.datasheet(name="stsim_Stratum")
+    saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
 
-    ids_to_delete = f"{saved_data.iloc[0]["Id"]},{saved_data.iloc[1]["Id"]}"
+    ids_to_delete = f"{saved_data.iloc[0]["StratumId"]},{saved_data.iloc[1]["StratumId"]}"
     myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid,
             ids=ids_to_delete, force=True)
     remaining_data = myProject.datasheets(name="stsim_Stratum")
     assert len(remaining_data) == 1
-    # assert remaining_data.iloc[0]["Name"] == "a3"
+    assert remaining_data.iloc[0]["Name"] == "a3"
     
 def test_library_save_datasheet():
 

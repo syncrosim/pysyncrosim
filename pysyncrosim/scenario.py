@@ -537,10 +537,14 @@ class Scenario(object):
         None.
 
         """
-        
-        self.library.delete(project=self.project, scenario=self,
-                            data=data, datasheet=datasheet, ids=ids,
-                            sid=self.sid, force=force)
+
+        if data is True:
+            self.library.delete(data=data, datasheet=datasheet, ids=ids,
+                                sid=self.sid, force=force)
+
+        else:
+            self.library.delete(project=self.project, scenario=self,
+                                force=True)            
     
     def copy(self, name=None):
         """
