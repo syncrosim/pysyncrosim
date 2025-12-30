@@ -17,6 +17,7 @@
       ~Session.install_conda
       ~Session.install_packages
       ~Session.packages
+      ~Session.restore
       ~Session.sign_in
       ~Session.sign_out
       ~Session.uninstall_packages
