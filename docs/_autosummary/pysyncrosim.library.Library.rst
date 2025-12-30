@@ -16,6 +16,7 @@
       ~Library.__init__
       ~Library.add_packages
       ~Library.backup
+      ~Library.compact
       ~Library.datasheets
       ~Library.delete
       ~Library.folders
@@ -36,6 +37,7 @@
    
       ~Library.date_modified
       ~Library.description
+      ~Library.environment
       ~Library.info
       ~Library.location
       ~Library.name
