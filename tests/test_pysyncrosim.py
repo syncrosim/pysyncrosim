@@ -10,7 +10,9 @@ import tempfile
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_name = os.path.join(temp_path.name, "stsimLibrary.ssim")
-existing_lib_name = os.path.join("C:/gitprojects/pysyncrosim/tests", "spatial-example.ssim")
+# Use relative path from the test file location
+test_dir = os.path.dirname(os.path.abspath(__file__))
+existing_lib_name = os.path.join(test_dir, "spatial-example.ssim")
 
 def test_session_attributes():
     

@@ -352,9 +352,9 @@ class Session(object):
             
             if exception is False:
                 print(f"{pkgs_installed} installed successfully")
-                
+
             # Set executable back to console
-            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+            if os.path.split(self.console_exe)[-1] != self.__get_console_exe_name():
                 self.console_exe = self.__init_console(console=True)
     
     def uninstall_packages(self, packages, version=None):
@@ -406,9 +406,9 @@ class Session(object):
             
             if exception is False:
                 print(f"{pkgs_removed} removed successfully")
-                
+
             # Set executable back to console
-            if os.path.split(self.console_exe)[-1] != "SyncroSim.Console.exe":
+            if os.path.split(self.console_exe)[-1] != self.__get_console_exe_name():
                 self.console_exe = self.__init_console(console=True)
 
 
@@ -448,8 +448,27 @@ class Session(object):
         e = ps.environment._environment()
         if location is None:
             if e.program_directory.item() is None:
-                location = "C:/Program Files/SyncroSim"
-
+                # Use platform-specific default paths
+                if os.name == 'nt':  # Windows
+                    location = "C:/Program Files/SyncroSim"
+                else:  # Linux/Mac
+                    # Try common Linux installation paths
+                    possible_paths = [
+                        "/usr/local/syncrosim",
+                        "/opt/syncrosim",
+                        os.path.expanduser("~/syncrosim")
+                    ]
+                    location = None
+                    for path in possible_paths:
+                        if os.path.isdir(path):
+                            location = path
+                            break
+                    if location is None:
+                        raise ValueError(
+                            "Could not find SyncroSim installation. "
+                            "Please specify the location parameter or set "
+                            "SSIM_PROGRAM_DIRECTORY environment variable."
+                        )
             else:
                 location = e.program_directory.item()
         else:
@@ -460,16 +479,26 @@ class Session(object):
         else :
             return location
                         
+    def __get_console_exe_name(self):
+        """Get the platform-specific console executable name"""
+        # On Linux with Mono, .exe files are still used
+        return "SyncroSim.Console.exe"
+
+    def __get_pkgman_exe_name(self):
+        """Get the platform-specific package manager executable name"""
+        # On Linux with Mono, .exe files are still used
+        return "SyncroSim.PackageManager.exe"
+
     def __init_console(self, console=None, pkgman=None):
-        
+
         if console is True:
             return os.path.join(self.__location,
-                                "SyncroSim.Console.exe")
-            
+                                self.__get_console_exe_name())
+
         elif pkgman is True:
             return os.path.join(self.__location,
-                                "SyncroSim.PackageManager.exe")
-            
+                                self.__get_pkgman_exe_name())
+
         else:
             raise ValueError("No executable assigned")
     
@@ -534,12 +563,12 @@ class Session(object):
             if output:
                 print(output.strip())
         
-    def __retrieve_conda_filepath(self):        
+    def __retrieve_conda_filepath(self):
         result = self.__call_console(["--conda", "--config"])
-        
+
         if result.returncode != 0:
             cleaned_result = result.stderr.decode('utf-8').strip()
-            if cleaned_result.contains("No conda configuration yet"):
+            if "No conda configuration yet" in cleaned_result:
                 self.__conda_filepath = None
             else:
                 self.__conda_filepath = cleaned_result.split(": ")[1]
