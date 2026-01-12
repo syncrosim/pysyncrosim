@@ -899,7 +899,8 @@ class Library(object):
             self.session._Session__call_console(args)
         
         except RuntimeError as e:
-            raise RuntimeError(f"Failed to compact library at {self.location}.") from e
+            raise RuntimeError(f"Failed to compact library with the following "
+                               "error message: {e}.")
         
         else:
             return self.location
