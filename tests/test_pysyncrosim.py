@@ -494,11 +494,12 @@ def test_library_compact():
     myLibrary = ps.library(name=lib_path, session=mySession)
 
     size_before = os.path.getsize(myLibrary.location)
-    myLibrary.compact()
+    result = myLibrary.compact()
     size_after = os.path.getsize(myLibrary.location)
 
     assert size_before >= size_after
 
+    assert result == myLibrary.location
     
 def test_project_attributes():
     

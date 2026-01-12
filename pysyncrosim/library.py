@@ -898,10 +898,12 @@ class Library(object):
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
-            return None
         
         except RuntimeError as e:
-            print(e)
+            raise RuntimeError(f"Failed to compact library at {self.location}.")
+        
+        else:
+            return self.location
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
