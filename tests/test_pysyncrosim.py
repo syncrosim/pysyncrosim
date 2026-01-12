@@ -85,11 +85,11 @@ def test_session_restore_function():
 
     # Test with incorrect Library
     mySession = ps.Session(session_path)
-    with pytest.raises(ValueError, match=f"Library not found: test"):
+    with pytest.raises(ValueError, match="Library not found: test"):
         mySession.restore("test")
     
     # Test with incorrect output folder
-    with pytest.raises(ValueError, match=f"Output folder not found: test"):
+    with pytest.raises(ValueError, match="Output folder not found: test"):
         mySession.restore(lib_backup_path, folder="test")
 
     # Restore and test that restore worked
@@ -498,7 +498,6 @@ def test_library_compact():
     size_after = os.path.getsize(myLibrary.location)
 
     assert size_before >= size_after
-
     assert result == myLibrary.location
     
 def test_project_attributes():

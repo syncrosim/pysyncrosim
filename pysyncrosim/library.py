@@ -4,7 +4,6 @@ import numpy as np
 import os
 import io
 import tempfile
-import shutil
 import pysyncrosim as ps
 from pysyncrosim import helper
 from pysyncrosim.environment import _environment
@@ -900,7 +899,7 @@ class Library(object):
             self.session._Session__call_console(args)
         
         except RuntimeError as e:
-            raise RuntimeError(f"Failed to compact library at {self.location}.")
+            raise RuntimeError(f"Failed to compact library at {self.location}.") from e
         
         else:
             return self.location
