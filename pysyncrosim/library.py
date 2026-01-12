@@ -900,7 +900,7 @@ class Library(object):
         
         except RuntimeError as e:
             raise RuntimeError(f"Failed to compact library with the following "
-                               "error message: {e}.")
+                               f"error message: {e}.")
         
         else:
             return self.location
