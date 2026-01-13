@@ -53,7 +53,7 @@ def library(name, session=None, packages=None,
         _check_library_update(session, loc, force_update)
         return ps.Library(location=loc, session=session, use_ssim_env=use_ssim_env)
     
-    args = ["--create", "--library", "--name=\"%s\"" % loc]
+    args = ["--create", "--library", "--name=%s" % loc]
     
     if overwrite is True:      
         args += ["--force"]
@@ -231,7 +231,7 @@ def _delete_project(library, name=None, pid=None, session=None,
         # Delete Project using console   
         if pid is None:
             pid = p["ID"].values[0]
-        args = ["--delete", "--project", "--lib=\"%s\"" % library.location,
+        args = ["--delete", "--project", "--lib=%s" % library.location,
                 "--pid=%d" % pid, "--force"]
         session._Session__call_console(args)
         
@@ -263,7 +263,7 @@ def _delete_scenario(library, project, name=None, sid=None, session=None,
         # Delete Scenario using console   
         if sid is None:
             sid = s["Scenario ID"].values[0]
-        args = ["--delete", "--scenario", "--lib=\"%s\"" % library.location,
+        args = ["--delete", "--scenario", "--lib=%s" % library.location,
                 "--sid=%d" % sid, "--force"]
         session._Session__call_console(args)
         

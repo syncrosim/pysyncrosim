@@ -12,7 +12,7 @@ class Session(object):
     A class to represent a SyncroSim Session.
     
     """    
-    def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None):
+    def __init__(self, location=None, silent=True, print_cmd=False, conda_filepath=None, mono_path=None):
         """
         Initializes a pysyncrosim Session instance.
 
@@ -22,20 +22,24 @@ class Session(object):
             Filepath to SyncroSim executable. If None, then uses default
             location on windows. The default is None.
         silent : Logical, optional
-            If True, will not print warnings from the console. The default is 
+            If True, will not print warnings from the console. The default is
             True.
         print_cmd : Logical, optional
-            If True, arguments from the console command will be printed. The 
+            If True, arguments from the console command will be printed. The
             default is False.
         conda_filepath : Str, optional
             Filepath to conda executable. If None, then uses default location
+        mono_path : Str, optional
+            Path to mono executable on Linux. If None, automatically searches PATH.
+            Specify custom path if mono is not in your PATH.
+            Example: Session(location="/opt/syncrosim", mono_path="/usr/local/bin/mono")
 
         Raises
         ------
         ValueError
             Raises error if the location given does not exist.
         RuntimeError
-            Raises error if the version of the SyncroSim installation is 
+            Raises error if the version of the SyncroSim installation is
             incompatible with the current version of pysyncrosim.
 
         Returns
@@ -43,12 +47,15 @@ class Session(object):
         None.
 
         """
+        # Set platform detection first as it's needed by validation methods
+        self.__is_windows = os.name == 'nt'
+        self.__mono_path = mono_path if mono_path else "mono"
+
         self.__location = self.__init_location(location)
         self.console_exe = self.__init_console(console=True)
         self.__silent = silent
         self.__print_cmd = print_cmd
         self.__conda_filepath = conda_filepath
-        self.__is_windows = os.name == 'nt'
         
         # Add check to make sure that correct version of SyncroSim is being used
         ssim_required_version = "3.1.0"
@@ -442,7 +449,41 @@ class Session(object):
         else:
             print(result.stdout.decode('utf-8'))
 
-         
+    def _validate_mono(self):
+        """Validate Mono is available on Linux systems"""
+        import shutil
+        mono_path = shutil.which("mono")
+        if mono_path is None:
+            raise RuntimeError(
+                "Mono is required to run SyncroSim on Linux but was not found.\n"
+                "Install Mono: sudo apt-get install mono-complete\n"
+                "Or specify custom path: Session(location=..., mono_path=...)"
+            )
+        return mono_path
+
+    def _validate_installation(self, location):
+        """Validate SyncroSim installation is complete and usable"""
+        if not os.path.isdir(location):
+            raise ValueError(f"SyncroSim directory does not exist: {location}")
+
+        console_path = os.path.join(location, self.__get_console_exe_name())
+        pkgman_path = os.path.join(location, self.__get_pkgman_exe_name())
+
+        if not os.path.isfile(console_path):
+            raise ValueError(
+                f"SyncroSim Console executable not found: {console_path}\n"
+                f"Please verify your SyncroSim installation."
+            )
+
+        if not os.path.isfile(pkgman_path):
+            raise ValueError(
+                f"SyncroSim PackageManager executable not found: {pkgman_path}\n"
+                f"Please verify your SyncroSim installation."
+            )
+
+        if not self.__is_windows:
+            self._validate_mono()
+
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
         e = ps.environment._environment()
@@ -451,33 +492,41 @@ class Session(object):
                 # Use platform-specific default paths
                 if os.name == 'nt':  # Windows
                     location = "C:/Program Files/SyncroSim"
-                else:  # Linux/Mac
-                    # Try common Linux installation paths
+                else:  # Linux/Mac - expanded search
                     possible_paths = [
                         "/usr/local/syncrosim",
                         "/opt/syncrosim",
-                        os.path.expanduser("~/syncrosim")
+                        os.path.expanduser("~/syncrosim"),
+                        os.path.expanduser("~/.local/syncrosim"),
+                        "/usr/share/syncrosim"
                     ]
                     location = None
                     for path in possible_paths:
                         if os.path.isdir(path):
-                            location = path
-                            break
+                            # Check if executables exist in this path
+                            console_path = os.path.join(path, self.__get_console_exe_name())
+                            if os.path.isfile(console_path):
+                                location = path
+                                break
+
                     if location is None:
                         raise ValueError(
-                            "Could not find SyncroSim installation. "
-                            "Please specify the location parameter or set "
-                            "SSIM_PROGRAM_DIRECTORY environment variable."
+                            "Could not find SyncroSim installation.\n\n"
+                            "Searched locations:\n" +
+                            "\n".join(f"  - {p}" for p in possible_paths) +
+                            "\n\nSolutions:\n"
+                            "1. Specify location: Session(location='/path/to/syncrosim')\n"
+                            "2. Set environment: export SSIM_PROGRAM_DIRECTORY=/path/to/syncrosim\n"
+                            "3. Ensure SyncroSim.Console.exe exists in the directory"
                         )
             else:
                 location = e.program_directory.item()
         else:
             location = os.path.expanduser(location)
 
-        if not os.path.isdir(location):
-            raise ValueError("The location is not valid")
-        else :
-            return location
+        # Validate installation after finding location
+        self._validate_installation(location)
+        return location
                         
     def __get_console_exe_name(self):
         """Get the platform-specific console executable name"""
@@ -504,45 +553,56 @@ class Session(object):
     
     def __call_console(self, args, csv=False, decode=False):
         final_args = []
-        
+
         final_args.append(self.console_exe)
         final_args += args
-        
+
         if csv:
             final_args += ["--csv"]
-            
+
         if self.__print_cmd:
             print(final_args)
 
         if not self.__is_windows:
-            final_args = ["mono"] + final_args
+            final_args = [self.__mono_path] + final_args
 
         result = subprocess.run(
             final_args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
-        
-        if result.returncode !=0:
+
+        if result.returncode != 0:
+            error_msg = result.stderr.decode('utf-8')
+
+            # Provide helpful context for common errors
+            if "Cannot find" in error_msg or "No such file" in error_msg:
+                error_msg += (
+                    f"\n\nTroubleshooting:\n"
+                    f"- SyncroSim location: {self.__location}\n"
+                    f"- Console executable: {self.console_exe}\n"
+                    f"- Mono command: {self.__mono_path if not self.__is_windows else 'N/A'}\n"
+                )
+
             if self.silent is False:
                 print(final_args, flush=True)
-            raise RuntimeError(result.stderr.decode('utf-8'))
-            
+            raise RuntimeError(error_msg)
+
         if decode is True:
             return result.stdout.decode('utf-8')
-        else:    
+        else:
             return result
 
     def __call_console_interactive(self, args):
         final_args = []
-        
+
         final_args.append(self.console_exe)
         final_args += args
-        
+
         if self.__print_cmd:
             print(final_args)
-            
+
         if not self.__is_windows:
-            final_args = ["mono"] + final_args
+            final_args = [self.__mono_path] + final_args
             process = subprocess.Popen(
                 final_args,
                 stdout=subprocess.PIPE,
