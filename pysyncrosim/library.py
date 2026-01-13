@@ -613,8 +613,8 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None,
-                pid=None, sid=None, data=None, datasheet=None, ids=None,
+    def delete(self, project=None, scenario=None, folder=None,
+               pid=None, sid=None, data=None, datasheet=None, ids=None,
                force=False, remove_backup=False, remove_publish=False,
                remove_custom_folders=False):
         """
@@ -630,6 +630,19 @@ class Library(object):
             delete. The default is None.
         folder : Folder, or Int, optional
             If called from a Library class instance, specify the folder to delete. The default is None.
+        data : Logical, optional
+            If True, deletes data from a specified datasheet. The default is
+            None
+        datasheet : String, optional
+            Name of the datasheet to delete data from. Required when
+            data = True. The default is None.
+        ids : String, optional
+            The primary key IDs for the rows to delete from the datasheet. The
+            default is None.
+        pid : Int, optional
+            Project ID for datasheet deletion. The default is None.
+        sid : Int, optional
+            Scenario ID for datasheet deletion. The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
@@ -666,6 +679,21 @@ class Library(object):
                     scenario, str) and not isinstance(scenario, np.int64):
                 raise TypeError(
                     "scenario must be a Scenario instance, Integer, or String")
+        
+        if folder is not None and not isinstance(folder, ps.Folder):
+            if not isinstance(folder, int) and not isinstance(folder, np.int64):
+                raise TypeError("folder must be a Folder instance or Integer")
+        
+        if data is not None and not isinstance(data, bool):
+            raise TypeError("data must be a Logical")
+        if datasheet is not None and not isinstance(datasheet, str):
+            raise TypeError("datasheet must be a String")
+        if pid is not None and not isinstance(pid, int)\
+            and not isinstance(pid, np.int64):
+            raise TypeError("pid must be an Integer")
+        if sid is not None and not isinstance(sid, int)\
+            and not isinstance(sid, np.int64):
+            raise TypeError("sid must be an Integer")
 
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
@@ -675,14 +703,23 @@ class Library(object):
             raise TypeError("remove_publish must be a Logical")
         if not isinstance(remove_custom_folders, bool):
             raise TypeError("remove_custom_folders must be a Logical")
+
+        # delete datasheet      
+        if data is True:
+            if datasheet is None:
+                raise ValueError("datasheet name is required")
+            helper._delete_data(library=self, datasheet=datasheet, pid=pid,
+                                sid=sid, ids=ids, session=self.session,
+                                force=force)
         
-        if project is None and scenario is None and folder is None:
-            
+        # delete library
+        elif project is None and scenario is None and folder is None:
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup,
                                    remove_publish=remove_publish,
                                    remove_custom_folders=remove_custom_folders)
         
+        # delete project        
         elif project is not None and scenario is None:
             
             # turn project into project class instance if str or int
@@ -699,7 +736,8 @@ class Library(object):
             helper._delete_project(library=self, name=p.name,
                                    pid=p.pid, session=self.session,
                                    force=force)
-            
+
+        # delete scenario 
         elif scenario is not None:
             
             # turn scenario into scenario class instance if str or int
@@ -718,6 +756,7 @@ class Library(object):
                                     session=self.session,
                                     force=force)
         
+        # delete folder
         elif folder is not None:
 
             # turn folder into folder ID if int
@@ -729,7 +768,8 @@ class Library(object):
             else:
                 raise TypeError("folder must be a Folder instance or Integer")
     
-            helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
+            helper._delete_folder(library=self, fid=fid, session=self.session,
+                                  force=force)
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):
