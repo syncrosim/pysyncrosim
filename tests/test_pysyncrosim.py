@@ -367,7 +367,11 @@ def test_library_delete():
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
 
-    
+    myProject = myLibrary.projects(name="test")
+    myFolder = myProject.folders(folder="test_folder")
+    myFolder2 = myProject.folders(name="test_folder2")
+    fid = myFolder2.folder_id
+
     myLibrary.delete(folder=myFolder, force=True)
     assert myFolder.folder_id not in myLibrary.folders()["Id"].values
 
