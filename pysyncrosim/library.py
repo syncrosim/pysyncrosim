@@ -4,7 +4,6 @@ import numpy as np
 import os
 import io
 import tempfile
-import shutil
 import pysyncrosim as ps
 from pysyncrosim import helper
 from pysyncrosim.environment import _environment
@@ -614,7 +613,7 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, folder=None,
+    def delete(self, project=None, scenario=None,
                 pid=None, sid=None, data=None, datasheet=None, ids=None,
                force=False, remove_backup=False, remove_publish=False,
                remove_custom_folders=False):
@@ -630,23 +629,7 @@ class Library(object):
             If called from a Scenario class instance, specify the Scenario to
             delete. The default is None.
         folder : Folder, or Int, optional
-            If called from a Library class instance, specify the folder to
-            delete. The default is None.
-        pid : Int, optional
-            Project ID for the datasheet. Not required for a library-scoped
-            datasheet. The default is None.
-        sid : Int, optional
-            Scenario ID for the datasheet. Not required for a library-scoped
-            datasheet. The default is None.
-        data : Logical, optional
-            If set to True, will delete data from a datasheet. The default is
-            None.
-        datasheet : String, optional
-            If called from the Library class instance, specify the Datasheet to
-            delete data. Required when data is True. The default is None.
-        ids : String or Int, optional
-            IDs of the rows to delete. If None, deletes all data. The default
-            is None.
+            If called from a Library class instance, specify the folder to delete. The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
@@ -683,11 +666,6 @@ class Library(object):
                     scenario, str) and not isinstance(scenario, np.int64):
                 raise TypeError(
                     "scenario must be a Scenario instance, Integer, or String")
-        
-        if folder is not None and not isinstance(folder, ps.Folder):
-            if not isinstance(folder, int) and not isinstance(folder, np.int64):
-                raise TypeError(
-                    "folder must be a Folder instance or Integer")
 
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
@@ -697,23 +675,8 @@ class Library(object):
             raise TypeError("remove_publish must be a Logical")
         if not isinstance(remove_custom_folders, bool):
             raise TypeError("remove_custom_folders must be a Logical")
-
-        if data is not None and not isinstance(data, bool):
-            raise TypeError("data must be a Logical")
-        if datasheet is not None and not isinstance(datasheet, str):
-            raise TypeError("datasheet must be a String")
-        if pid is not None and not isinstance(pid, int) and not isinstance(
-            pid, np.int64):
-            raise TypeError("pid must be an Integer")
-        if sid is not None and not isinstance(sid, int) and not isinstance(
-            sid, np.int64):
-            raise TypeError("sid must be an Integer")
-        if ids is not None and not isinstance(ids, str) and not isinstance(
-            ids, int) and not isinstance(ids, np.int64):
-            raise TypeError("ids must be a String or Integer")
         
-        if (project is None and scenario is None and folder is None and
-            data is None):
+        if project is None and scenario is None and folder is None:
             
             helper._delete_library(name = self.location, session=self.session,
                                    force=force, remove_backup=remove_backup,
@@ -767,15 +730,6 @@ class Library(object):
                 raise TypeError("folder must be a Folder instance or Integer")
     
             helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
-        
-        elif data is True:
-
-            if not datasheet:
-                raise ValueError("datasheet name is required") 
-                
-            helper._delete_data(library=self, datasheet=datasheet, pid=pid,
-                                sid=sid, ids=ids, session=self.session,
-                                force=force)
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):
@@ -969,10 +923,14 @@ class Library(object):
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
-            return None
+            return self.location
         
         except RuntimeError as e:
-            print(e)
+            raise RuntimeError(f"Failed to compact library with the following "
+                               f"error message: {e}.")
+        
+        else:
+            return self.location
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]

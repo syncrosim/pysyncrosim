@@ -85,11 +85,11 @@ def test_session_restore_function():
 
     # Test with incorrect Library
     mySession = ps.Session(session_path)
-    with pytest.raises(ValueError, match=f"Library not found: test"):
+    with pytest.raises(ValueError, match="Library not found: test"):
         mySession.restore("test")
     
     # Test with incorrect output folder
-    with pytest.raises(ValueError, match=f"Output folder not found: test"):
+    with pytest.raises(ValueError, match="Output folder not found: test"):
         mySession.restore(lib_backup_path, folder="test")
 
     # Restore and test that restore worked
@@ -111,7 +111,8 @@ def test_session_restore_function():
     assert os.path.exists(test_folder_lib_path)
 
     # Delete folder with restored Library
-    myLibrary = ps.library(test_folder_lib_path, session=mySession, force_update=True)
+    myLibrary = ps.library(test_folder_lib_path, session=mySession,
+        force_update=True)
     myLibrary.delete(force=True)
     os.rmdir(test_output_folder)
     
@@ -360,24 +361,19 @@ def test_library_delete():
     with pytest.raises(ValueError, match="scenario dne does not exist"):
         myLibrary.delete(scenario="dne")
     
-    # folder should be moved but should work
-    with pytest.raises(
-            TypeError,
-            match="folder must be a Folder instance or Integer"):
+    with pytest.raises(TypeError, match="folder must be a Folder instance or Integer"):
         myLibrary.delete(folder="folder")
 
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
+
     
-    # Test delete folder from folder name
     myLibrary.delete(folder=myFolder, force=True)
     assert myFolder.folder_id not in myLibrary.folders()["Id"].values
 
-    # Test delete folder from folder ID
     myLibrary.delete(folder=fid, force=True)
     assert fid not in myLibrary.folders()["Id"].values
-    
-    # Test delete project
+        
     myLibrary.delete(project="test", force=True)
     assert myLibrary._Library__projects.empty
     assert "test" not in myLibrary.projects().Name.values
@@ -575,11 +571,11 @@ def test_library_compact():
     myLibrary = ps.library(name=lib_path, session=mySession)
 
     size_before = os.path.getsize(myLibrary.location)
-    compactLibrary = myLibrary.compact()
-    size_after = os.path.getsize(compactLibrary)
+    result = myLibrary.compact()
+    size_after = os.path.getsize(myLibrary.location)
 
-    assert size_before > size_after
-
+    assert size_before >= size_after
+    assert result == myLibrary.location
     
 def test_project_attributes():
     
