@@ -328,8 +328,11 @@ class Project(object):
             self.library.delete(data=data, datasheet=datasheet, ids=ids,
                                 pid=self.pid, force=force)
         
+        elif scenario is not None:
+            self.library.delete(scenario = scenario, force = force)
+
         else:
-            self.library.delete(project=self, scenario=self, force=True)
+            self.library.delete(project=self, force=True)
 
 
     def save_datasheet(self, name, data, append=True, force=False):

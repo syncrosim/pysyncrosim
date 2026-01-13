@@ -439,7 +439,7 @@ def test_delete_datasheet():
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
 
-    ids_to_delete = f"{saved_data.iloc[0]["StratumId"]},{saved_data.iloc[1]["StratumId"]}"
+    ids_to_delete = f"{saved_data.iloc[0]['StratumId']},{saved_data.iloc[1]["StratumId"]}"
     myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid,
             ids=ids_to_delete, force=True)
     remaining_data = myProject.datasheets(name="stsim_Stratum")
