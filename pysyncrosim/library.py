@@ -761,7 +761,7 @@ class Library(object):
 
             # turn folder into folder ID if int
 
-            if type(folder) is int:
+            if type(folder) is int or isinstance(folder, np.int64):
                 fid = folder
             elif isinstance(folder, ps.Folder):
                 fid = folder.folder_id

@@ -369,7 +369,7 @@ def test_library_delete():
 
     myProject = myLibrary.projects(name="test")
     myFolder = myProject.folders(folder="test_folder")
-    myFolder2 = myProject.folders(name="test_folder2")
+    myFolder2 = myProject.folders(folder="test_folder2")
     fid = myFolder2.folder_id
 
     myLibrary.delete(folder=myFolder, force=True)
