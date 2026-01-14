@@ -2,6 +2,7 @@ import os
 import io
 import time
 import subprocess
+import shutil
 import pandas as pd
 import pysyncrosim as ps
 from pysyncrosim._version import __version__
@@ -449,9 +450,15 @@ class Session(object):
         else:
             print(result.stdout.decode('utf-8'))
 
-    def _validate_mono(self):
+    def _validate_mono(self, skip_if_in_environment=False):
         """Validate Mono is available on Linux systems"""
-        import shutil
+        # Skip validation if running inside a SyncroSim environment
+        if skip_if_in_environment:
+            e = ps.environment._environment()
+            if e.program_directory.item() is not None:
+                # Running inside SyncroSim environment, skip validation
+                return "mono"
+
         mono_path = shutil.which("mono")
         if mono_path is None:
             raise RuntimeError(
@@ -481,8 +488,10 @@ class Session(object):
                 f"Please verify your SyncroSim installation."
             )
 
+        # Skip Mono validation if running inside a SyncroSim environment
+        # (transformers don't need Mono check since SyncroSim manages execution)
         if not self.__is_windows:
-            self._validate_mono()
+            self._validate_mono(skip_if_in_environment=True)
 
     def __init_location(self, location):
         # Initializes the location of the SyncroSim executable
