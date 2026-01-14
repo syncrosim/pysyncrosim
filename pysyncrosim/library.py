@@ -4,7 +4,6 @@ import numpy as np
 import os
 import io
 import tempfile
-import shutil
 import pysyncrosim as ps
 from pysyncrosim import helper
 from pysyncrosim.environment import _environment
@@ -614,7 +613,7 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, force=False):
+    def delete(self, project=None, scenario=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -629,6 +628,12 @@ class Library(object):
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
+        remove_backup : Logical, optional
+            If True, will remove the backup folder when deleting a Library. Default is False.
+        remove_publish : Logical, optional
+            If True, will remove the publish folder when deleting a Library. Default is False.
+        remove_custom_folders : Logical, optional
+            If True and custom folders have been configured for a Library, then will remove the custom publish and/or backup folders when deleting a Library. Note that the remove_publish and remove_backup arguments must also be set to True to remove the respective custom folders. Default is False.
 
         Returns
         -------
@@ -650,13 +655,20 @@ class Library(object):
                     scenario, str) and not isinstance(scenario, np.int64):
                 raise TypeError(
                     "scenario must be a Scenario instance, Integer, or String")
+
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
+        if not isinstance(remove_backup, bool):
+            raise TypeError("remove_backup must be a Logical")
+        if not isinstance(remove_publish, bool):
+            raise TypeError("remove_publish must be a Logical")
+        if not isinstance(remove_custom_folders, bool):
+            raise TypeError("remove_custom_folders must be a Logical")
         
         if project is None and scenario is None:
             
             helper._delete_library(name = self.location, session=self.session,
-                               force=force)
+                                   force=force, remove_backup=remove_backup, remove_publish=remove_publish, remove_custom_folders=remove_custom_folders)
         
         elif project is not None and scenario is None:
             
@@ -872,6 +884,26 @@ class Library(object):
             args += ["--extdata"]
         
         self.session._Session__call_console(args)
+
+    def compact(self):
+        """
+        Compacts a SyncroSim library to reduce its footprint on disk.
+        
+        Returns
+        -------
+        String.
+            Path to the compacted library.
+        """
+        try:
+            args = ["--compact", f"--lib={self.location}"]
+            self.session._Session__call_console(args)
+        
+        except RuntimeError as e:
+            raise RuntimeError(f"Failed to compact library with the following "
+                               f"error message: {e}.")
+        
+        else:
+            return self.location
 
     def __init_conda(self):
         args = ["--setprop", "--lib=%s" % self.location]
