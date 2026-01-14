@@ -19,7 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="ApexRMS",
-    author_email="info@apexrms.com",
+    author_email="pysyncrosim@syncrosim.com",
     url="https://syncrosim.com/",
     packages=find_packages(exclude=("tests",)),
     install_requires=["numpy", "pandas", "rasterio"],
