@@ -1,6 +1,30 @@
 import os
 import pandas as pd
 
+def _getenv_case_insensitive(name, default=None):
+    """
+    Get an environment variable, checking both uppercase and lowercase versions.
+
+    SyncroSim on Linux sets environment variables in lowercase (e.g., ssim_program_directory)
+    while on Windows they are uppercase (e.g., SSIM_PROGRAM_DIRECTORY).
+    """
+    # Try the exact name first (usually uppercase)
+    value = os.getenv(name)
+    if value is not None:
+        return value
+
+    # Try lowercase version
+    value = os.getenv(name.lower())
+    if value is not None:
+        return value
+
+    # Try uppercase version (in case name was passed lowercase)
+    value = os.getenv(name.upper())
+    if value is not None:
+        return value
+
+    return default
+
 def runtime_data_folder(scenario, datasheet_name):
     """
     Creates a SyncroSim Datasheet data folder.
@@ -18,9 +42,9 @@ def runtime_data_folder(scenario, datasheet_name):
         Path to data folder.
 
     """
-    _validate_environment()
+    _validate_environment(require_vars=['data_directory'])
     parent_folder = _environment().data_directory.item()
-    
+
     return _create_scenario_folder(scenario, parent_folder, datasheet_name)
 
 def runtime_temp_folder(folder_name):
@@ -38,7 +62,7 @@ def runtime_temp_folder(folder_name):
         Path to temporary folder.
 
     """
-    _validate_environment()
+    _validate_environment(require_vars=['temp_directory'])
     return _create_temp_folder(folder_name)
 
 def progress_bar(report_type="step", iteration=None, timestep=None,
@@ -72,8 +96,9 @@ def progress_bar(report_type="step", iteration=None, timestep=None,
     None.
 
     """
-    _validate_environment()
-    
+    # Note: No environment validation needed - this function just prints to stdout
+    # which SyncroSim captures regardless of environment variables
+
     # Begin progress bar tracking
     if report_type == "begin": 
         try:
@@ -137,8 +162,9 @@ def update_run_log(*message, sep="", type="status"):
     None.
 
     """
-    _validate_environment()
-    
+    # Note: No environment validation needed - this function just prints to stdout
+    # which SyncroSim captures regardless of environment variables
+
     # Check that a message is provided
     if len(message) == 0:
         raise ValueError("Please include a message to send to the run log.")
@@ -178,33 +204,60 @@ def update_run_log(*message, sep="", type="status"):
 
 def _environment():
     env_df = pd.DataFrame(
-        {"package_directory": [os.getenv("SSIM_PACKAGE_DIRECTORY")],
-         "program_directory": [os.getenv("SSIM_PROGRAM_DIRECTORY")],
-         "library_filepath": [os.getenv("SSIM_LIBRARY_FILEPATH")],
-         "project_id": [int(os.getenv("SSIM_PROJECT_ID", default=-1))],
-         "scenario_id": [int(os.getenv("SSIM_SCENARIO_ID", default=-1))],
-         "data_directory": [os.getenv("SSIM_DATA_DIRECTORY")],
-         "temp_directory": [os.getenv("SSIM_TEMP_DIRECTORY")],
-         "transfer_directory": [os.getenv("SSIM_TRANSFER_DIRECTORY")],
+        {"package_directory": [_getenv_case_insensitive("SSIM_PACKAGE_DIRECTORY")],
+         "program_directory": [_getenv_case_insensitive("SSIM_PROGRAM_DIRECTORY")],
+         "library_filepath": [_getenv_case_insensitive("SSIM_LIBRARY_FILEPATH")],
+         "project_id": [int(_getenv_case_insensitive("SSIM_PROJECT_ID", default=-1))],
+         "scenario_id": [int(_getenv_case_insensitive("SSIM_SCENARIO_ID", default=-1))],
+         "data_directory": [_getenv_case_insensitive("SSIM_DATA_DIRECTORY")],
+         "temp_directory": [_getenv_case_insensitive("SSIM_TEMP_DIRECTORY")],
+         "transfer_directory": [_getenv_case_insensitive("SSIM_TRANSFER_DIRECTORY")],
          "before_iteration": [
-             int(os.getenv("SSIM_STOCHASTIC_TIME_BEFORE_ITERATION",
+             int(_getenv_case_insensitive("SSIM_STOCHASTIC_TIME_BEFORE_ITERATION",
                            default=-1))],
          "after_iteration": [
-             int(os.getenv("SSIM_STOCHASTIC_TIME_AFTER_ITERATION",
+             int(_getenv_case_insensitive("SSIM_STOCHASTIC_TIME_AFTER_ITERATION",
                            default=-1))],
          "before_timestep": [
-             int(os.getenv("SSIM_STOCHASTIC_TIME_BEFORE_TIMESTEP",
+             int(_getenv_case_insensitive("SSIM_STOCHASTIC_TIME_BEFORE_TIMESTEP",
                            default=-1))],
          "after_timestep": [
-             int(os.getenv("SSIM_STOCHASTIC_TIME_AFTER_TIMESTEP",
+             int(_getenv_case_insensitive("SSIM_STOCHASTIC_TIME_AFTER_TIMESTEP",
                            default=-1))]})
     return env_df
     
-def _validate_environment():
+def _validate_environment(require_vars=None):
+    """
+    Validate that required SyncroSim environment variables are set.
+
+    Parameters
+    ----------
+    require_vars : list of str, optional
+        List of environment variable names to check. If None, checks for
+        any SyncroSim environment variable. Valid values: 'program_directory',
+        'data_directory', 'temp_directory', 'library_filepath', etc.
+    """
     e = _environment()
-    
-    if e.program_directory.item() is None:
-        raise RuntimeError("This function requires a SyncroSim environment")
+
+    if require_vars is None:
+        # If no specific vars required, just check that ANY env var is set
+        # This indicates we're running inside SyncroSim
+        if all(e[col].item() is None or (isinstance(e[col].item(), int) and e[col].item() == -1)
+               for col in e.columns):
+            raise RuntimeError("This function requires a SyncroSim environment")
+    else:
+        # Check specific required variables
+        missing = []
+        for var in require_vars:
+            if var in e.columns:
+                val = e[var].item()
+                if val is None or (isinstance(val, int) and val == -1):
+                    missing.append(var)
+        if missing:
+            raise RuntimeError(
+                f"This function requires SyncroSim environment variable(s): "
+                f"{', '.join(missing)}"
+            )
         
 def _create_scenario_folder(scenario, parent_folder, datasheet_name):
     sidpart = "Scenario-" + str(scenario.sid)
