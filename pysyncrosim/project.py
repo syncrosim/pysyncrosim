@@ -321,7 +321,8 @@ class Project(object):
 
         """
         if datasheet is not None:
-            self.library.delete(datasheet=datasheet, pid=self.pid, force=force)
+            self.library.delete(datasheet=datasheet, pid=self.pid,
+            ids=ids, force=force)
         
         elif scenario is not None:
             self.library.delete(scenario = scenario, force = force)

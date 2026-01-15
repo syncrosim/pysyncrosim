@@ -425,7 +425,7 @@ def test_delete_datasheet():
     # Add datasheet to project and test delete from project using Library class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     assert len(myProject.datasheets(name="stsim_Stratum")) == 3
-    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid, force=True)
+    myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid, force=True)
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Library class
@@ -444,7 +444,7 @@ def test_delete_datasheet():
     assert myScenario2.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet by row ID
-    myProject.save_datasheet(name="stsim_Stratum", datasheet=test_data)
+    myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
 
     ids_to_delete = f"{saved_data.iloc[0]['StratumId']},{saved_data.iloc[1]["StratumId"]}"

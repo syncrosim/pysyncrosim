@@ -535,7 +535,8 @@ class Scenario(object):
         """
 
         if datasheet is not None:
-            self.library.delete(datasheet=datasheet, ids=ids, force=force)
+            self.library.delete(datasheet=datasheet, sid=self.sid,
+            ids=ids, force=force)
 
         else:
             self.library.delete(project=self.project, scenario=self,
