@@ -349,13 +349,13 @@ def test_library_delete():
     with pytest.raises(TypeError, match="force must be a Logical"):
         myLibrary.delete(force="True")
         
-    with pytest.raises(ValueError, match="Project ID 2 does not exist"):
+    with pytest.raises(ValueError, match="project 2 does not exist"):
         myLibrary.delete(project=2)
         
     with pytest.raises(ValueError, match="project dne does not exist"):
         myLibrary.delete(project="dne")
         
-    with pytest.raises(ValueError, match="Scenario ID 50 does not exist"):
+    with pytest.raises(ValueError, match="scenario 50 does not exist"):
         myLibrary.delete(scenario=50)
         
     with pytest.raises(ValueError, match="scenario dne does not exist"):
@@ -382,10 +382,17 @@ def test_library_delete():
     assert myLibrary._Library__projects.empty
     assert "test" not in myLibrary.projects().Name.values
     
-    # Test delete scenario
     myLibrary.scenarios(name="test")
     myLibrary.delete(scenario="test", force=True)
     assert "test" not in myLibrary.scenarios().Name.values
+
+    myLibrary.delete(force=True)
+    assert not os.path.exists(lib_path)
+
+    with pytest.raises(
+        ValueError,
+        match="Library not found:"):
+        myLibrary.delete(force=True)
 
 
 def test_delete_datasheet():

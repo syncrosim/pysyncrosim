@@ -236,7 +236,7 @@ def _delete_project(library, name=None, pid=None, session=None,
                 
         # Delete Project using console   
         if pid is None:
-            pid = p["ID"].values[0]
+            pid = p["ProjectId"].values[0]
         args = ["--delete", "--project", "--lib=\"%s\"" % library.location,
                 "--pid=%d" % pid, "--force"]
         session._Session__call_console(args)
@@ -268,7 +268,7 @@ def _delete_scenario(library, project, name=None, sid=None, session=None,
                                         
         # Delete Scenario using console   
         if sid is None:
-            sid = s["Scenario ID"].values[0]
+            sid = s["ScenarioId"].values[0]
         args = ["--delete", "--scenario", "--lib=\"%s\"" % library.location,
                 "--sid=%d" % sid, "--force"]
         session._Session__call_console(args)
