@@ -520,8 +520,7 @@ class Scenario(object):
         Parameters
         ----------
         datasheet : String, optional
-            Name of the datasheet to delete data from. Required when data is
-            True. The default is None
+            Name of the datasheet to delete data from. The default is None
         ids : Int or String, optional
             IDs of the rows to delete. If None, deletes all data. The default is
             None.
@@ -540,7 +539,7 @@ class Scenario(object):
 
         else:
             self.library.delete(project=self.project, scenario=self,
-                                force=True)            
+                                force=force)            
     
     def copy(self, name=None):
         """

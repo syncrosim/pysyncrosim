@@ -409,21 +409,18 @@ def test_delete_datasheet():
         "Description": ["test1", "test2", "test3"]
     })
 
-
-    with pytest.raises(TypeError, match="data must be a Logical"):
-        myLibrary.delete(data="True")
     
     with pytest.raises(TypeError, match="datasheet must be a String"):
-        myLibrary.delete(data=True, datasheet=1)
+        myLibrary.delete(datasheet=1)
     
     with pytest.raises(TypeError, match="pid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", pid="1")
+        myLibrary.delete(datasheet="core_Backup", pid="1")
 
     with pytest.raises(TypeError, match="sid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
+        myLibrary.delete(datasheet="core_Backup", sid="1")
     
     with pytest.raises(ValueError, match="datasheet name is required"):
-        myLibrary.delete(data=True)
+        myLibrary.delete(datasheet="")
 
     # Add datasheet to project and test delete from project using Library class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
@@ -432,26 +429,26 @@ def test_delete_datasheet():
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Library class
-    myLibrary.delete(data=True, datasheet="stsim_RunControl",
+    myLibrary.delete(datasheet="stsim_RunControl",
         sid=myScenario.sid, force=True)
     assert myScenario.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet from project using Project class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     assert len(myProject.datasheets(name="stsim_Stratum")) == 3
-    myProject.delete(data=True, datasheet="stsim_Stratum", force=True)
+    myProject.delete(datasheet="stsim_Stratum", force=True)
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Scenario class
-    myScenario2.delete(data=True, datasheet="stsim_RunControl", force=True)
+    myScenario2.delete(datasheet="stsim_RunControl", force=True)
     assert myScenario2.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet by row ID
-    myProject.save_datasheet(name="stsim_Stratum", data=test_data)
+    myProject.save_datasheet(name="stsim_Stratum", datasheet=test_data)
     saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
 
     ids_to_delete = f"{saved_data.iloc[0]['StratumId']},{saved_data.iloc[1]["StratumId"]}"
-    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid,
+    myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid,
             ids=ids_to_delete, force=True)
     remaining_data = myProject.datasheets(name="stsim_Stratum")
     assert len(remaining_data) == 1

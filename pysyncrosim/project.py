@@ -307,8 +307,7 @@ class Project(object):
         scenario : Scenario, String, or Int, optional
             Scenario to delete. The default is None.
         datasheet : String, optional
-            Name of the datasheet to delete data from. Required when data is
-            True. The default is None.
+            Name of the datasheet to delete data from. The default is None.
         ids : Int or String, optional
             IDs of the rows to delete. If None, deletes all data. The default is
             None.
@@ -322,7 +321,7 @@ class Project(object):
 
         """
         if datasheet is not None:
-            self.library.delete(datasheet=datasheet, ids=ids, force=force)
+            self.library.delete(datasheet=datasheet, pid=self.pid, force=force)
         
         elif scenario is not None:
             self.library.delete(scenario = scenario, force = force)
