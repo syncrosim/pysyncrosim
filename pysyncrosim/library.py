@@ -706,7 +706,7 @@ class Library(object):
                 raise TypeError(f"project must be a Project instance, "
                                 f"Integer, or String")
             
-            helper._delete_project(library=self, name=p.name,
+            helper._delete_project(library=self, name=p.name, pid = p.pid, 
                                    session=self.session, force=force)
 
         # delete scenario
@@ -730,8 +730,8 @@ class Library(object):
                                 f"Integer, or String")
             
             helper._delete_scenario(library=self, project=s.project,
-                                    name=s.name, session=self.session,
-                                    force=force)
+                                    sid = s.sid, name=s.name,
+                                    session=self.session, force=force)
         
         # delete folder
         elif folder is not None:
