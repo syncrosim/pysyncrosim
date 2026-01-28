@@ -537,7 +537,7 @@ class Session(object):
                 # Use platform-specific default paths
                 if os.name == 'nt':  # Windows
                     location = "C:/Program Files/SyncroSim"
-                else:  # Linux/Mac - expanded search
+                else:  # Linux - expanded search
                     possible_paths = [
                         "/usr/local/syncrosim",
                         "/opt/syncrosim",
@@ -556,13 +556,8 @@ class Session(object):
 
                     if location is None:
                         raise ValueError(
-                            "Could not find SyncroSim installation.\n\n"
-                            "Searched locations:\n" +
-                            "\n".join(f"  - {p}" for p in possible_paths) +
-                            "\n\nSolutions:\n"
-                            "1. Specify location: Session(location='/path/to/syncrosim')\n"
-                            "2. Set environment: export SSIM_PROGRAM_DIRECTORY=/path/to/syncrosim\n"
-                            "3. Ensure SyncroSim.Console.exe exists in the directory"
+                            "Could not find SyncroSim installation.\n"
+                            "When using a Linux the location of the SyncroSim installation must be explicitly set for the session."
                         )
             else:
                 location = e.program_directory.item()
