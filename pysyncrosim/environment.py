@@ -1,29 +1,6 @@
 import os
 import pandas as pd
 
-def _getenv_case_insensitive(name, default=None):
-    """
-    Get an environment variable, checking both uppercase and lowercase versions.
-
-    SyncroSim on Linux sets environment variables in lowercase (e.g., ssim_program_directory)
-    while on Windows they are uppercase (e.g., SSIM_PROGRAM_DIRECTORY).
-    """
-    # Try the exact name first (usually uppercase)
-    value = os.getenv(name)
-    if value is not None:
-        return value
-
-    # Try lowercase version
-    value = os.getenv(name.lower())
-    if value is not None:
-        return value
-
-    # Try uppercase version (in case name was passed lowercase)
-    value = os.getenv(name.upper())
-    if value is not None:
-        return value
-
-    return default
 
 def runtime_data_folder(scenario, datasheet_name):
     """
@@ -279,3 +256,27 @@ def _create_temp_folder(folder_name):
         
     return f
 
+
+def _getenv_case_insensitive(name, default=None):
+    """
+    Get an environment variable, checking both uppercase and lowercase versions.
+
+    SyncroSim on Linux sets environment variables in lowercase (e.g., ssim_program_directory)
+    while on Windows they are uppercase (e.g., SSIM_PROGRAM_DIRECTORY).
+    """
+    # Try the exact name first (usually uppercase)
+    value = os.getenv(name)
+    if value is not None:
+        return value
+
+    # Try lowercase version
+    value = os.getenv(name.lower())
+    if value is not None:
+        return value
+
+    # Try uppercase version (in case name was passed lowercase)
+    value = os.getenv(name.upper())
+    if value is not None:
+        return value
+
+    return default
