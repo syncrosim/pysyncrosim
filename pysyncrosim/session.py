@@ -444,38 +444,7 @@ class Session(object):
         else:
             print(result.stdout.decode('utf-8'))
 
-    def restore(self, filepath, folder=None):
-
-        """
-        Restores a SyncroSim Library backup file (.ssimbak) to a SyncroSim Library (.ssim)
-
-        Parameters
-        ----------
-        filepath : Str
-            The filepath to the backup file (.ssimbak).
-        
-        folder: Str, optional
-            The output folder name. If no folder name is provided, the library gets extracted to the same folder as the .ssimbak file.
-        
-        Returns
-        -------
-        None.
-
-        """
-
-        if not os.path.exists(filepath):
-            raise ValueError(f"Library not found: {filepath}")
-
-        args = ["--restore", f"--lib={filepath}"]
-
-        if folder is not None:
-            if not os.path.exists(folder):
-                raise ValueError(f"Output folder not found: {folder}")
-            args += [f"--folder={folder}"]
-
-        result = self.__call_console(args)
-        print(result.stdout.decode('utf-8'))
-
+   
     def restore(self, filepath, folder=None):
 
         """
@@ -515,16 +484,25 @@ class Session(object):
             e = ps.environment._environment()
             if e.program_directory.item() is not None:
                 # Running inside SyncroSim environment, skip validation
-                return "mono"
+                return self.__mono_path
 
-        mono_path = shutil.which("mono")
-        if mono_path is None:
+        # If user provided custom path, validate it exists
+        if self.__mono_path != "mono":
+          if shutil.which(self.__mono_path) or os.path.isfile(self.__mono_path):
+                return self.__mono_path
+          raise RuntimeError(
+               f"Specified mono path not found: {self.__mono_path}\n"
+              "Verify the path exists and is executable."
+         )
+        # Default case: search for mono in PATH
+        found_mono = shutil.which("mono")
+        if found_mono is None:
             raise RuntimeError(
                 "Mono is required to run SyncroSim on Linux but was not found.\n"
                 "Install Mono: sudo apt-get install mono-complete\n"
                 "Or specify custom path: Session(location=..., mono_path=...)"
             )
-        return mono_path
+        return found_mono
 
     def _validate_installation(self, location):
         """Validate SyncroSim installation is complete and usable"""
