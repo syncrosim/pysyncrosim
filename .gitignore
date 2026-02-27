@@ -133,6 +133,7 @@ dmypy.json
 *.ssim.input
 *.ssim.temp
 *.ssim.output
+*.ssim.backup
 
 # VS code
 .vs/

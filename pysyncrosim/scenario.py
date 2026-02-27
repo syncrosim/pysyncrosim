@@ -766,12 +766,9 @@ class Scenario(object):
             else:
                 raise ValueError(f'Scenario [{sid}] is not a Results Scenario')
         
-        elif self.__results is None:
-            s = self.project.scenarios(optional = True)
-            self.__results = s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
-            return self.__results
         else:
-            return self.__results
+            s = self.project.scenarios(optional = True)
+            return s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
         
     def __retrieve_scenario_folder_id(self):
 
