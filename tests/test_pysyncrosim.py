@@ -1063,8 +1063,8 @@ def test_scenario_copy_dep_delete():
     
     # Test delete            
     myNewScn.delete(force=True)
-    emptyResScn = myNewScn.run()
-    assert emptyResScn is None
+    with pytest.raises(RuntimeError, match = f"Run failed for Scenario"):
+        myNewScn.run()
     
     # Delete other scenarios
     sameNameScn.delete(force=True)
