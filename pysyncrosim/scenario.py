@@ -688,10 +688,21 @@ class Scenario(object):
                 print("Run successful")
 
         except RuntimeError as e:
-            # TODO: add handling when the error message contains "You must be signed in" or "There has been an issue with your SyncroSim license file"
 
+            if "You must be signed in" in str(e):
+                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
+                                   f"{self.name}: you must be signed in to "
+                                   "SyncroSim. Use session.sign_in() to sign "
+                                   "in.") from e
             
-            print(e)
+            elif "There has been an issue with your SyncroSim license file" in str(e):
+                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
+                                   f"{self.name}: there has been an issue "
+                                   "with your SyncroSim license file.") from e
+            
+            else:
+                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
+                                   f"{self.name}: {e}") from e
 
         finally:
             
