@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 #import sys
+import shutil
 import os
 import io
 import tempfile
@@ -667,8 +668,12 @@ class Library(object):
         
         if project is None and scenario is None:
             
-            helper._delete_library(name = self.location, session=self.session,
-                                   force=force, remove_backup=remove_backup, remove_publish=remove_publish, remove_custom_folders=remove_custom_folders)
+            helper._delete_library(name = self.location, 
+                                   session = self.session,
+                                   force = force,
+                                   remove_backup = remove_backup, 
+                                   remove_publish = remove_publish, 
+                                   remove_custom_folders = remove_custom_folders)
         
         elif project is not None and scenario is None:
             
@@ -764,11 +769,11 @@ class Library(object):
             
             # If running from user interface, save data to transfer directory
             if (transfer_dir is not None) & (append is False):
-                fpath = '{}\\SSIM_OVERWRITE-{}.csv'.format(transfer_dir, name)
+                fpath = os.path.join(transfer_dir, 'SSIM_OVERWRITE-{}.csv'.format(name))
                 data.to_csv(fpath, index=False)
                 return
             elif (transfer_dir is not None) & (append is True):
-                fpath = '{}\\SSIM_APPEND-{}.csv'.format(transfer_dir, name)
+                fpath = os.path.join(transfer_dir, 'SSIM_APPEND-{}.csv'.format(name))
                 data.to_csv(fpath, index=False)
                 return
         
@@ -1625,7 +1630,7 @@ class Library(object):
     def __save_datasheet_to_temp(self, data):
 
         temp_folder = tempfile.mkdtemp(prefix="SyncroSim-")
-        fpath = '{}\\export.csv'.format(temp_folder)
+        fpath = os.path.join(temp_folder, 'export.csv')
         data.to_csv(fpath, index=False)
 
         if not os.path.isfile(fpath):
