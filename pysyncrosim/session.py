@@ -488,12 +488,12 @@ class Session(object):
 
         # If user provided custom path, validate it exists
         if self.__mono_path != "mono":
-          if shutil.which(self.__mono_path) or os.path.isfile(self.__mono_path):
+            if shutil.which(self.__mono_path) or os.path.isfile(self.__mono_path):
                 return self.__mono_path
-          raise RuntimeError(
-               f"Specified mono path not found: {self.__mono_path}\n"
-              "Verify the path exists and is executable."
-         )
+            raise RuntimeError(
+                f"Specified mono path not found: {self.__mono_path}\n"
+                "Verify the path exists and is executable."
+            )
         # Default case: search for mono in PATH
         found_mono = shutil.which("mono")
         if found_mono is None:
