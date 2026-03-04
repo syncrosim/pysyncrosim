@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 #import sys
+import shutil
 import os
 import io
 import tempfile
@@ -667,8 +668,12 @@ class Library(object):
         
         if project is None and scenario is None:
             
-            helper._delete_library(name = self.location, session=self.session,
-                                   force=force, remove_backup=remove_backup, remove_publish=remove_publish, remove_custom_folders=remove_custom_folders)
+            helper._delete_library(name = self.location, 
+                                   session = self.session,
+                                   force = force,
+                                   remove_backup = remove_backup, 
+                                   remove_publish = remove_publish, 
+                                   remove_custom_folders = remove_custom_folders)
         
         elif project is not None and scenario is None:
             
