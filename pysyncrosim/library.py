@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 #import sys
+import shutil
 import os
 import io
 import tempfile
@@ -614,7 +615,7 @@ class Library(object):
             return ds
         
     def delete(self, project=None, scenario=None, folder=None,
-               datasheet=None, ids=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
+               datasheet=None, pid=None, sid=None, ids=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -630,6 +631,10 @@ class Library(object):
             If called from a Library class instance, specify the folder to delete. The default is None.
         datasheet : String, optional
             Name of the datasheet to delete data from. The default is None.
+        pid : Int, optional
+            Project ID. Only used when a datasheet name is provided. The default is None.
+        sid : Int, optional
+            Scenario ID. Only used when a datasheet name is provided. The default is None.
         ids : String, optional
             The primary key IDs for the rows to delete from the datasheet. Only used when a datasheet name is provided. The default is None.
         force : Logical, optional
@@ -663,6 +668,10 @@ class Library(object):
                 raise TypeError("folder must be a Folder instance or Integer")
         if datasheet is not None and not isinstance(datasheet, str):
             raise TypeError("datasheet must be a String")
+        if pid is not None and not isinstance(pid, int) and not isinstance(pid, np.int64):
+            raise TypeError("pid must be an Integer")
+        if sid is not None and not isinstance(sid, int) and not isinstance(sid, np.int64):
+            raise TypeError("sid must be an Integer")
 
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
@@ -675,14 +684,21 @@ class Library(object):
         
         # delete datasheet
         if datasheet is not None:
-            helper._delete_data(library=self, datasheet=datasheet, ids=ids,
-                                session=self.session, force=force)
+            helper._delete_data(library=self,
+                                datasheet=datasheet,
+                                pid=pid,
+                                sid=sid,
+                                ids=ids,
+                                session=self.session,
+                                force=force)
 
         # delete library
         if project is None and scenario is None and folder is None and\
             datasheet is None:
-            helper._delete_library(name = self.location, session=self.session,
-                                   force=force, remove_backup=remove_backup,
+            helper._delete_library(name = self.location, 
+                                   session=self.session,
+                                   force=force, 
+                                   remove_backup=remove_backup,
                                    remove_publish=remove_publish,
                                    remove_custom_folders=remove_custom_folders)
       
@@ -806,11 +822,11 @@ class Library(object):
             
             # If running from user interface, save data to transfer directory
             if (transfer_dir is not None) & (append is False):
-                fpath = '{}\\SSIM_OVERWRITE-{}.csv'.format(transfer_dir, name)
+                fpath = os.path.join(transfer_dir, 'SSIM_OVERWRITE-{}.csv'.format(name))
                 data.to_csv(fpath, index=False)
                 return
             elif (transfer_dir is not None) & (append is True):
-                fpath = '{}\\SSIM_APPEND-{}.csv'.format(transfer_dir, name)
+                fpath = os.path.join(transfer_dir, 'SSIM_APPEND-{}.csv'.format(name))
                 data.to_csv(fpath, index=False)
                 return
         
@@ -846,7 +862,7 @@ class Library(object):
                 result = self.__session._Session__call_console(args)
                 
                 if result.returncode == 0:
-                    print(f"{name} saved successfully")                
+                    print(f"{name} saved successfully")
 
             finally:
                 if fpath is not None:
@@ -1668,7 +1684,7 @@ class Library(object):
     def __save_datasheet_to_temp(self, data):
 
         temp_folder = tempfile.mkdtemp(prefix="SyncroSim-")
-        fpath = '{}\\export.csv'.format(temp_folder)
+        fpath = os.path.join(temp_folder, 'export.csv')
         data.to_csv(fpath, index=False)
 
         if not os.path.isfile(fpath):
