@@ -684,13 +684,8 @@ class Library(object):
         
         # delete datasheet
         if datasheet is not None:
-            helper._delete_data(library=self,
-                                datasheet=datasheet,
-                                pid=pid,
-                                sid=sid,
-                                ids=ids,
-                                session=self.session,
-                                force=force)
+            helper._delete_data(library=self, datasheet=datasheet, ids=ids,
+                                session=self.session, force=force)
 
         # delete library
         if project is None and scenario is None and folder is None and\
