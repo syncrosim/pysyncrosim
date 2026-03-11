@@ -614,7 +614,8 @@ class Library(object):
             
             return ds
         
-    def delete(self, project=None, scenario=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
+    def delete(self, project=None, scenario=None, folder=None,
+               datasheet=None, pid=None, sid=None, ids=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -624,17 +625,33 @@ class Library(object):
             If called from a Library class instance, specify the Project to 
             delete. The default is None.
         scenario : Scenario, String, or Int, optional
-            If called from a Scenario class instance, specify the Scenario to
+            If called from a Project class instance, specify the Scenario to
             delete. The default is None.
+        folder : Folder, or Int, optional
+            If called from a Library class instance, specify the folder to delete. The default is None.
+        datasheet : String, optional
+            Name of the datasheet to delete data from. The default is None.
+        pid : Int, optional
+            Project ID. Only used when a datasheet name is provided. The default is None.
+        sid : Int, optional
+            Scenario ID. Only used when a datasheet name is provided. The default is None.
+        ids : String, optional
+            The primary key IDs for the rows to delete from the datasheet. Only used when a datasheet name is provided. The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
         remove_backup : Logical, optional
-            If True, will remove the backup folder when deleting a Library. Default is False.
+            If True, will remove the backup folder when deleting a Library.
+            Default is False.
         remove_publish : Logical, optional
-            If True, will remove the publish folder when deleting a Library. Default is False.
+            If True, will remove the publish folder when deleting a Library.
+            Default is False.
         remove_custom_folders : Logical, optional
-            If True and custom folders have been configured for a Library, then will remove the custom publish and/or backup folders when deleting a Library. Note that the remove_publish and remove_backup arguments must also be set to True to remove the respective custom folders. Default is False.
+            If True and custom folders have been configured for a Library, then
+            will remove the custom publish and/or backup folders when deleting
+            a Library. Note that the remove_publish and remove_backup arguments
+            must also be set to True to remove the respective custom folders.
+            Default is False.
 
         Returns
         -------
@@ -646,16 +663,15 @@ class Library(object):
         # Also, should have method to delete list of Projects or Scenarios?
         
         # type checks
-        if project is not None and not isinstance(project, ps.Project):
-            if not isinstance(project, int) and not isinstance(
-                    project, str) and not isinstance(project, np.int64):
-                raise TypeError(
-                    "project must be a Project instance, Integer, or String")
-        if scenario is not None and not isinstance(scenario, ps.Scenario):
-            if not isinstance(scenario, int) and not isinstance(
-                    scenario, str) and not isinstance(scenario, np.int64):
-                raise TypeError(
-                    "scenario must be a Scenario instance, Integer, or String")
+        if folder is not None and not isinstance(folder, ps.Folder):
+            if not isinstance(folder, int) and not isinstance(folder, np.int64):
+                raise TypeError("folder must be a Folder instance or Integer")
+        if datasheet is not None and not isinstance(datasheet, str):
+            raise TypeError("datasheet must be a String")
+        if pid is not None and not isinstance(pid, int) and not isinstance(pid, np.int64):
+            raise TypeError("pid must be an Integer")
+        if sid is not None and not isinstance(sid, int) and not isinstance(sid, np.int64):
+            raise TypeError("sid must be an Integer")
 
         if not isinstance(force, bool):
             raise TypeError("force must be a Logical")
@@ -666,49 +682,81 @@ class Library(object):
         if not isinstance(remove_custom_folders, bool):
             raise TypeError("remove_custom_folders must be a Logical")
         
-        if project is None and scenario is None:
-            
+        # delete datasheet
+        if datasheet is not None:
+            helper._delete_data(library=self, datasheet=datasheet, ids=ids,
+                                session=self.session, force=force)
+
+        # delete library
+        if project is None and scenario is None and folder is None and\
+            datasheet is None:
             helper._delete_library(name = self.location, 
-                                   session = self.session,
-                                   force = force,
-                                   remove_backup = remove_backup, 
-                                   remove_publish = remove_publish, 
-                                   remove_custom_folders = remove_custom_folders)
-        
+                                   session=self.session,
+                                   force=force, 
+                                   remove_backup=remove_backup,
+                                   remove_publish=remove_publish,
+                                   remove_custom_folders=remove_custom_folders)
+      
+        # delete project scope     
         elif project is not None and scenario is None:
             
             # turn project into project class instance if str or int
-            if type(project) is int:
-                p = self.projects(pid = project)
-            if type(project) is str:
+            if type(project) is int or isinstance(project, np.int64):
+                if project in self.__projects["ProjectId"].values:
+                    p = self.projects(pid = project)
+                else:
+                    raise ValueError(f"project {project} does not exist")
+            elif type(project) is str:
                 if project in self.__projects["Name"].values:
                     p = self.projects(name = project)
                 else:
-                    raise ValueError(f'project {project} does not exist')
-            if isinstance(project, ps.Project):
+                    raise ValueError(f"project {project} does not exist")
+            elif isinstance(project, ps.Project):
                 p = project
+            else:
+                raise TypeError(f"project must be a Project instance, "
+                                f"Integer, or String")
             
-            helper._delete_project(library=self, name=p.name,
-                                   pid=p.pid, session=self.session,
-                                   force=force)
-            
+            helper._delete_project(library=self, name=p.name, pid = p.pid, 
+                                   session=self.session, force=force)
+
+        # delete scenario
         elif scenario is not None:
             
             # turn scenario into scenario class instance if str or int
-            if type(scenario) is int:
-                s = self.scenarios(sid = scenario, project = project)
-            if type(scenario) is str:
+            if type(scenario) is int or isinstance(scenario, np.int64):
+                if scenario in self.__scenarios["ScenarioId"].values:
+                    s = self.scenarios(sid = scenario, project = project)
+                else:
+                    raise ValueError(f"scenario {scenario} does not exist")
+            elif type(scenario) is str:
                 if scenario in self.__scenarios["Name"].values:
                     s = self.scenarios(name = scenario, project = project)
                 else:
-                    raise ValueError(f'scenario {scenario} does not exist')
-            if isinstance(scenario, ps.Scenario):
+                    raise ValueError(f"scenario {scenario} does not exist")
+            elif isinstance(scenario, ps.Scenario):
                 s = scenario
+            else:
+                raise TypeError(f"scenario must be a Scenario instance, "
+                                f"Integer, or String")
             
-            helper._delete_scenario(library=self, project=s.project, 
-                                    name=s.name, sid=s.sid,
-                                    session=self.session,
-                                    force=force)
+            helper._delete_scenario(library=self, project=s.project,
+                                    sid = s.sid, name=s.name,
+                                    session=self.session, force=force)
+        
+        # delete folder
+        elif folder is not None:
+
+            # turn folder into folder ID if int
+            if type(folder) is int or isinstance(folder, np.int64):
+                fid = folder
+            elif isinstance(folder, ps.Folder):
+                fid = folder.folder_id
+            else:
+                raise ValueError(f"folder {folder} does not exist")
+    
+            helper._delete_folder(library=self, fid=fid, session=self.session,
+                                  force=force)
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):
@@ -809,7 +857,7 @@ class Library(object):
                 result = self.__session._Session__call_console(args)
                 
                 if result.returncode == 0:
-                    print(f"{name} saved successfully")                
+                    print(f"{name} saved successfully")
 
             finally:
                 if fpath is not None:
@@ -902,6 +950,7 @@ class Library(object):
         try:
             args = ["--compact", f"--lib={self.location}"]
             self.session._Session__call_console(args)
+            return self.location
         
         except RuntimeError as e:
             raise RuntimeError(f"Failed to compact library with the following "
