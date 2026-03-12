@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.name
+pysyncrosim.scenario.Scenario.name
 ==================================
 
 .. currentmodule:: pysyncrosim.scenario

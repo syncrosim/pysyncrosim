@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.remove\_packages
+pysyncrosim.library.Library.remove\_packages
 ============================================
 
 .. currentmodule:: pysyncrosim.library

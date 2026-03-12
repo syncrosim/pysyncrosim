@@ -1,4 +1,4 @@
-﻿pysyncrosim.folder.Folder.owner
+pysyncrosim.folder.Folder.owner
 ===============================
 
 .. currentmodule:: pysyncrosim.folder

@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.run\_log
+pysyncrosim.scenario.Scenario.run\_log
 ======================================
 
 .. currentmodule:: pysyncrosim.scenario

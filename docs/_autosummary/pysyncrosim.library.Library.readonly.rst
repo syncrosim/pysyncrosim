@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.readonly
+pysyncrosim.library.Library.readonly
 ====================================
 
 .. currentmodule:: pysyncrosim.library

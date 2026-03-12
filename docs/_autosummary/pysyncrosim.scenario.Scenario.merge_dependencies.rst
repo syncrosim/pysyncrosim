@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.merge\_dependencies
+pysyncrosim.scenario.Scenario.merge\_dependencies
 =================================================
 
 .. currentmodule:: pysyncrosim.scenario

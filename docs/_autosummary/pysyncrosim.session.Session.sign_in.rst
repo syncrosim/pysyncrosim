@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.sign\_in
+pysyncrosim.session.Session.sign\_in
 ====================================
 
 .. currentmodule:: pysyncrosim.session

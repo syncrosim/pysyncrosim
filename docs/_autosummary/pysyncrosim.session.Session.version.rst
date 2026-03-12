@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.version
+pysyncrosim.session.Session.version
 ===================================
 
 .. currentmodule:: pysyncrosim.session

@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.session
+pysyncrosim.library.Library.session
 ===================================
 
 .. currentmodule:: pysyncrosim.library

@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.print\_cmd
+pysyncrosim.session.Session.print\_cmd
 ======================================
 
 .. currentmodule:: pysyncrosim.session

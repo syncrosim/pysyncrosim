@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.delete
+pysyncrosim.project.Project.delete
 ==================================
 
 .. currentmodule:: pysyncrosim.project

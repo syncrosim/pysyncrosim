@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.parent\_id
+pysyncrosim.scenario.Scenario.parent\_id
 ========================================
 
 .. currentmodule:: pysyncrosim.scenario

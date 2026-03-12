@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.create\_nested\_folder
+pysyncrosim.project.Project.create\_nested\_folder
 ==================================================
 
 .. currentmodule:: pysyncrosim.project

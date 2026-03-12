@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.restore
+pysyncrosim.session.Session.restore
 ===================================
 
 .. currentmodule:: pysyncrosim.session

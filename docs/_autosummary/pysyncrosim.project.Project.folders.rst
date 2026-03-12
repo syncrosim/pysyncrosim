@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.folders
+pysyncrosim.project.Project.folders
 ===================================
 
 .. currentmodule:: pysyncrosim.project

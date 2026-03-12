@@ -1,4 +1,4 @@
-﻿pysyncrosim.environment.update\_run\_log
+pysyncrosim.environment.update\_run\_log
 ========================================
 
 .. currentmodule:: pysyncrosim.environment

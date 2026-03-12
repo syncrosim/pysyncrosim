@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.owner
+pysyncrosim.scenario.Scenario.owner
 ===================================
 
 .. currentmodule:: pysyncrosim.scenario

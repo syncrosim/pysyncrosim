@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.sign\_out
+pysyncrosim.session.Session.sign\_out
 =====================================
 
 .. currentmodule:: pysyncrosim.session

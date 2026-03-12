@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.dependencies
+pysyncrosim.scenario.Scenario.dependencies
 ==========================================
 
 .. currentmodule:: pysyncrosim.scenario

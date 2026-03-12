@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.datasheet\_rasters
+pysyncrosim.scenario.Scenario.datasheet\_rasters
 ================================================
 
 .. currentmodule:: pysyncrosim.scenario

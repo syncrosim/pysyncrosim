@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.readonly
+pysyncrosim.scenario.Scenario.readonly
 ======================================
 
 .. currentmodule:: pysyncrosim.scenario

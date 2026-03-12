@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.library
+pysyncrosim.scenario.Scenario.library
 =====================================
 
 .. currentmodule:: pysyncrosim.scenario

@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.info
+pysyncrosim.library.Library.info
 ================================
 
 .. currentmodule:: pysyncrosim.library

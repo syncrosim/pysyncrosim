@@ -1,4 +1,4 @@
-﻿pysyncrosim.environment.runtime\_temp\_folder
+pysyncrosim.environment.runtime\_temp\_folder
 =============================================
 
 .. currentmodule:: pysyncrosim.environment

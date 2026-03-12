@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.\_\_init\_\_
+pysyncrosim.scenario.Scenario.\_\_init\_\_
 ==========================================
 
 .. currentmodule:: pysyncrosim.scenario

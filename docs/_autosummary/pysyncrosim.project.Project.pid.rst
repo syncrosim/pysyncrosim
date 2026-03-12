@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.pid
+pysyncrosim.project.Project.pid
 ===============================
 
 .. currentmodule:: pysyncrosim.project

@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.conda\_filepath
+pysyncrosim.session.Session.conda\_filepath
 ===========================================
 
 .. currentmodule:: pysyncrosim.session

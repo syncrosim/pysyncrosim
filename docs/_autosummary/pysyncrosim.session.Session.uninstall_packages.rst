@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.uninstall\_packages
+pysyncrosim.session.Session.uninstall\_packages
 ===============================================
 
 .. currentmodule:: pysyncrosim.session

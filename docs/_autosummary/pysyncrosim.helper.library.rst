@@ -1,4 +1,4 @@
-﻿pysyncrosim.helper.library
+pysyncrosim.helper.library
 ==========================
 
 .. currentmodule:: pysyncrosim.helper

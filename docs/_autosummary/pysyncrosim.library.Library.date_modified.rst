@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.date\_modified
+pysyncrosim.library.Library.date\_modified
 ==========================================
 
 .. currentmodule:: pysyncrosim.library

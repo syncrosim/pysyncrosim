@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.ignore\_dependencies
+pysyncrosim.scenario.Scenario.ignore\_dependencies
 ==================================================
 
 .. currentmodule:: pysyncrosim.scenario

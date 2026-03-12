@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.copy
+pysyncrosim.project.Project.copy
 ================================
 
 .. currentmodule:: pysyncrosim.project

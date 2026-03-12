@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.datasheets
+pysyncrosim.library.Library.datasheets
 ======================================
 
 .. currentmodule:: pysyncrosim.library

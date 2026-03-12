@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.environment
+pysyncrosim.library.Library.environment
 =======================================
 
 .. currentmodule:: pysyncrosim.library

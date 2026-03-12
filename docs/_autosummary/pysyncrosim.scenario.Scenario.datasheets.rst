@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.datasheets
+pysyncrosim.scenario.Scenario.datasheets
 ========================================
 
 .. currentmodule:: pysyncrosim.scenario

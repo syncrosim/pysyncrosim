@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.silent
+pysyncrosim.session.Session.silent
 ==================================
 
 .. currentmodule:: pysyncrosim.session

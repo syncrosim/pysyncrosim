@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.install\_packages
+pysyncrosim.session.Session.install\_packages
 =============================================
 
 .. currentmodule:: pysyncrosim.session

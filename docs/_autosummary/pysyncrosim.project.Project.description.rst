@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.description
+pysyncrosim.project.Project.description
 =======================================
 
 .. currentmodule:: pysyncrosim.project

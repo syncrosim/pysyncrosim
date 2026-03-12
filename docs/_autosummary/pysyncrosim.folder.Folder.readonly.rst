@@ -1,4 +1,4 @@
-﻿pysyncrosim.folder.Folder.readonly
+pysyncrosim.folder.Folder.readonly
 ==================================
 
 .. currentmodule:: pysyncrosim.folder

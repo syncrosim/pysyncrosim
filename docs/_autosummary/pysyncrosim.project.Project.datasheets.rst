@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.datasheets
+pysyncrosim.project.Project.datasheets
 ======================================
 
 .. currentmodule:: pysyncrosim.project

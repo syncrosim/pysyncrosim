@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.location
+pysyncrosim.session.Session.location
 ====================================
 
 .. currentmodule:: pysyncrosim.session

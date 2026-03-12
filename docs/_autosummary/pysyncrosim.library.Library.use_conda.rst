@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.use\_conda
+pysyncrosim.library.Library.use\_conda
 ======================================
 
 .. currentmodule:: pysyncrosim.library

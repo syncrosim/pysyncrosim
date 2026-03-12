@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.date\_modified
+pysyncrosim.scenario.Scenario.date\_modified
 ============================================
 
 .. currentmodule:: pysyncrosim.scenario

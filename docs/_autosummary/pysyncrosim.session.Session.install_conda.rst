@@ -1,4 +1,4 @@
-﻿pysyncrosim.session.Session.install\_conda
+pysyncrosim.session.Session.install\_conda
 ==========================================
 
 .. currentmodule:: pysyncrosim.session

@@ -1,4 +1,4 @@
-﻿pysyncrosim.raster.Raster.resolution
+pysyncrosim.raster.Raster.resolution
 ====================================
 
 .. currentmodule:: pysyncrosim.raster

@@ -1,4 +1,4 @@
-﻿pysyncrosim.folder.Folder.date\_modified
+pysyncrosim.folder.Folder.date\_modified
 ========================================
 
 .. currentmodule:: pysyncrosim.folder

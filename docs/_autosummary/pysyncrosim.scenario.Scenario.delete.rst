@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.delete
+pysyncrosim.scenario.Scenario.delete
 ====================================
 
 .. currentmodule:: pysyncrosim.scenario

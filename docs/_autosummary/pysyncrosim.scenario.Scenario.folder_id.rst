@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.folder\_id
+pysyncrosim.scenario.Scenario.folder\_id
 ========================================
 
 .. currentmodule:: pysyncrosim.scenario

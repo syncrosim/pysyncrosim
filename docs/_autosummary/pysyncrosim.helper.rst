@@ -3,10 +3,29 @@
 
 .. automodule:: pysyncrosim.helper
 
-   
-   .. rubric:: Functions
 
-   .. autosummary::
-   
-      library
-   
+
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: .
+
+
+   library
+
+
+
+
+
+
+
+
+
+
+
+
+

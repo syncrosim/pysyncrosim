@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.readonly
+pysyncrosim.project.Project.readonly
 ====================================
 
 .. currentmodule:: pysyncrosim.project

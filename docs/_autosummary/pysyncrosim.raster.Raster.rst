@@ -5,30 +5,35 @@
 
 .. autoclass:: Raster
 
-   
-   .. automethod:: __init__
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   .. rubric:: Methods
+   ~Raster.__init__
+   ~Raster.values
 
-   .. autosummary::
-   
-      ~Raster.__init__
-      ~Raster.values
-   
-   
+
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   
-   .. rubric:: Attributes
+   ~Raster.crs
+   ~Raster.dimensions
+   ~Raster.extent
+   ~Raster.name
+   ~Raster.resolution
+   ~Raster.source
 
-   .. autosummary::
-   
-      ~Raster.crs
-      ~Raster.dimensions
-      ~Raster.extent
-      ~Raster.name
-      ~Raster.resolution
-      ~Raster.source
-   
-   
+

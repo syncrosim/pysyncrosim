@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.description
+pysyncrosim.library.Library.description
 =======================================
 
 .. currentmodule:: pysyncrosim.library

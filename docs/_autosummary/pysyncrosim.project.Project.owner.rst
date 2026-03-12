@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.owner
+pysyncrosim.project.Project.owner
 =================================
 
 .. currentmodule:: pysyncrosim.project

@@ -5,48 +5,53 @@
 
 .. autoclass:: Scenario
 
-   
-   .. automethod:: __init__
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   .. rubric:: Methods
+   ~Scenario.__init__
+   ~Scenario.copy
+   ~Scenario.datasheet_rasters
+   ~Scenario.datasheets
+   ~Scenario.delete
+   ~Scenario.folders
+   ~Scenario.ignore_dependencies
+   ~Scenario.merge_dependencies
+   ~Scenario.results
+   ~Scenario.run
+   ~Scenario.run_log
+   ~Scenario.save_datasheet
 
-   .. autosummary::
-   
-      ~Scenario.__init__
-      ~Scenario.copy
-      ~Scenario.datasheet_rasters
-      ~Scenario.datasheets
-      ~Scenario.delete
-      ~Scenario.folders
-      ~Scenario.ignore_dependencies
-      ~Scenario.merge_dependencies
-      ~Scenario.results
-      ~Scenario.run
-      ~Scenario.run_log
-      ~Scenario.save_datasheet
-   
-   
+
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   
-   .. rubric:: Attributes
+   ~Scenario.date_modified
+   ~Scenario.dependencies
+   ~Scenario.description
+   ~Scenario.folder_id
+   ~Scenario.info
+   ~Scenario.is_result
+   ~Scenario.library
+   ~Scenario.name
+   ~Scenario.owner
+   ~Scenario.parent_id
+   ~Scenario.project
+   ~Scenario.project_id
+   ~Scenario.readonly
+   ~Scenario.sid
 
-   .. autosummary::
-   
-      ~Scenario.date_modified
-      ~Scenario.dependencies
-      ~Scenario.description
-      ~Scenario.folder_id
-      ~Scenario.info
-      ~Scenario.is_result
-      ~Scenario.library
-      ~Scenario.name
-      ~Scenario.owner
-      ~Scenario.parent_id
-      ~Scenario.project
-      ~Scenario.project_id
-      ~Scenario.readonly
-      ~Scenario.sid
-   
-   
+

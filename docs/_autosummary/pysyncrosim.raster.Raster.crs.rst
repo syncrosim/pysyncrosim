@@ -1,4 +1,4 @@
-﻿pysyncrosim.raster.Raster.crs
+pysyncrosim.raster.Raster.crs
 =============================
 
 .. currentmodule:: pysyncrosim.raster

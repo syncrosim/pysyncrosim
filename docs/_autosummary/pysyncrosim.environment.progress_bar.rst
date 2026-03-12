@@ -1,4 +1,4 @@
-﻿pysyncrosim.environment.progress\_bar
+pysyncrosim.environment.progress\_bar
 =====================================
 
 .. currentmodule:: pysyncrosim.environment

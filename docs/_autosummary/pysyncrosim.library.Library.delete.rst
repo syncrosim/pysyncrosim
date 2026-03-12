@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.delete
+pysyncrosim.library.Library.delete
 ==================================
 
 .. currentmodule:: pysyncrosim.library

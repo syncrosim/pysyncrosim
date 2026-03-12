@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.\_\_init\_\_
+pysyncrosim.project.Project.\_\_init\_\_
 ========================================
 
 .. currentmodule:: pysyncrosim.project

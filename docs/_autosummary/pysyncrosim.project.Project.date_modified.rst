@@ -1,4 +1,4 @@
-﻿pysyncrosim.project.Project.date\_modified
+pysyncrosim.project.Project.date\_modified
 ==========================================
 
 .. currentmodule:: pysyncrosim.project

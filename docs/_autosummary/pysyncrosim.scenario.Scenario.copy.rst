@@ -1,4 +1,4 @@
-﻿pysyncrosim.scenario.Scenario.copy
+pysyncrosim.scenario.Scenario.copy
 ==================================
 
 .. currentmodule:: pysyncrosim.scenario

@@ -1,4 +1,4 @@
-﻿pysyncrosim.library.Library.owner
+pysyncrosim.library.Library.owner
 =================================
 
 .. currentmodule:: pysyncrosim.library
