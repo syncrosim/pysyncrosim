@@ -302,31 +302,3 @@ def _delete_folder(library, fid, session=None, force=False):
         args = ["--delete", "--folder", f"--lib={library.location}", f"--fid={fid}", "--force"]
 
         session._Session__call_console(args)
-
-def _delete_data(library, datasheet, pid=None, sid=None, ids=None,
-                 session=None, force=False):
-
-    if session is None:
-        session = ps.Session()
-
-    if force is False:
-        if ids is not None:
-            answer = input(f"Are you sure you want to delete rows {ids} from {datasheet} (Y/N)?")
-        else:
-            answer = input(f"Are you sure you want to delete all data from {datasheet} (Y/N)?")
-    else:
-        answer = "Y"
-        
-    if answer == "Y":
-
-        # Delete Data using Console
-        args = ["--delete", "--data", f"--lib={library.location}", f"--sheet={datasheet}", "--force"]
-
-        if pid is not None:
-            args += [f"--pid={pid}"]
-        if sid is not None:
-            args += [f"--sid={sid}"]
-        if ids is not None:
-            args += [f'--ids="{ids}"']
-        
-        session._Session__call_console(args)

@@ -1,3 +1,4 @@
+from numpy.ma import ids
 import pandas as pd
 import numpy as np
 #import sys
@@ -615,7 +616,7 @@ class Library(object):
             return ds
         
     def delete(self, project=None, scenario=None, folder=None,
-               datasheet=None, pid=None, sid=None, ids=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
+               datasheet=None, pid=None, sid=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
         """
         Deletes a SyncroSim class instance.
 
@@ -635,8 +636,6 @@ class Library(object):
             Project ID. Only used when a datasheet name is provided. The default is None.
         sid : Int, optional
             Scenario ID. Only used when a datasheet name is provided. The default is None.
-        ids : String, optional
-            The primary key IDs for the rows to delete from the datasheet. Only used when a datasheet name is provided. The default is None.
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
@@ -684,8 +683,15 @@ class Library(object):
         
         # delete datasheet
         if datasheet is not None:
-            helper._delete_data(library=self, datasheet=datasheet, ids=ids,
-                                session=self.session, force=force)
+            if pid != None:
+                scope = "Project"
+                self.__delete_datasheet(scope=scope, name=datasheet, ids=pid)
+            elif sid != None:
+                scope = "Scenario"
+                self.__delete_datasheet(scope=scope, name=datasheet, ids=sid)
+            else:
+                scope = "Library"
+                self.__delete_datasheet(scope=scope, name=datasheet, ids=None)
 
         # delete library
         if project is None and scenario is None and folder is None and\
