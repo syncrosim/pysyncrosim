@@ -11,8 +11,9 @@ import shutil
 temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
-lib_name = "spatial-example-2.ssim" 
-git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+lib_name = "spatial-example.ssim" 
+#git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+git_repo_path = "C:/gitprojects"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
@@ -23,7 +24,7 @@ def test_session_attributes():
     # Test init
     assert isinstance(mySession, ps.Session)
     
-    with pytest.raises(ValueError, match="The location is not valid"):
+    with pytest.raises(ValueError, match="SyncroSim directory does not exist: bad/location"):
         mySession = ps.Session(location="bad/location")
         
     # Test version method
@@ -65,31 +66,31 @@ def test_session_package_functions():
     assert "helloworld" not in mySession.packages()["Name"].values
     
     # Test with version - this requires v2.0.0 and v2.0.2 to be on package repo
-    mySession.install_packages("helloworld", version="2.0.0")
+    mySession.install_packages("helloworld", version="2.1.0")
     pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
-    assert "2.0.0" in pkg_subset["Version"].values
+    assert "2.1.0" in pkg_subset["Version"].values
 
     # Should now have two versions of the package
-    mySession.install_packages("helloworld", version="2.0.1")
+    mySession.install_packages("helloworld", version="2.1.1")
     pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
-    assert "2.0.0" in pkg_subset["Version"].values
-    assert "2.0.1" in pkg_subset["Version"].values
+    assert "2.1.0" in pkg_subset["Version"].values
+    assert "2.1.1" in pkg_subset["Version"].values
 
     # Test uninstall with version
-    mySession.uninstall_packages("helloworld", version="2.0.0")
+    mySession.uninstall_packages("helloworld", version="2.1.0")
     pkg_subset = mySession.packages()[mySession.packages()["Name"] == "helloworld"]
-    assert "2.0.0" not in pkg_subset["Version"].values
-    assert "2.0.1" in pkg_subset["Version"].values
+    assert "2.1.0" not in pkg_subset["Version"].values
+    assert "2.1.1" in pkg_subset["Version"].values
 
 def test_session_restore_function():
 
     # Test with incorrect Library
     mySession = ps.Session(session_path)
-    with pytest.raises(ValueError, match=f"Library not found: test"):
+    with pytest.raises(ValueError, match="Library not found: test"):
         mySession.restore("test")
     
     # Test with incorrect output folder
-    with pytest.raises(ValueError, match=f"Output folder not found: test"):
+    with pytest.raises(ValueError, match="Output folder not found: test"):
         mySession.restore(lib_backup_path, folder="test")
 
     # Restore and test that restore worked
@@ -111,7 +112,8 @@ def test_session_restore_function():
     assert os.path.exists(test_folder_lib_path)
 
     # Delete folder with restored Library
-    myLibrary = ps.library(test_folder_lib_path, session=mySession, force_update=True)
+    myLibrary = ps.library(test_folder_lib_path, session=mySession,
+        force_update=True)
     myLibrary.delete(force=True)
     os.rmdir(test_output_folder)
     
@@ -330,12 +332,10 @@ def test_library_datasheets():
     
 def test_library_delete():
 
-    mySession = ps.Session(session_path)   
+    mySession = ps.Session(session_path)
+    mySession.restore(lib_backup_path)
     myLibrary = ps.library(name=lib_path, overwrite=True, session=mySession)
-    myProject = myLibrary.projects(name="test")
-    myFolder = myProject.folders(folder="test-folder")
-    myFolder2 = myProject.folders(folder="test-folder2")
-    fid = myFolder2.folder_id
+    myLibrary.projects(name="test")
     
     # Test delete method
     with pytest.raises(
@@ -350,23 +350,14 @@ def test_library_delete():
         
     with pytest.raises(TypeError, match="force must be a Logical"):
         myLibrary.delete(force="True")
-    
-    with pytest.raises(TypeError, match="remove_backup must be a Logical"):
-        myLibrary.delete(force=True, remove_backup="True")
         
-    with pytest.raises(TypeError, match="remove_publish must be a Logical"):
-        myLibrary.delete(force=True, remove_publish="True")
-
-    with pytest.raises(TypeError, match="remove_custom_folders must be a Logical"):
-        myLibrary.delete(force=True, remove_custom_folders="True")
-    
-    with pytest.raises(ValueError, match="Project ID 2 does not exist"):
+    with pytest.raises(ValueError, match="project 2 does not exist"):
         myLibrary.delete(project=2)
         
     with pytest.raises(ValueError, match="project dne does not exist"):
         myLibrary.delete(project="dne")
         
-    with pytest.raises(ValueError, match="Scenario ID 50 does not exist"):
+    with pytest.raises(ValueError, match="scenario 50 does not exist"):
         myLibrary.delete(scenario=50)
         
     with pytest.raises(ValueError, match="scenario dne does not exist"):
@@ -378,7 +369,11 @@ def test_library_delete():
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
 
-    
+    myProject = myLibrary.projects(name="test")
+    myFolder = myProject.folders(folder="test_folder")
+    myFolder2 = myProject.folders(folder="test_folder2")
+    fid = myFolder2.folder_id
+
     myLibrary.delete(folder=myFolder, force=True)
     assert myFolder.folder_id not in myLibrary.folders()["Id"].values
 
@@ -392,6 +387,74 @@ def test_library_delete():
     myLibrary.scenarios(name="test")
     myLibrary.delete(scenario="test", force=True)
     assert "test" not in myLibrary.scenarios().Name.values
+
+    myLibrary.delete(force=True)
+    assert not os.path.exists(lib_path)
+
+    with pytest.raises(
+        ValueError,
+        match="Library not found:"):
+        myLibrary.delete(force=True)
+
+
+def test_delete_datasheet():
+
+    mySession = ps.Session(session_path)   
+    myLibrary = ps.library(name=lib_path, overwrite=True,
+        packages=["stsim"], session=mySession)
+    myProject = myLibrary.projects(name="test")
+    myScenario = myLibrary.scenarios(name="test")
+    myScenario2 = myLibrary.scenarios(name="test2")
+    test_data = pd.DataFrame({
+        "Name": ["a1", "a2", "a3"],
+        "Id": [1, 2, 3],
+        "Description": ["test1", "test2", "test3"]
+    })
+
+    
+    with pytest.raises(TypeError, match="datasheet must be a String"):
+        myLibrary.delete(datasheet=1)
+    
+    with pytest.raises(TypeError, match="pid must be an Integer"):
+        myLibrary.delete(datasheet="core_Backup", pid="1")
+
+    with pytest.raises(TypeError, match="sid must be an Integer"):
+        myLibrary.delete(datasheet="core_Backup", sid="1")
+    
+    with pytest.raises(ValueError, match="datasheet name is required"):
+        myLibrary.delete(datasheet="")
+
+    # Add datasheet to project and test delete from project using Library class
+    myProject.save_datasheet(name="stsim_Stratum", data=test_data)
+    assert len(myProject.datasheets(name="stsim_Stratum")) == 3
+    myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid, force=True)
+    assert myProject.datasheets(name="stsim_Stratum").empty
+
+    # Test delete datasheet from scenario using Library class
+    myLibrary.delete(datasheet="stsim_RunControl",
+        sid=myScenario.sid, force=True)
+    assert myScenario.datasheets(name="stsim_RunControl").empty
+
+    # Test delete datasheet from project using Project class
+    myProject.save_datasheet(name="stsim_Stratum", data=test_data)
+    assert len(myProject.datasheets(name="stsim_Stratum")) == 3
+    myProject.delete(datasheet="stsim_Stratum", force=True)
+    assert myProject.datasheets(name="stsim_Stratum").empty
+
+    # Test delete datasheet from scenario using Scenario class
+    myScenario2.delete(datasheet="stsim_RunControl", force=True)
+    assert myScenario2.datasheets(name="stsim_RunControl").empty
+
+    # Test delete datasheet by row ID
+    myProject.save_datasheet(name="stsim_Stratum", data=test_data)
+    saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
+
+    ids_to_delete = f"{saved_data.iloc[0]['StratumId']},{saved_data.iloc[1]['StratumId']}"
+    myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid,
+            ids=ids_to_delete, force=True)
+    remaining_data = myProject.datasheets(name="stsim_Stratum")
+    assert len(remaining_data) == 1
+    assert remaining_data.iloc[0]["Name"] == "a3"
     
 def test_library_save_datasheet():
 
@@ -430,7 +493,7 @@ def test_library_save_datasheet():
         
     with pytest.raises(
             RuntimeError,
-            match="The header references a column that does not belong"):
+            match="The CSV header references a column that does not belong"):
         random_df = pd.DataFrame({"col1": [1], "col2": [2]})
         myLibrary.save_datasheet(name="core_Backup", data=random_df)
 
@@ -469,13 +532,14 @@ def test_library_save_datasheet():
 def test_library_run():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=lib_path, 
+    mySession.restore(lib_backup_path)
+    myLibrary = ps.library(name=lib_path,
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
     num_scns = len(all_scns)
-    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    scn_id = myLibrary.scenarios().iloc[0].ScenarioId
     proj_id = myLibrary.projects().iloc[0].ProjectId
     
     # Test run method
@@ -510,19 +574,22 @@ def test_library_run():
             match="Must specify project when > 1 Project in the Library"):
         myLibrary.run()
 
-    myLibrary.delete(project="New Project", force=True)
+    myLibrary.delete(force=True)
 
 def test_library_compact():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=lib_path, session=mySession)
+    mySession.restore(lib_backup_path)
+    myLibrary = ps.library(name=lib_path, session=mySession, force_update=True)
 
     size_before = os.path.getsize(myLibrary.location)
-    compactLibrary = myLibrary.compact()
-    size_after = os.path.getsize(compactLibrary)
+    result = myLibrary.compact()
+    size_after = os.path.getsize(myLibrary.location)
 
-    assert size_before > size_after
+    assert size_before >= size_after
+    assert result == myLibrary.location
 
+    myLibrary.delete(force=True)
     
 def test_project_attributes():
     
@@ -694,6 +761,7 @@ def test_project_copy_delete():
 def test_project_run():
 
     mySession = ps.Session(session_path)
+    mySession.restore(lib_backup_path)
     myLibrary = ps.library(name=lib_path, 
                            session=mySession,
                            force_update=True)
@@ -701,7 +769,7 @@ def test_project_run():
     all_scns = myProject.scenarios()
     num_parent_scns = len(all_scns[all_scns["IsResult"] == "No"])
     num_scns = len(all_scns)
-    scn_id = myProject.scenarios().iloc[1].ScenarioId
+    scn_id = myProject.scenarios().iloc[0].ScenarioId
 
     myProject.run([scn_id])
     num_scns += 1
@@ -724,6 +792,8 @@ def test_project_run():
     for result_scn in result_scenarios:
         myProject.delete(scenario=result_scn, force=True)
     assert len(myProject.scenarios()) == 2
+
+    myLibrary.delete(force=True)
 
 def test_scenarios_attributes():
 
@@ -835,12 +905,13 @@ def test_scenario_save_datasheet():
 def test_scenario_run_and_results():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=lib_path, 
+    mySession.restore(lib_backup_path)
+    myLibrary = ps.library(name=lib_path,
                            session=mySession,
                            force_update=True)
     all_scns = myLibrary.scenarios()
     num_scns = len(all_scns)
-    scn_id = myLibrary.scenarios().iloc[1].ScenarioId
+    scn_id = myLibrary.scenarios().iloc[0].ScenarioId
     myScenario = myLibrary.scenarios(sid=scn_id)
     runcontrol = myScenario.datasheets(name="stsim_RunControl")
     runcontrol["MaximumIteration"] = 2
@@ -996,11 +1067,16 @@ def test_scenario_run_and_results():
     assert isinstance(raster1.crs, rasterio.crs.CRS)
     assert isinstance(raster1.values(), np.ndarray)
     assert isinstance(raster1.values(band=1), np.ndarray)
+
+    myLibrary.delete(force=True)
     
 def test_scenario_copy_dep_delete():
     
     mySession = ps.Session(session_path)
-    myLibrary = ps.library(name=lib_path, 
+
+    mySession.restore(lib_backup_path)
+
+    myLibrary = ps.library(name=lib_path,
                            session=mySession,
                            force_update=True)
     myScenario = myLibrary.scenarios(name="My Scenario")
@@ -1093,6 +1169,9 @@ def test_scenario_copy_dep_delete():
     # Delete other scenarios
     sameNameScn.delete(force=True)
     myNewerScn.delete(force=True)
+
+    # Delete library
+    myLibrary.delete(force=True)
 
 def test_folder_functions():
 
