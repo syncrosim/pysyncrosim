@@ -297,11 +297,7 @@ class Project(object):
                                                     return_hidden, self.pid)
         return self.__datasheets
     
-<<<<<<< HEAD
     def delete(self, scenario=None, datasheet=None, ids=None,
-=======
-    def delete(self, scenario=None, data=None, datasheet=None, ids=None,
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
                force=False):
         """
         Deletes a Project, Scenario, or data from a Project scope.
@@ -310,17 +306,8 @@ class Project(object):
         ----------
         scenario : Scenario, String, or Int, optional
             Scenario to delete. The default is None.
-<<<<<<< HEAD
         datasheet : String, optional
             Name of the datasheet to delete data from. The default is None.
-=======
-        data : Logical, optional
-            If True, will delete data from a Project-scoped datasheet. The
-            default is None.
-        datasheet : String, optional
-            Name of the datasheet to delete data from. Required when data is
-            True. The default is None.
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         ids : Int or String, optional
             IDs of the rows to delete. If None, deletes all data. The default is
             None.
@@ -333,7 +320,6 @@ class Project(object):
         None.
 
         """
-<<<<<<< HEAD
         if datasheet is not None:
             self.library.delete(datasheet=datasheet, pid=self.pid,
             ids=ids, force=force)
@@ -343,14 +329,6 @@ class Project(object):
 
         else:
             self.library.delete(project=self, force=force)
-=======
-        if data is True:
-            self.library.delete(data=data, datasheet=datasheet, ids=ids,
-                                pid=self.pid, force=force)
-        
-        else:
-            self.library.delete(project=self, scenario=self, force=True)
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
 
 
     def save_datasheet(self, name, data, append=True, force=False):

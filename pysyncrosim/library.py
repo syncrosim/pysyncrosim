@@ -722,7 +722,6 @@ class Library(object):
             ids, int) and not isinstance(ids, np.int64):
             raise TypeError("ids must be a String or Integer")
         
-<<<<<<< HEAD
         # delete datasheet
         if datasheet is not None:
             helper._delete_data(library=self, datasheet=datasheet, ids=ids,
@@ -739,16 +738,6 @@ class Library(object):
                                    remove_custom_folders=remove_custom_folders)
       
         # delete project scope     
-=======
-        if (project is None and scenario is None and folder is None and
-            data is None):
-            
-            helper._delete_library(name = self.location, session=self.session,
-                                   force=force, remove_backup=remove_backup,
-                                   remove_publish=remove_publish,
-                                   remove_custom_folders=remove_custom_folders)
-        
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         elif project is not None and scenario is None:
             
             # turn project into project class instance if str or int
@@ -806,21 +795,8 @@ class Library(object):
             else:
                 raise ValueError(f"folder {folder} does not exist")
     
-<<<<<<< HEAD
             helper._delete_folder(library=self, fid=fid, session=self.session,
                                   force=force)
-=======
-            helper._delete_folder(library=self, fid=fid, session=self.session, force=force)
-        
-        elif data is True:
-
-            if not datasheet:
-                raise ValueError("datasheet name is required") 
-                
-            helper._delete_data(library=self, datasheet=datasheet, pid=pid,
-                                sid=sid, ids=ids, session=self.session,
-                                force=force)
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
     
     def save_datasheet(self, name, data, append=False, force=False, 
                        scope="Library", *ids):

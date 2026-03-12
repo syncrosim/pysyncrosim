@@ -350,11 +350,7 @@ def test_library_delete():
     with pytest.raises(TypeError, match="force must be a Logical"):
         myLibrary.delete(force="True")
         
-<<<<<<< HEAD
     with pytest.raises(ValueError, match="project 2 does not exist"):
-=======
-    with pytest.raises(ValueError, match="Project ID 2 does not exist"):
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         myLibrary.delete(project=2)
         
     with pytest.raises(ValueError, match="project dne does not exist"):
@@ -374,17 +370,12 @@ def test_library_delete():
 
     with pytest.raises(ValueError, match="Folder ID 50 does not exist"):
         myLibrary.delete(folder=50, force=True)
-<<<<<<< HEAD
 
     myProject = myLibrary.projects(name="test")
     myFolder = myProject.folders(folder="test_folder")
     myFolder2 = myProject.folders(folder="test_folder2")
     fid = myFolder2.folder_id
 
-=======
-    
-    # Test delete folder from folder name
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
     myLibrary.delete(folder=myFolder, force=True)
     assert myFolder.folder_id not in myLibrary.folders()["Id"].values
 
@@ -402,7 +393,6 @@ def test_library_delete():
     myLibrary.delete(scenario="test", force=True)
     assert "test" not in myLibrary.scenarios().Name.values
 
-<<<<<<< HEAD
     myLibrary.delete(force=True)
     assert not os.path.exists(lib_path)
 
@@ -411,8 +401,6 @@ def test_library_delete():
         match="Library not found:"):
         myLibrary.delete(force=True)
 
-=======
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
 
 def test_delete_datasheet():
 
@@ -428,7 +416,6 @@ def test_delete_datasheet():
         "Description": ["test1", "test2", "test3"]
     })
 
-<<<<<<< HEAD
     
     with pytest.raises(TypeError, match="datasheet must be a String"):
         myLibrary.delete(datasheet=1)
@@ -441,72 +428,34 @@ def test_delete_datasheet():
     
     with pytest.raises(ValueError, match="datasheet name is required"):
         myLibrary.delete(datasheet="")
-=======
-
-    with pytest.raises(TypeError, match="data must be a Logical"):
-        myLibrary.delete(data="True")
-    
-    with pytest.raises(TypeError, match="datasheet must be a String"):
-        myLibrary.delete(data=True, datasheet=1)
-    
-    with pytest.raises(TypeError, match="pid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", pid="1")
-
-    with pytest.raises(TypeError, match="sid must be an Integer"):
-        myLibrary.delete(data=True, datasheet="core_Backup", sid="1")
-    
-    with pytest.raises(ValueError, match="datasheet name is required"):
-        myLibrary.delete(data=True)
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
 
     # Add datasheet to project and test delete from project using Library class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     assert len(myProject.datasheets(name="stsim_Stratum")) == 3
-<<<<<<< HEAD
     myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid, force=True)
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Library class
     myLibrary.delete(datasheet="stsim_RunControl",
-=======
-    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid, force=True)
-    assert myProject.datasheets(name="stsim_Stratum").empty
-
-    # Test delete datasheet from scenario using Library class
-    myLibrary.delete(data=True, datasheet="stsim_RunControl",
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         sid=myScenario.sid, force=True)
     assert myScenario.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet from project using Project class
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     assert len(myProject.datasheets(name="stsim_Stratum")) == 3
-<<<<<<< HEAD
     myProject.delete(datasheet="stsim_Stratum", force=True)
     assert myProject.datasheets(name="stsim_Stratum").empty
 
     # Test delete datasheet from scenario using Scenario class
     myScenario2.delete(datasheet="stsim_RunControl", force=True)
-=======
-    myProject.delete(data=True, datasheet="stsim_Stratum", force=True)
-    assert myProject.datasheets(name="stsim_Stratum").empty
-
-    # Test delete datasheet from scenario using Scenario class
-    myScenario2.delete(data=True, datasheet="stsim_RunControl", force=True)
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
     assert myScenario2.datasheets(name="stsim_RunControl").empty
 
     # Test delete datasheet by row ID
     myProject.save_datasheet(name="stsim_Stratum", data=test_data)
     saved_data = myProject.datasheets(name="stsim_Stratum", include_key=True)
 
-<<<<<<< HEAD
     ids_to_delete = f"{saved_data.iloc[0]['StratumId']},{saved_data.iloc[1]['StratumId']}"
     myLibrary.delete(datasheet="stsim_Stratum", pid=myProject.pid,
-=======
-    ids_to_delete = f"{saved_data.iloc[0]["StratumId"]},{saved_data.iloc[1]["StratumId"]}"
-    myLibrary.delete(data=True, datasheet="stsim_Stratum", pid=myProject.pid,
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
             ids=ids_to_delete, force=True)
     remaining_data = myProject.datasheets(name="stsim_Stratum")
     assert len(remaining_data) == 1
