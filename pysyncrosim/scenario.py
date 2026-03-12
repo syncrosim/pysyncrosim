@@ -513,14 +513,27 @@ class Scenario(object):
         """
         self.library.save_datasheet(name, data, append, False, "Scenario", self.sid)
     
+<<<<<<< HEAD
     def delete(self, datasheet=None, ids=None, force=False):
+=======
+    def delete(self, data=None, datasheet=None, ids=None, force=False):
+>>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         """
         Deletes a Scenario or data from a Scenario scope.
 
         Parameters
         ----------
+<<<<<<< HEAD
         datasheet : String, optional
             Name of the datasheet to delete data from. The default is None
+=======
+        data : Logical, optional
+            If set to True, will delete data from a Scenario-scoped datasheet.
+            The default is None
+        datasheet : String, optional
+            Name of the datasheet to delete data from. Required when data is
+            True. The default is None
+>>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         ids : Int or String, optional
             IDs of the rows to delete. If None, deletes all data. The default is
             None.
@@ -534,6 +547,7 @@ class Scenario(object):
 
         """
 
+<<<<<<< HEAD
         if datasheet is not None:
             self.library.delete(datasheet=datasheet, sid=self.sid,
             ids=ids, force=force)
@@ -541,6 +555,15 @@ class Scenario(object):
         else:
             self.library.delete(project=self.project, scenario=self,
                                 force=force)            
+=======
+        if data is True:
+            self.library.delete(data=data, datasheet=datasheet, ids=ids,
+                                sid=self.sid, force=force)
+
+        else:
+            self.library.delete(project=self.project, scenario=self,
+                                force=True)            
+>>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
     
     def copy(self, name=None):
         """
