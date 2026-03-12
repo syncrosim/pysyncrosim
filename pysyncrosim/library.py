@@ -615,13 +615,7 @@ class Library(object):
             return ds
         
     def delete(self, project=None, scenario=None, folder=None,
-<<<<<<< HEAD
                datasheet=None, pid=None, sid=None, ids=None, force=False, remove_backup=False, remove_publish=False, remove_custom_folders=False):
-=======
-                pid=None, sid=None, data=None, datasheet=None, ids=None,
-               force=False, remove_backup=False, remove_publish=False,
-               remove_custom_folders=False):
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         """
         Deletes a SyncroSim class instance.
 
@@ -634,7 +628,6 @@ class Library(object):
             If called from a Project class instance, specify the Scenario to
             delete. The default is None.
         folder : Folder, or Int, optional
-<<<<<<< HEAD
             If called from a Library class instance, specify the folder to delete. The default is None.
         datasheet : String, optional
             Name of the datasheet to delete data from. The default is None.
@@ -644,25 +637,6 @@ class Library(object):
             Scenario ID. Only used when a datasheet name is provided. The default is None.
         ids : String, optional
             The primary key IDs for the rows to delete from the datasheet. Only used when a datasheet name is provided. The default is None.
-=======
-            If called from a Library class instance, specify the folder to
-            delete. The default is None.
-        pid : Int, optional
-            Project ID for the datasheet. Not required for a library-scoped
-            datasheet. The default is None.
-        sid : Int, optional
-            Scenario ID for the datasheet. Not required for a library-scoped
-            datasheet. The default is None.
-        data : Logical, optional
-            If set to True, will delete data from a datasheet. The default is
-            None.
-        datasheet : String, optional
-            If called from the Library class instance, specify the Datasheet to
-            delete data. Required when data is True. The default is None.
-        ids : String or Int, optional
-            IDs of the rows to delete. If None, deletes all data. The default
-            is None.
->>>>>>> ba03e356be85060ce7edcf23a0eba80ee3ec8d43
         force : Logical, optional
             If set to True, does not ask user before deleting SyncroSim class
             instance. The default is False.
