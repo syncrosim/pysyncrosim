@@ -1,3 +1,4 @@
+from osgeo import gdal
 import os
 import pysyncrosim as ps
 import pytest
@@ -12,8 +13,8 @@ temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
 lib_name = "spatial-example.ssim" 
-#git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
-git_repo_path = "C:/gitprojects"
+git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+# git_repo_path = "C:/gitprojects"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
