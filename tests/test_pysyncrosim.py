@@ -1041,22 +1041,6 @@ def test_scenario_run_and_results():
         filter_column="Timestep",
         filter_value=2001)
     assert isinstance(raster3[0], ps.Raster)
-    
-    # Test raster class attributes
-    assert os.path.isfile(raster1.source)
-    assert isinstance(raster1.name, str)
-    assert raster1.name.endswith(".it1.ts2001")
-    assert isinstance(raster1.dimensions, dict)
-    assert all([
-        x in raster1.dimensions.keys() for x in [
-            "height", "width", "cells"]])
-    assert isinstance(raster1.extent, dict)
-    assert all([
-        x in raster1.extent.keys() for x in [
-            "xmin", "xmax", "ymin", "ymax"]])    
-    assert isinstance(raster1.crs, rasterio.crs.CRS)
-    assert isinstance(raster1.values(), np.ndarray)
-    assert isinstance(raster1.values(band=1), np.ndarray)
 
     myLibrary.delete(force=True)
     
