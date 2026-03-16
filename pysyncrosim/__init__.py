@@ -2,7 +2,6 @@ from pysyncrosim.session import Session
 from pysyncrosim.library import Library
 from pysyncrosim.project import Project
 from pysyncrosim.scenario import Scenario
-from pysyncrosim.raster import Raster
 from pysyncrosim.folder import Folder
 from pysyncrosim.environment import runtime_data_folder
 from pysyncrosim.environment import runtime_temp_folder

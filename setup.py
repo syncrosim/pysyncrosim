@@ -22,7 +22,7 @@ setup(
     author_email="pysyncrosim@syncrosim.com",
     url="https://syncrosim.com/",
     packages=find_packages(exclude=("tests",)),
-    install_requires=["numpy", "pandas", "rasterio"],
+    install_requires=["numpy", "pandas"],
     extras_require={
         "dev": ["pytest", "build", "twine"],
     },
