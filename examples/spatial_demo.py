@@ -164,6 +164,7 @@ spatialRaster = myResultsScenario.datasheet_rasters(
 # View the raster metadata
 spatialRaster
 
+# TO DO remove Raster class instance here
 # View cell values and plot raster using the Raster class instance
 ## use the raster object
 spatialRaster.values()

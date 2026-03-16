@@ -427,13 +427,14 @@ class Scenario(object):
         filter_value : String, Int, Logical
             The value to filter the filter_column by. The default is None.
         path_only : Logical
-            Instead of returning a Raster Class Instance, a filepath to the
+            Instead of returning a Raster dictionary, a filepath to the
             raster is returned. The default is False.
 
         Returns
         -------
-        Raster or List of Rasters 
-            Raster class instance or List of these.
+        dict or List of dicts 
+            Dictionary, or list of dictionaries, with keys "rpath", "iteration",
+            and "timestep".
 
         """
         # Validate inputs
