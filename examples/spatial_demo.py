@@ -154,7 +154,8 @@ myResultsScenario.datasheets(name = "OutputDatasheet").head()
 # # View spatial results
 # =============================================================================
 
-# Get a raster 
+# Get a raster (returns a dicionary with keys for the path "rpath",
+# iteration, and timestep
 spatialRaster = myResultsScenario.datasheet_rasters(
     datasheet = "IntermediateDatasheet",
     column = "OutputRasterFile",
@@ -164,29 +165,22 @@ spatialRaster = myResultsScenario.datasheet_rasters(
 # View the raster metadata
 spatialRaster
 
-# TO DO remove Raster class instance here
-# View cell values and plot raster using the Raster class instance
-## use the raster object
-spatialRaster.values()
-pyplot.imshow(spatialRaster.values())
-
-# You can also specify the band you want to extract
-spatialRaster.values(band=1)
-
-# You can further modify the source TIF using rasterio
-with rasterio.open(spatialRaster.source) as raster:
+# Open and read the raster using rasterio
+with rasterio.open(spatialRaster["rpath"]) as raster:
     cell_values = raster.read()
 cell_values
 
-with rasterio.open(spatialRaster[0].source) as raster:
+# Plot the raster using rasterio
+with rasterio.open(spatialRaster["rpath"]) as raster:
     rasterio.plot.show(raster)
 
-# Get multiple rasters in a list
+# Get multiple rasters in a list (returns a list of dicts)
 spatialRasters = myResultsScenario.datasheet_rasters(
     datasheet = "helloworldSpatial_IntermediateDatasheet",
     column = "OutputRasterFile")
 
 spatialRasters[15]
 
-pyplot.imshow(spatialRasters[15].values(), cmap = "pink")
+with rasterio.open(spatialRasters[15]["rpath"]) as raster:
+    pyplot.imshow(raster.read(1), cmap = "pink")
 pyplot.show()
