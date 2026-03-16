@@ -154,7 +154,7 @@ myResultsScenario.datasheets(name = "OutputDatasheet").head()
 # # View spatial results
 # =============================================================================
 
-# Get a raster (returns a dicionary with keys for the path "rpath",
+# Get a raster (returns a dictionary with keys for the path "rpath",
 # iteration, and timestep
 spatialRaster = myResultsScenario.datasheet_rasters(
     datasheet = "IntermediateDatasheet",
