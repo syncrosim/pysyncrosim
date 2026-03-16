@@ -484,7 +484,7 @@ class Scenario(object):
             data_row = d[d[column] == os.path.basename(rpath)]
             iter_val = None if "Iteration" not in d.columns else data_row.Iteration.item()
             ts = None if "Timestep" not in d.columns else data_row.Timestep.item()   
-            raster = ps.Raster(rpath, iteration=iter_val, timestep=ts)
+            raster = {"rpath": rpath, "iteration": iter_val, "timestep": ts}
             raster_list.append(raster)
             
         if len(raster_list) == 1:

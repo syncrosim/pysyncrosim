@@ -12,8 +12,8 @@ temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
 lib_name = "spatial-example.ssim" 
-#git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
-git_repo_path = "C:/gitprojects"
+git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+# git_repo_path = "C:/gitprojects"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
@@ -1028,19 +1028,19 @@ def test_scenario_run_and_results():
     raster1 = myResultsScenario.datasheet_rasters(
         datasheet="stsim_OutputSpatialState", column="Filename",
         iteration=1, timestep=2001)
-    assert isinstance(raster1, ps.Raster)
+    assert isinstance(raster1, dict)
     
     raster2 = myResultsScenario.datasheet_rasters(
         datasheet="stsim_OutputSpatialState", column="Filename")
     assert len(raster2) > 1
-    assert all([isinstance(x, ps.Raster) for x in raster2])
+    assert all([isinstance(x, dict) for x in raster2])
     
     raster3 = myResultsScenario.datasheet_rasters(
         datasheet = "stsim_OutputSpatialState", 
         column = None,
         filter_column="Timestep",
         filter_value=2001)
-    assert isinstance(raster3[0], ps.Raster)
+    assert isinstance(raster3[0], dict)
 
     myLibrary.delete(force=True)
     
