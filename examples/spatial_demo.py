@@ -168,7 +168,7 @@ spatialRaster
 # Open and read the raster using rasterio
 with rasterio.open(spatialRaster["rpath"]) as raster:
     cell_values = raster.read()
-cell_values
+print(cell_values)
 
 # Plot the raster using rasterio
 with rasterio.open(spatialRaster["rpath"]) as raster:
