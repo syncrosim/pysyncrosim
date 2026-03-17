@@ -154,33 +154,32 @@ myResultsScenario.datasheets(name = "OutputDatasheet").head()
 # # View spatial results
 # =============================================================================
 
-# Get a raster (returns a dictionary with keys for the path "rpath",
-# iteration, and timestep
-spatialRaster = myResultsScenario.datasheet_rasters(
-    datasheet = "IntermediateDatasheet",
-    column = "OutputRasterFile",
-    iteration = 3,
-    timestep = 4)
+# Get a output datasheet with the full path to the raster files
+outputDatasheet = myResultsScenario.datasheet(
+    name = "helloworldSpatial_IntermediateDatasheet",
+    show_full_paths = True)
 
-# View the raster metadata
-spatialRaster
+# View the output datasheet
+outputDatasheet.head()
+
+# Filter by iteration and timestep to get a single raster path
+spatialRasterPath = outputDatasheet.loc[
+    (outputDatasheet["Iteration"] == 3) & (outputDatasheet["Timestep"] == 4), "OutputRasterFile"].values[0]
 
 # Open and read the raster using rasterio
-with rasterio.open(spatialRaster["rpath"]) as raster:
+with rasterio.open(spatialRasterPath) as raster:
     cell_values = raster.read()
 print(cell_values)
 
 # Plot the raster using rasterio
-with rasterio.open(spatialRaster["rpath"]) as raster:
+with rasterio.open(spatialRasterPath) as raster:
     rasterio.plot.show(raster)
 
-# Get multiple rasters in a list (returns a list of dicts)
-spatialRasters = myResultsScenario.datasheet_rasters(
-    datasheet = "helloworldSpatial_IntermediateDatasheet",
-    column = "OutputRasterFile")
+# Get multiple rasters in a list
+spatialRasters = outputDatasheet["OutputRasterFile"].values
+print(spatialRasters)
 
-spatialRasters[15]
-
-with rasterio.open(spatialRasters[15]["rpath"]) as raster:
+# Access a specific raster
+with rasterio.open(spatialRasters[15]) as raster:
     pyplot.imshow(raster.read(1), cmap = "pink")
 pyplot.show()
