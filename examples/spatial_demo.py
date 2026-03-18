@@ -20,16 +20,13 @@ mySession.version()
 mySession.packages()
 
 # Install helloworldSpatial package
-mySession.add_packages("helloworldSpatial")
+mySession.install_packages("helloworldSpatial")
 
 # Make sure it was installed
 mySession.packages()
 
-# Update installed packages
-mySession.update_packages("myPackage")
-
 # Remove installed packages
-mySession.remove_packages("myPackage")
+mySession.uninstall_packages("myPackage")
 
 # =============================================================================
 # # Create a modeling workflow
@@ -38,13 +35,13 @@ mySession.remove_packages("myPackage")
 # Create a new Library using the helloworldSpatial package
 myLibrary = ps.library(name = "spatialDemo",
                        session = mySession, 
-                       package = "helloworldSpatial",
+                       packages = "helloworldSpatial",
                        overwrite = True)
 
 # You can also open an existing Library using the same function
 myLibrary = ps.library(name = "spatialDemo",
                        session = mySession,
-                       package = "helloworldSpatial")
+                       packages = "helloworldSpatial")
 
 # Retrieve information about the Library instance attributes
 myLibrary.info
@@ -84,7 +81,7 @@ myScenario.datasheets(name = "helloworldSpatial_InputDatasheet")
 InputDataFrame = pd.DataFrame({"mMean": [2],
                                "mSD": [4],
                                "InterceptRasterFile": [
-                                   os.getcwd()+".\input-raster.tif"]})
+                                   os.getcwd()+"\\examples\\input-raster.tif"]})
 
 myScenario.save_datasheet(name = "helloworldSpatial_InputDatasheet",
                           data = InputDataFrame)
@@ -95,9 +92,12 @@ myScenario.datasheets(name = "helloworldSpatial_InputDatasheet")
 myScenario.datasheets(name = "core_Pipeline")
 pipelineDataFrame1 = myScenario.datasheets(name = "core_Pipeline")
 
-pipelineDataFrame2 = pd.DataFrame({"StageNameID": ["First Model",
-                                                   "Second Model"],
-                                   "RunOrder": [1, 2]})
+# Get available stage names from the project's registered transformers
+transformerDataFrame = myProject.datasheets(name = "core_Transformer")
+pipelineDataFrame2 = pd.DataFrame({
+    "StageNameId": transformerDataFrame["DisplayName"].tolist(),
+    "RunOrder": list(range(1, len(transformerDataFrame) + 1))
+})
 pipelineDataFrame1 = pd.concat([pipelineDataFrame1, pipelineDataFrame2])
 
 myScenario.save_datasheet(name = "core_Pipeline", data = pipelineDataFrame1)
@@ -113,15 +113,14 @@ myCopiedScenario = myScenario.copy(name = "My Copied Scenario")
 # =============================================================================
 
 # Run using a Scenario method
-myResultsScenario = myScenario.run(jobs=2)
+myResultsScenario = myScenario.run()
 
 # Run using Library method
-myResultsScenario = myLibrary.run(scenarios=myScenario, jobs=5)
+myResultsScenario = myLibrary.run(scenarios=myScenario)
 
 # Run multiple Scenarios at once (can use Scenario instances, names, or IDs)
 myResultsScenarioAll = myLibrary.run(scenarios=[myScenario,
-                                                myCopiedScenario],
-                                     jobs=5)
+                                                myCopiedScenario])
 
 # =============================================================================
 # # View results
@@ -147,8 +146,8 @@ myResultsScenario = myScenario.results(sid=3)
 myResultsScenario.run_log()
 
 # View Results Scenario Datasheets
-myResultsScenario.datasheets(name = "IntermediateDatasheet").head()
-myResultsScenario.datasheets(name = "OutputDatasheet").head()
+myResultsScenario.datasheets(name = "helloworldSpatial_IntermediateDatasheet").head()
+myResultsScenario.datasheets(name = "helloworldSpatial_OutputDatasheet").head()
 
 # =============================================================================
 # # View spatial results
@@ -173,7 +172,8 @@ print(cell_values)
 
 # Plot the raster using rasterio
 with rasterio.open(spatialRasterPath) as raster:
-    rasterio.plot.show(raster)
+    pyplot.imshow(raster.read(1), cmap = "pink")
+pyplot.show()
 
 # Get multiple rasters in a list
 spatialRasters = outputDatasheet["OutputRasterFile"].values
