@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Apex Resource Management Solution Ltd. (ApexRMS). All rights reserved.
+# Copyright (c) 2026 Apex Resource Management Solution Ltd. (ApexRMS). All rights reserved.
 # MIT License
 
 from setuptools import setup, find_packages
@@ -22,7 +22,7 @@ setup(
     author_email="pysyncrosim@syncrosim.com",
     url="https://syncrosim.com/",
     packages=find_packages(exclude=("tests",)),
-    install_requires=["numpy", "pandas", "rasterio"],
+    install_requires=["numpy", "pandas"],
     extras_require={
         "dev": ["pytest", "build", "twine"],
     },

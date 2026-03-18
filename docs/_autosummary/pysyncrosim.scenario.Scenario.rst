@@ -16,7 +16,6 @@
    
    ~Scenario.__init__
    ~Scenario.copy
-   ~Scenario.datasheet_rasters
    ~Scenario.datasheets
    ~Scenario.delete
    ~Scenario.folders

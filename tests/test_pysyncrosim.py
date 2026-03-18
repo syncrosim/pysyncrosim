@@ -12,8 +12,8 @@ temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
 lib_name = "spatial-example.ssim" 
-#git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
-git_repo_path = "C:/gitprojects"
+git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+# git_repo_path = "C:/gitprojects"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
@@ -931,133 +931,6 @@ def test_scenario_run_and_results():
     assert isinstance(myResultsScenario.run_log(), pd.DataFrame)
     assert not isinstance(myScenario.run_log(), pd.DataFrame)
     
-    # Test datasheet_rasters
-    with pytest.raises(TypeError, match="datasheet must be a String"):
-        myResultsScenario.datasheet_rasters(datasheet=1, column="test")
-        
-    with pytest.raises(TypeError, match="column must be a String"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column=1)
-        
-    with pytest.raises(TypeError, match="iteration must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
-                                           iteration="test")
-        
-    with pytest.raises(TypeError, match="timestep must be an Integer"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test",
-                                           timestep="test")
-        
-    with pytest.raises(RuntimeError,
-                       match="The datasheet does not belong to this library: stsim_test"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_test", column="test")
-        
-    with pytest.raises(ValueError,
-                       match="No raster columns found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputStratum")
-    
-    with pytest.raises(
-            ValueError,
-            match="Column test not found in Datasheet"):
-        myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                           column="test")
-        
-    with pytest.raises(
-            ValueError, 
-            match="Specified iteration above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          iteration=1000) 
-       
-    with pytest.raises(ValueError, match="iteration cannot be below 1"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          iteration=0)
-       
-    with pytest.raises(ValueError,
-                       match="Some iteration values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          iteration=[1, 2, 1000])  
-       
-    with pytest.raises(
-            ValueError, 
-            match="Specified timestep above range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          timestep=9999) 
-       
-    with pytest.raises(
-            ValueError, 
-            match="Specified timestep below range of plausible values"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          timestep=0) 
-       
-    with pytest.raises(ValueError,
-                       match="Some timestep values outside of range"):
-       myResultsScenario.datasheet_rasters(datasheet="stsim_OutputSpatialState",
-                                          column="Filename",
-                                          timestep=[1999, 2002, 2003])  
-       
-    with pytest.raises(
-            ValueError, 
-            match = "Must specify a filter_value to filter the filter_column"):
-        myResultsScenario.datasheet_rasters(
-            datasheet="stsim_OutputSpatialState",
-            column = None,
-            filter_column="OutputSpatialStateId") 
-        
-    with pytest.raises(
-            ValueError, 
-            match = "filter column test not in Datasheet"
-            ):
-        myResultsScenario.datasheet_rasters(
-            datasheet="stsim_OutputSpatialState",
-            column = None,
-            filter_column="test",
-            filter_value="test") 
-       
-    with pytest.raises(
-            RuntimeError, 
-            match="Cannot find a value for: test"):
-        myResultsScenario.datasheet_rasters(
-            datasheet="stsim_OutputSpatialState",
-            column = None,
-            filter_column="OutputSpatialStateId",
-            filter_value="test") 
-      
-    raster1 = myResultsScenario.datasheet_rasters(
-        datasheet="stsim_OutputSpatialState", column="Filename",
-        iteration=1, timestep=2001)
-    assert isinstance(raster1, ps.Raster)
-    
-    raster2 = myResultsScenario.datasheet_rasters(
-        datasheet="stsim_OutputSpatialState", column="Filename")
-    assert len(raster2) > 1
-    assert all([isinstance(x, ps.Raster) for x in raster2])
-    
-    raster3 = myResultsScenario.datasheet_rasters(
-        datasheet = "stsim_OutputSpatialState", 
-        column = None,
-        filter_column="Timestep",
-        filter_value=2001)
-    assert isinstance(raster3[0], ps.Raster)
-    
-    # Test raster class attributes
-    assert os.path.isfile(raster1.source)
-    assert isinstance(raster1.name, str)
-    assert raster1.name.endswith(".it1.ts2001")
-    assert isinstance(raster1.dimensions, dict)
-    assert all([
-        x in raster1.dimensions.keys() for x in [
-            "height", "width", "cells"]])
-    assert isinstance(raster1.extent, dict)
-    assert all([
-        x in raster1.extent.keys() for x in [
-            "xmin", "xmax", "ymin", "ymax"]])    
-    assert isinstance(raster1.crs, rasterio.crs.CRS)
-    assert isinstance(raster1.values(), np.ndarray)
-    assert isinstance(raster1.values(band=1), np.ndarray)
-
     myLibrary.delete(force=True)
     
 def test_scenario_copy_dep_delete():

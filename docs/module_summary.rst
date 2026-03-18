@@ -13,7 +13,6 @@ API Reference
     helper
     library.Library
     project.Project
-    raster.Raster
     scenario.Scenario
     session.Session
     
