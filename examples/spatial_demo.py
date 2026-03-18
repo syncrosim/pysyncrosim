@@ -155,7 +155,7 @@ myResultsScenario.datasheets(name = "OutputDatasheet").head()
 # =============================================================================
 
 # Get a output datasheet with the full path to the raster files
-outputDatasheet = myResultsScenario.datasheet(
+outputDatasheet = myResultsScenario.datasheets(
     name = "helloworldSpatial_IntermediateDatasheet",
     show_full_paths = True)
 
