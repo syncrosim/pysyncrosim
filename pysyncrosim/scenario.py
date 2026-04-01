@@ -680,52 +680,56 @@ class Scenario(object):
         if copy_external_inputs is True:
             args += ["--copyextfiles=yes"]
         
-        try:    
+        error_msg = None
+
+        try:
             print(f"Running Scenario [{self.sid}] {self.name}")
-            result = self.library.session._Session__call_console(args)
-            
-            if result.returncode == 0:
-                print("Run successful")
+            self.library.session._Session__call_console(args)
 
         except RuntimeError as e:
 
             if "You must be signed in" in str(e):
-                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
-                                   f"{self.name}: you must be signed in to "
-                                   "SyncroSim. Use session.sign_in() to sign "
-                                   "in.") from e
-            
+                error_msg = ("you must be signed in to SyncroSim. "
+                              "Use session.sign_in() to sign in.")
+
             elif "There has been an issue with your SyncroSim license file" in str(e):
-                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
-                                   f"{self.name}: there has been an issue "
-                                   "with your SyncroSim license file.") from e
-            
+                error_msg = "there has been an issue with your SyncroSim license file."
+
             else:
-                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
-                                   f"{self.name}: {e}") from e
+                error_msg = str(e)
 
         finally:
-            
+
             # Reset Project Scenarios
             self.project._Project__scenarios = None
 
             # Reset results
             self.__results = None
-            
+
             # Retrieve Results Scenario ID
             # Also resets scenarios and results info
             results_df = self.results()
 
             if (not results_df.empty):
-            
+
                 result_id = results_df["ScenarioId"].values[-1]
-                
+
+                if error_msg is not None:
+                    raise RuntimeError(f"Run failed for Scenario [{result_id}] "
+                                       f"{self.name}: {error_msg}")
+                else:
+                    print("Run successful")
+
                 # Return Results Scenario
                 result_scn = self.library.scenarios(project=self.project,
                                                     name=None,
                                                     sid=result_id)
-                
+
                 return result_scn
+
+            elif error_msg is not None:
+                raise RuntimeError(f"Run failed for Scenario [{self.sid}] "
+                                   f"{self.name}: {error_msg}")
     
     def run_log(self):
         """

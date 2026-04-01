@@ -12,7 +12,7 @@ temp_path = tempfile.TemporaryDirectory()
 session_path = None
 test_lib_path = os.path.join(temp_path.name, "stsimLibrary.ssim")
 lib_name = "spatial-example.ssim" 
-git_repo_path = "C:/Users/VickiZhang/Documents/GH_ApexRMS"
+git_repo_path = "C:/GH_ApexRMS"
 lib_path = os.path.join(git_repo_path, "pysyncrosim/tests", lib_name)
 lib_backup_path = os.path.join(git_repo_path, "pysyncrosim/tests", "spatial-example.ssimbak")
 
@@ -972,6 +972,16 @@ def test_scenario_run_and_results():
     assert isinstance(raster1.crs, rasterio.crs.CRS)
     assert isinstance(raster1.values(), np.ndarray)
     assert isinstance(raster1.values(band=1), np.ndarray)
+
+def test_scenario_run_failure():
+    mySession = ps.Session(session_path)
+    myLibrary = ps.library(name=lib_path, session=mySession, force_update=True)
+    myScenario = myLibrary.scenarios(name="My Scenario")
+    myFailScenario = myScenario.copy(name="My Scenario - Failure Test")
+    myFailScenario.delete(force=True)
+    
+    with pytest.raises(RuntimeError, match="Run failed for Scenario"):
+        myFailScenario.run()
     
 def test_scenario_copy_dep_delete():
     
