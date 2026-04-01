@@ -403,95 +403,6 @@ class Scenario(object):
                                                     return_hidden, self.sid)
         return self.__datasheets
     
-
-    def datasheet_rasters(self, datasheet, column=None, iteration=None,
-                         timestep=None, filter_column=None, filter_value=None,
-                         path_only=False):
-        """
-        Retrieves spatial data columns from one or more SyncroSim Datasheets.
-
-        Parameters
-        ----------
-        datasheet : String
-            The name of a SyncroSim Datasheet containing raster data.
-        column : String
-            The column in the Datasheet containing the raster data. If no 
-            column selected, then datasheet_rasters will attempt to find one.
-        iteration : Int, List, or Range, optional
-            The iteration to subset by. The default is None.
-        timestep : Int, List, or Range, optional
-            The timestep to subset by. The default is None.
-        filter_column : String
-            The column to filter the output rasters by 
-            (e.g. "TransitionGroupId=20"). The default is None.
-        filter_value : String, Int, Logical
-            The value to filter the filter_column by. The default is None.
-        path_only : Logical
-            Instead of returning a Raster Class Instance, a filepath to the
-            raster is returned. The default is False.
-
-        Returns
-        -------
-        Raster or List of Rasters 
-            Raster class instance or List of these.
-
-        """
-        # Validate inputs
-        self.__validate_datasheet_raster_inputs(
-            datasheet, column, iteration, timestep)
-            
-        # Check that Datasheet has package prefix
-        datasheet = self.library._Library__check_datasheet_name(datasheet)
-        
-        # Retrieve Datasheet as DataFrame
-        d = self.datasheets(name = datasheet, filter_column = filter_column,
-                            filter_value = filter_value, show_full_paths = False)
-        
-        if d.empty:
-            raise ValueError(f"Datasheet {datasheet} does not contain data.")
-        
-        # Check if column is raster column
-        column = self.__retrieve_raster_column(datasheet, column)
-        
-        # Filter data by iteration and timestep
-        d = self.__filter_by_iteration(iteration, d)
-        d = self.__filter_by_timestep(timestep, d)
-                    
-        # Determine which folder to look for raster tifs      
-        if self.__env is None:                       
-            lib_dir = self.__find_output_fpath(
-                self.library.location + ".data", datasheet)
-                
-        else:
-            # TODO: test update - do we need to also search .data when in ssim env?
-            e = _environment()
-            lib_dir = e.library_filepath.item() + ".temp"
-        
-        # Search for raster tifs in data or temp directories
-        raster_tifs = d[column].values
-        rpaths = self.__list_datasheet_rasters(raster_tifs, lib_dir)
-        
-        # Return only filepaths to rasters if path_only is True
-        if path_only:
-            return rpaths
-        
-        # Iterate through all raster files in datasheet and store in list
-        raster_list = []
-
-        for rpath in rpaths:
-            
-            # Open and append each raster from the Datasheet
-            data_row = d[d[column] == os.path.basename(rpath)]
-            iter_val = None if "Iteration" not in d.columns else data_row.Iteration.item()
-            ts = None if "Timestep" not in d.columns else data_row.Timestep.item()   
-            raster = ps.Raster(rpath, iteration=iter_val, timestep=ts)
-            raster_list.append(raster)
-            
-        if len(raster_list) == 1:
-            return raster_list[0]
-        else:
-            return raster_list
-    
     def save_datasheet(self, name, data, append=False):
         """
         Saves a pandas DataFrame as a SyncroSim Datasheet.
@@ -513,12 +424,17 @@ class Scenario(object):
         """
         self.library.save_datasheet(name, data, append, False, "Scenario", self.sid)
     
-    def delete(self, force=False):
+    def delete(self, datasheet=None, ids=None, force=False):
         """
-        Deletes a Scenario.
+        Deletes a Scenario or data from a Scenario scope.
 
         Parameters
         ----------
+        datasheet : String, optional
+            Name of the datasheet to delete data from. The default is None
+        ids : Int or String, optional
+            IDs of the rows to delete. If None, deletes all data. The default is
+            None.
         force : Logical, optional
             If True, does not ask the user for permission to delete the 
             Scenario. The default is False.
@@ -528,8 +444,14 @@ class Scenario(object):
         None.
 
         """
-        
-        self.library.delete(project=self.project, scenario=self, force=force)
+
+        if datasheet is not None:
+            self.library.delete(datasheet=datasheet, sid=self.sid,
+            force=force)
+
+        else:
+            self.library.delete(project=self.project, scenario=self,
+                                force=force)            
     
     def copy(self, name=None):
         """
@@ -781,12 +703,9 @@ class Scenario(object):
             else:
                 raise ValueError(f'Scenario [{sid}] is not a Results Scenario')
         
-        elif self.__results is None:
-            s = self.project.scenarios(optional = True)
-            self.__results = s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
-            return self.__results
         else:
-            return self.__results
+            s = self.project.scenarios(optional = True)
+            return s[(s.IsResult == "Yes") & (s.ParentId == self.__sid)]
         
     def __retrieve_scenario_folder_id(self):
 
@@ -875,130 +794,7 @@ class Scenario(object):
         if type(parent_id) == float:
             return int(parent_id)
         else:
-            return parent_id
-    
-    def __validate_datasheet_raster_inputs(self, datasheet, column, iteration, timestep):
-                
-        if not isinstance(datasheet, str):
-            raise TypeError("datasheet must be a String")
-            
-        if column is not None and not isinstance(column, str):
-            raise TypeError("column must be a String")
-            
-        if iteration is not None and not isinstance(iteration, int)\
-            and not isinstance(iteration, np.int64)\
-                and not isinstance(iteration, list)\
-                    and not isinstance(iteration, range):
-            raise TypeError("iteration must be an Integer, List, or Range")
-            
-        if timestep is not None and not isinstance(timestep, int)\
-            and not isinstance(timestep, np.int64)\
-                and not isinstance(timestep, list)\
-                    and not isinstance(timestep, range):
-            raise TypeError("timestep must be an Integer, List, or Range")
-        
-    def __retrieve_raster_column(self, datasheet, column):
-
-        args = ["--list", "--columns", "--allprops",
-                "--sheet=%s" % datasheet, "--csv", 
-                "--lib=%s" % self.library.location]
-        props = self.library.session._Session__call_console(args, decode=True,
-                                                            csv=True)
-        props = pd.read_csv(io.StringIO(props))
-        props["is_raster"] = props.Properties.str.contains(r"isRaster\^True")
-        
-        if (props.is_raster == False).all():
-            raise ValueError(
-                f"No raster columns found in Datasheet {datasheet}")
-          
-        # If no raster column specified, find the raster column
-        if column is None:
-            if len(props[props.is_raster == True]) > 1:
-                raise ValueError(
-                    "> 1 raster output column available, please specify.")
-            column = props[props.is_raster == True].Name.values[0]
-            
-        if not (props.Name == column).any():
-            raise ValueError(
-               f"Column {column} not found in Datasheet {datasheet}")
-            
-        col_props = props[props.Name == column]
-        
-        if col_props.is_raster is False:
-            raise ValueError(f"Column {column} is not a raster column")
-        
-        return column
-    
-    def __list_datasheet_rasters(self, raster_tifs, lib_dir):
-
-        rpaths = []
-        for raster_tif in raster_tifs:
-            for root, _, files in os.walk(lib_dir):
-                if raster_tif in files:
-                    rpaths.append(os.path.join(root, raster_tif))
-                else:
-                    warnings.warn(f"The following raster was not found: {raster_tif}", 
-                                    UserWarning)
-                    
-        return rpaths
-    
-    def __filter_by_iteration(self, iteration, d):
-
-        if iteration is None:
-            return d
-
-        if isinstance(iteration, range):
-            iteration = list(iteration)
-        
-        if isinstance(iteration, int):
-            
-            if iteration > d.Iteration.max():
-                raise ValueError(
-                    "Specified iteration above range of plausible values")
-            elif iteration <= 0:
-                raise ValueError("iteration cannot be below 1")
-                
-            d = d.loc[d["Iteration"] == iteration]
-            
-        if isinstance(iteration, list):
-            
-            if any(x > d.Iteration.max() for x in iteration) or any(
-                    x < 1 for x in iteration):
-                raise ValueError("Some iteration values outside of range")
-                
-            d = d.loc[d["Iteration"].isin(iteration)]
-            
-        return d.reset_index()
-        
-    def __filter_by_timestep(self, timestep, d):
-
-        if timestep is None:
-            return d
-
-        if isinstance(timestep, range):
-            timestep = list(timestep)
-            
-        if isinstance(timestep, int):
-            
-            if timestep > d.Timestep.max():
-                raise ValueError(
-                    "Specified timestep above range of plausible values")
-            if timestep < d.Timestep.min():
-                raise ValueError(
-                    "Specified timestep below range of plausible values")
-                
-            d = d.loc[d["Timestep"] == timestep]
-            
-        if isinstance(timestep, list):
-            
-            if any(x > d.Timestep.max() for x in timestep) or any(
-                    x < d.Timestep.min() for x in timestep):
-                raise ValueError("Some timestep values outside of range")
-            
-            d = d.loc[d["Timestep"].isin(timestep)]
-            
-        return d.reset_index()
-                
+            return parent_id             
     
     def __init_dependencies(self):
         
@@ -1064,9 +860,3 @@ class Scenario(object):
             
         except RuntimeError as e:
             print(e)
-    
-    def __find_output_fpath(self, f_base_path, datasheet):
-
-        fpath = os.path.join(f_base_path, f"Scenario-{self.sid}", datasheet)
-        
-        return fpath

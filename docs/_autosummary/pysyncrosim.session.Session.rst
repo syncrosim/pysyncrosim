@@ -5,35 +5,41 @@
 
 .. autoclass:: Session
 
-   
-   .. automethod:: __init__
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   .. rubric:: Methods
+   ~Session.__init__
+   ~Session.install_conda
+   ~Session.install_packages
+   ~Session.packages
+   ~Session.restore
+   ~Session.sign_in
+   ~Session.sign_out
+   ~Session.uninstall_packages
+   ~Session.version
+   ~Session.view_profile
 
-   .. autosummary::
-   
-      ~Session.__init__
-      ~Session.install_conda
-      ~Session.install_packages
-      ~Session.packages
-      ~Session.sign_in
-      ~Session.sign_out
-      ~Session.uninstall_packages
-      ~Session.version
-      ~Session.view_profile
-   
-   
+
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   
-   .. rubric:: Attributes
+   ~Session.conda_filepath
+   ~Session.location
+   ~Session.print_cmd
+   ~Session.silent
 
-   .. autosummary::
-   
-      ~Session.conda_filepath
-      ~Session.location
-      ~Session.print_cmd
-      ~Session.silent
-   
-   
+

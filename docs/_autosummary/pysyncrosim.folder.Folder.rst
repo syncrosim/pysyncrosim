@@ -5,30 +5,35 @@
 
 .. autoclass:: Folder
 
-   
-   .. automethod:: __init__
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   .. rubric:: Methods
+   ~Folder.__init__
 
-   .. autosummary::
-   
-      ~Folder.__init__
-   
-   
+
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   
-   .. rubric:: Attributes
+   ~Folder.date_modified
+   ~Folder.folder_id
+   ~Folder.name
+   ~Folder.owner
+   ~Folder.parent_id
+   ~Folder.project_id
+   ~Folder.readonly
 
-   .. autosummary::
-   
-      ~Folder.date_modified
-      ~Folder.folder_id
-      ~Folder.name
-      ~Folder.owner
-      ~Folder.parent_id
-      ~Folder.project_id
-      ~Folder.readonly
-   
-   
+

@@ -53,7 +53,7 @@ def library(name, session=None, packages=None,
         _check_library_update(session, loc, force_update)
         return ps.Library(location=loc, session=session, use_ssim_env=use_ssim_env)
     
-    args = ["--create", "--library", "--name=\"%s\"" % loc]
+    args = ["--create", "--library", "--name=%s" % loc]
     
     if overwrite is True:      
         args += ["--force"]
@@ -236,8 +236,9 @@ def _delete_project(library, name=None, pid=None, session=None,
                 
         # Delete Project using console   
         if pid is None:
-            pid = p["ID"].values[0]
-        args = ["--delete", "--project", "--lib=\"%s\"" % library.location,
+            pid = p["ProjectId"].values[0]
+
+        args = ["--delete", "--project", "--lib=%s" % library.location,
                 "--pid=%d" % pid, "--force"]
         session._Session__call_console(args)
         
@@ -268,8 +269,8 @@ def _delete_scenario(library, project, name=None, sid=None, session=None,
                                         
         # Delete Scenario using console   
         if sid is None:
-            sid = s["Scenario ID"].values[0]
-        args = ["--delete", "--scenario", "--lib=\"%s\"" % library.location,
+            sid = s["ScenarioId"].values[0]
+        args = ["--delete", "--scenario", "--lib=%s" % library.location,
                 "--sid=%d" % sid, "--force"]
         session._Session__call_console(args)
         
@@ -277,3 +278,27 @@ def _delete_scenario(library, project, name=None, sid=None, session=None,
         library._Library__scenarios = None
         library._Library__init_scenarios()
 
+def _delete_folder(library, fid, session=None, force=False):
+    
+    if session is None:
+        session = ps.Session()
+
+    if force is False:
+        answer = input(f"Are you sure you want to delete folder {fid} (Y/N)?")
+    else:
+        answer = "Y"
+    
+    if answer == "Y":
+
+        # Retrieve Folder DataFrame
+        args = [f"--lib={library.location}", "--list", "--folders"]
+        folder_data = session._Session__call_console(args, decode=True, csv=True)
+        folder_df = pd.read_csv(io.StringIO(folder_data))
+        
+        if fid not in folder_df["Id"].values:
+            raise ValueError(f"Folder ID {fid} does not exist")
+                
+        # Delete Folder using Console
+        args = ["--delete", "--folder", f"--lib={library.location}", f"--fid={fid}", "--force"]
+
+        session._Session__call_console(args)

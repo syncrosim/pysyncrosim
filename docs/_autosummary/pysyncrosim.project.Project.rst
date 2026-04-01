@@ -5,40 +5,45 @@
 
 .. autoclass:: Project
 
-   
-   .. automethod:: __init__
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   .. rubric:: Methods
+   ~Project.__init__
+   ~Project.copy
+   ~Project.create_nested_folder
+   ~Project.create_project_folder
+   ~Project.datasheets
+   ~Project.delete
+   ~Project.folders
+   ~Project.run
+   ~Project.save_datasheet
+   ~Project.scenarios
 
-   .. autosummary::
-   
-      ~Project.__init__
-      ~Project.copy
-      ~Project.create_nested_folder
-      ~Project.create_project_folder
-      ~Project.datasheets
-      ~Project.delete
-      ~Project.folders
-      ~Project.run
-      ~Project.save_datasheet
-      ~Project.scenarios
-   
-   
+
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
 
    
-   
-   .. rubric:: Attributes
+   ~Project.date_modified
+   ~Project.description
+   ~Project.info
+   ~Project.library
+   ~Project.name
+   ~Project.owner
+   ~Project.pid
+   ~Project.readonly
 
-   .. autosummary::
-   
-      ~Project.date_modified
-      ~Project.description
-      ~Project.info
-      ~Project.library
-      ~Project.name
-      ~Project.owner
-      ~Project.pid
-      ~Project.readonly
-   
-   
+
