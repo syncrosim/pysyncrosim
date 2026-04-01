@@ -931,6 +931,22 @@ def test_scenario_run_and_results():
     assert not isinstance(myScenario.run_log(), pd.DataFrame)
     
     myLibrary.delete(force=True)
+
+def test_scenario_run_failure():
+
+    mySession = ps.Session(session_path)
+    mySession.restore(lib_backup_path)
+
+    myLibrary = ps.library(name=lib_path,
+                           session=mySession,
+                           force_update=True)
+    
+    myScenario = myLibrary.scenarios(name="My Scenario")
+    myFailScenario = myScenario.copy(name="My Scenario - Failure Test")
+    myFailScenario.delete(force=True)
+
+    with pytest.raises(RuntimeError, match="Run failed for Scenario"):
+        myFailScenario.run()
     
 def test_scenario_copy_dep_delete():
     
